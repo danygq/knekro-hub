@@ -1,0 +1,30 @@
+---
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout>
+  <h1 class="text-2xl font-bold mb-4">Juegos</h1>
+
+  <!-- Category tabs / filters placeholder -->
+  <div class="mb-6">
+    <div class="flex space-x-2">
+      <button class="px-3 py-1 rounded-md bg-slate-100 dark:bg-slate-800">Todas</button>
+      <button class="px-3 py-1 rounded-md">Ojeadita</button>
+      <button class="px-3 py-1 rounded-md">En progreso</button>
+      <button class="px-3 py-1 rounded-md">Completado</button>
+      <button class="px-3 py-1 rounded-md">Voló alto</button>
+    </div>
+  </div>
+
+  <!-- Games grid placeholder -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+    <!-- Example card -->
+    <article class="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-md p-4">
+      <div class="h-40 bg-slate-200 dark:bg-slate-700 rounded-md mb-3"></div>
+      <h3 class="font-semibold">Título del juego</h3>
+      <p class="text-sm text-slate-500">Estado: En progreso</p>
+    </article>
+
+    <!-- Repeat cards will be dynamically rendered from Supabase in later phases -->
+  </div>
+</Layout>

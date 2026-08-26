@@ -1,0 +1,37 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout>
+  <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="lg:col-span-2">
+      <h1 class="text-3xl font-bold mb-4">Knekro — Stream</h1>
+
+      <!-- Embedded Twitch player (placeholder). Replace channel name and parameters as needed -->
+      <div class="aspect-video bg-slate-800 rounded-md overflow-hidden">
+        <iframe
+          src="https://player.twitch.tv/?channel=knekro&parent=localhost"
+          allowfullscreen
+          frameborder="0"
+          class="w-full h-full"
+        ></iframe>
+      </div>
+
+      <!-- Live status badge and latest YouTube videos placeholder -->
+      <div class="mt-4 flex items-center space-x-4">
+        <div class="px-3 py-1 rounded-full bg-red-600 text-white text-sm">EN VIVO</div>
+        <div class="text-sm text-slate-500">Último stream: --</div>
+      </div>
+
+      <section class="mt-6">
+        <h2 class="text-xl font-semibold mb-2">Último video de YouTube</h2>
+        <div class="bg-slate-100 dark:bg-slate-800 p-4 rounded-md">(Feed de YouTube aquí)</div>
+      </section>
+    </div>
+
+    <aside class="hidden lg:block">
+      <h3 class="text-lg font-medium mb-3">Chat / Info</h3>
+      <div class="bg-slate-50 dark:bg-slate-800 p-4 rounded-md">(Chat embebido o panel de información)</div>
+    </aside>
+  </section>
+</Layout>
