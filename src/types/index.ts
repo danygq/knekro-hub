@@ -3,6 +3,14 @@
 
 export type GameStatus = 'ojeadita' | 'en_progreso' | 'completado' | 'volo_alto';
 
+export interface Category {
+  id: string; // provider/category id (e.g., Twitch category id or UUID)
+  name: string; // display name, e.g. "Just Chatting"
+  game_id?: string; // optional reference to Game.id if this category maps to a known game
+  url?: string; // optional link to provider/category page
+  // add other provider-specific metadata here later (language, box_art_url, etc.)
+}
+
 export interface StreamLog {
   id: string; // UUID or provider ID
   title: string;
@@ -10,7 +18,7 @@ export interface StreamLog {
   ended_at?: string; // ISO timestamp, undefined if live
   is_live: boolean;
   duration_seconds?: number;
-  game_id?: string; // reference to Game.id
+  categories: Category[]; // list of categories for the stream (always present, can be empty)
   vod_url?: string; // Twitch VOD
   youtube_url?: string; // optional YouTube upload
   notes?: string;
