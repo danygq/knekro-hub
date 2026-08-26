@@ -1,12 +1,12 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import { supabase } from "../lib/supabase";
+import {supabase} from "../lib/supabase";
 
-const { data: posts, error } = await supabase
-  .from('posts')
-  .select('id,title,excerpt,created_at')
-  .order('created_at', { ascending: false })
-  .limit(10);
+const {data: posts, error} = await supabase
+    .from('posts')
+    .select('id,title,excerpt,created_at')
+    .order('created_at', {ascending: false})
+    .limit(10);
 
 const latestPosts = posts ?? [];
 
@@ -16,54 +16,64 @@ const hostname =
     Astro.url.hostname;
 ---
 <Layout>
-  <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <div class="lg:col-span-2">
-      <h1 class="text-3xl font-bold mb-4">Knekro — Stream</h1>
+    <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2">
+            <h1 class="text-3xl font-bold mb-4">Knekro — Stream</h1>
 
-      <!-- Embedded Twitch player with dynamic parent parameter -->
-      <div class="aspect-video bg-slate-800 rounded-md overflow-hidden">
-        <iframe
-          src={`https://player.twitch.tv/?channel=knekro&parent=${hostname}`}
-          allowfullscreen
-          frameborder="0"
-          class="w-full h-full"
-        ></iframe>
-      </div>
+            <!-- Embedded Twitch player with dynamic parent parameter -->
+            <div class="aspect-video bg-slate-800 rounded-md overflow-hidden">
+                <iframe
+                        id="twitch-player"
+                        allowfullscreen
+                        frameborder="0"
+                        class="w-full h-full"
+                ></iframe>
+            </div>
 
-      <!-- Live status badge and latest YouTube videos placeholder -->
-      <div class="mt-4 flex items-center space-x-4">
-        <div class="px-3 py-1 rounded-full bg-red-600 text-white text-sm">EN VIVO</div>
-        <div class="text-sm text-slate-500">Último stream: --</div>
-      </div>
+            <script>
+                (function () {
+                    const iframe: HTMLIFrameElement = document.getElementById('twitch-player') as HTMLIFrameElement;
+                    if (iframe) {
+                        const hostname = window.location.hostname;
+                        iframe.src = `https://player.twitch.tv/?channel=knekro&parent=${hostname}`;
+                    }
+                })();
+            </script>
 
-      <section class="mt-6">
-        <h2 class="text-xl font-semibold mb-2">Último video de YouTube</h2>
-        <div class="bg-slate-100 dark:bg-slate-800 p-4 rounded-md">(Feed de YouTube aquí)</div>
-      </section>
+            <!-- Live status badge and latest YouTube videos placeholder -->
+            <div class="mt-4 flex items-center space-x-4">
+                <div class="px-3 py-1 rounded-full bg-red-600 text-white text-sm">EN VIVO</div>
+                <div class="text-sm text-slate-500">Último stream: --</div>
+            </div>
 
-      <section class="mt-8">
-        <h2 class="text-xl font-semibold mb-2">Últimas publicaciones</h2>
-        <ul class="space-y-4">
-          {latestPosts.length === 0 ? (
-            <li class="text-sm text-slate-500">No hay publicaciones todavía.</li>
-          ) : (
-            latestPosts.map(post => (
-              <li class="p-4 bg-white dark:bg-slate-900 rounded-md shadow-sm">
-                <a href={`/posts/${post.id}`} class="block">
-                  <h3 class="font-semibold text-lg">{post.title}</h3>
-                  <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">{post.excerpt}</p>
-                  <time class="text-xs text-slate-400 mt-2 block">{new Date(post.created_at).toLocaleString()}</time>
-                </a>
-              </li>
-            ))
-          )}
-        </ul>
-      </section>
-    </div>
+            <section class="mt-6">
+                <h2 class="text-xl font-semibold mb-2">Último video de YouTube</h2>
+                <div class="bg-slate-100 dark:bg-slate-800 p-4 rounded-md">(Feed de YouTube aquí)</div>
+            </section>
 
-    <aside class="hidden lg:block">
-      <h3 class="text-lg font-medium mb-3">Chat / Info</h3>
-      <div class="bg-slate-50 dark:bg-slate-800 p-4 rounded-md">(Chat embebido o panel de información)</div>
-    </aside>
-  </section>
+            <section class="mt-8">
+                <h2 class="text-xl font-semibold mb-2">Últimas publicaciones</h2>
+                <ul class="space-y-4">
+                    {latestPosts.length === 0 ? (
+                            <li class="text-sm text-slate-500">No hay publicaciones todavía.</li>
+                    ) : (
+                        latestPosts.map(post => (
+                                <li class="p-4 bg-white dark:bg-slate-900 rounded-md shadow-sm">
+                                    <a href={`/posts/${post.id}`} class="block">
+                                        <h3 class="font-semibold text-lg">{post.title}</h3>
+                                        <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">{post.excerpt}</p>
+                                        <time class="text-xs text-slate-400 mt-2 block">{new Date(post.created_at).toLocaleString()}</time>
+                                    </a>
+                                </li>
+                        ))
+                    )}
+                </ul>
+            </section>
+        </div>
+
+        <aside class="hidden lg:block">
+            <h3 class="text-lg font-medium mb-3">Chat / Info</h3>
+            <div class="bg-slate-50 dark:bg-slate-800 p-4 rounded-md">(Chat embebido o panel de información)</div>
+        </aside>
+    </section>
 </Layout>
