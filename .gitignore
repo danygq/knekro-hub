@@ -9,3 +9,4 @@ dist/
 # Vite/Astro cache
 .astro/
 .idea/
+package-lock.json

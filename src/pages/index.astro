@@ -10,7 +10,10 @@ const { data: posts, error } = await supabase
 
 const latestPosts = posts ?? [];
 
-const domain = Astro.url.hostname;
+const hostname =
+    import.meta.env.VERCEL_URL ||
+    Astro.site?.hostname ||
+    Astro.url.hostname;
 ---
 <Layout>
   <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -20,7 +23,7 @@ const domain = Astro.url.hostname;
       <!-- Embedded Twitch player with dynamic parent parameter -->
       <div class="aspect-video bg-slate-800 rounded-md overflow-hidden">
         <iframe
-          src={`https://player.twitch.tv/?channel=knekro&parent=${domain}`}
+          src={`https://player.twitch.tv/?channel=knekro&parent=${hostname}`}
           allowfullscreen
           frameborder="0"
           class="w-full h-full"
