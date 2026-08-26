@@ -1,7 +1,15 @@
 ---
 import Layout from "../layouts/Layout.astro";
----
+import { supabase } from "../lib/supabase";
 
+const { data: posts, error } = await supabase
+  .from('posts')
+  .select('id,title,excerpt,created_at')
+  .order('created_at', { ascending: false })
+  .limit(10);
+
+const latestPosts = posts ?? [];
+---
 <Layout>
   <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <div class="lg:col-span-2">
@@ -26,6 +34,25 @@ import Layout from "../layouts/Layout.astro";
       <section class="mt-6">
         <h2 class="text-xl font-semibold mb-2">Último video de YouTube</h2>
         <div class="bg-slate-100 dark:bg-slate-800 p-4 rounded-md">(Feed de YouTube aquí)</div>
+      </section>
+
+      <section class="mt-8">
+        <h2 class="text-xl font-semibold mb-2">Últimas publicaciones</h2>
+        <ul class="space-y-4">
+          {latestPosts.length === 0 ? (
+            <li class="text-sm text-slate-500">No hay publicaciones todavía.</li>
+          ) : (
+            latestPosts.map(post => (
+              <li class="p-4 bg-white dark:bg-slate-900 rounded-md shadow-sm">
+                <a href={`/posts/${post.id}`} class="block">
+                  <h3 class="font-semibold text-lg">{post.title}</h3>
+                  <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">{post.excerpt}</p>
+                  <time class="text-xs text-slate-400 mt-2 block">{new Date(post.created_at).toLocaleString()}</time>
+                </a>
+              </li>
+            ))
+          )}
+        </ul>
       </section>
     </div>
 
