@@ -9,16 +9,18 @@ const { data: posts, error } = await supabase
   .limit(10);
 
 const latestPosts = posts ?? [];
+
+const domain = Astro.url.hostname;
 ---
 <Layout>
   <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <div class="lg:col-span-2">
       <h1 class="text-3xl font-bold mb-4">Knekro — Stream</h1>
 
-      <!-- Embedded Twitch player (placeholder). Replace channel name and parameters as needed -->
+      <!-- Embedded Twitch player with dynamic parent parameter -->
       <div class="aspect-video bg-slate-800 rounded-md overflow-hidden">
         <iframe
-          src="https://player.twitch.tv/?channel=knekro&parent=localhost"
+          src={`https://player.twitch.tv/?channel=knekro&parent=${domain}`}
           allowfullscreen
           frameborder="0"
           class="w-full h-full"
