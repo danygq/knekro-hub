@@ -1,1 +1,41 @@
 @import "tailwindcss";
+
+:root {
+    --knk-bg: #0b0f14;
+    --knk-surface: #121822;
+    --knk-surface-2: #171f2a;
+    --knk-line: #232d3a;
+    --knk-text: #e7ecf0;
+    --knk-text-muted: #8b98a6;
+    --knk-amber: #ffb020;
+    --knk-live: #ff4d4d;
+    --knk-red: #eb0400;
+    --knk-red-hover: color-mix(in srgb, white 10%, var(--knk-red));
+    --knk-discord: #5865f2;
+    --knk-discord-hover: color-mix(in srgb, white 10%, var(--knk-discord));
+    --knk-twitch: #9147ff;
+    --knk-twitch-hover: color-mix(in srgb, white 10%, var(--knk-twitch));
+    --font-display: "Space Grotesk", sans-serif;
+    --font-body: "Inter", system-ui, sans-serif;
+}
+
+body {
+    font-family: var(--font-body), sans-serif;
+}
+
+::selection {
+    background: var(--knk-amber);
+    color: #181000;
+}
+
+a:focus-visible,
+button:focus-visible {
+    outline: 2px solid var(--knk-amber);
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .animate-pulse {
+        animation: none !important;
+    }
+}
