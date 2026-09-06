@@ -2,6 +2,9 @@
 // Layout.astro
 // Base layout component used by pages. Provides responsive nav and footer.
 // Sets a dark theme class by default on the document element for Tailwind's dark mode.
+import { supabase } from "../lib/supabase";
+import LoginButton from "../components/LoginButton.astro";
+import UserMenu from '../components/UserMenu.astro'
 ---
 
 <!DOCTYPE html>
@@ -10,6 +13,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <slot name="head" />
+    <title>Knekro Hub</title>
   </head>
   <body class="min-h-screen bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100">
     <script>
@@ -34,6 +38,10 @@
             <div class="text-sm text-green-500">● LIVE</div>
             <a href="https://twitch.tv/knekro" target="_blank" rel="noopener" class="px-3 py-2 rounded-md bg-pink-600 text-white text-sm">Seguir</a>
           </div>
+        </div>
+        <div class="flex items-center space-x-4">
+          <UserMenu />
+          <LoginButton />
         </div>
       </div>
     </header>
