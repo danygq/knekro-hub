@@ -23,6 +23,8 @@ const supabase = createServerClient(
 const {
   data: { user },
 } = await supabase.auth.getUser();
+
+const currentPath = Astro.url.pathname;
 ---
 
 <!doctype html>
@@ -30,62 +32,90 @@ const {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
     <slot name="head" />
     <title>Knekro Hub</title>
   </head>
-  <body class="min-h-screen bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100">
-    <script>
-      try {
-        document.documentElement.classList.add("dark");
-      } catch (e) {
-        /* no-op */
-      }
-    </script>
-
-    <header class="sticky top-0 z-50 backdrop-blur-md bg-slate-900/80 border-b border-slate-800">
+  <body class="min-h-screen bg-(--knk-bg) text-(--knk-text)">
+    <header class="sticky top-0 z-50 bg-(--knk-bg)/95 backdrop-blur-sm border-b border-(--knk-line)">
       <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-16">
-          <div class="flex items-center space-x-4">
-            <a href="/" class="text-lg font-semibold">Knekro Hub</a>
-            <nav class="hidden sm:flex sm:space-x-3" aria-label="Primary">
-              <a href="/games" class="px-3 py-2 rounded-md text-sm hover:bg-slate-100 dark:hover:bg-slate-800">Juegos</a
+          <div class="flex items-center gap-8">
+            <a href="/" class="flex items-center gap-2">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" class="text-(--knk-amber)">
+                <path d="M1 5V1H5" stroke="currentColor" stroke-width="1.5"></path>
+                <path d="M13 1H17V5" stroke="currentColor" stroke-width="1.5"></path>
+                <path d="M17 13V17H13" stroke="currentColor" stroke-width="1.5"></path>
+                <path d="M5 17H1V13" stroke="currentColor" stroke-width="1.5"></path>
+              </svg>
+              <span class="font-(--font-display) text-lg tracking-tight">Knekro Hub</span>
+            </a>
+            <nav class="hidden sm:flex items-center gap-6" aria-label="Primary">
+              <a
+                href="/games"
+                class={`text-sm pb-0.75 border-b-2 transition-colors ${
+                  currentPath.startsWith("/games")
+                    ? "border-(--knk-amber) text-(--knk-text)"
+                    : "border-transparent text-(--knk-text-muted) hover:text-(--knk-text) hover:border-(--knk-line)"
+                }`}>Juegos</a
               >
-              <a href="/goty" class="px-3 py-2 rounded-md text-sm hover:bg-slate-100 dark:hover:bg-slate-800">GOTY</a>
+              <a
+                href="/goty"
+                class={`text-sm pb-0.75 border-b-2 transition-colors ${
+                  currentPath.startsWith("/goty")
+                    ? "border-(--knk-amber) text-(--knk-text)"
+                    : "border-transparent text-(--knk-text-muted) hover:text-(--knk-text) hover:border-(--knk-line)"
+                }`}>GOTY</a
+              >
             </nav>
           </div>
-
-          <div class="flex items-center space-x-4">
-            <!-- Twitch follow / live badge placeholder -->
+          <div class="flex items-center gap-4">
             <a
               href="https://twitch.tv/knekro"
               target="_blank"
               rel="noopener"
-              class="px-3 py-2 rounded-md bg-pink-600 text-white text-sm">Seguir</a
+              class="px-4 py-2 text-sm font-medium
+        bg-(--knk-twitch) text-[white] hover:bg-(--knk-twitch-hover) transition-colors"
+              style="clip-path: polygon(0 0,
+        calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));"
+              >Ver en Twitch</a
             >
-
+            <a
+              href="https://discord.com/invite/knekro"
+              target="_blank"
+              rel="noopener"
+              class="px-4 py-2 text-sm font-medium
+        bg-(--knk-discord) text-[white] hover:bg-(--knk-discord-hover) transition-colors"
+              style="clip-path: polygon(0 0,
+        calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));"
+              >Discord</a
+            >
             {user ? <UserMenu user={user} /> : <LoginButton />}
           </div>
         </div>
       </div>
     </header>
-
-    <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <slot />
-    </main>
-
-    <footer class="border-t border-slate-200 dark:border-slate-800">
-      <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-sm text-slate-500 dark:text-slate-400">
-        <div class="flex items-center justify-between">
-          <div>© {new Date().getFullYear()} Knekro Hub — Creado con ❤️</div>
-          <div>
-            <a href="/" class="hover:underline">Inicio</a>
-            <span class="mx-2">•</span>
-            <a href="/games" class="hover:underline">Juegos</a>
-            <span class="mx-2">•</span>
-            <a href="/goty" class="hover:underline">GOTY</a>
-          </div>
-        </div>
-      </div>
-    </footer>
   </body>
 </html>
+
+<main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <slot />
+</main>
+
+<footer class="border-t border-(--knk-line)">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-sm text-(--knk-text-muted)">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+      <div>© {new Date().getFullYear()} Knekro Hub — creado con ❤️</div>
+      <div class="flex items-center gap-4">
+        <a href="/" class="hover:text-(--knk-text) transition-colors">Inicio</a>
+        <a href="/games" class="hover:text-(--knk-text) transition-colors">Juegos</a>
+        <a href="/goty" class="hover:text-(--knk-text) transition-colors">GOTY</a>
+      </div>
+    </div>
+  </div>
+</footer>

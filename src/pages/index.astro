@@ -13,55 +13,85 @@ const latestPosts = posts ?? [];
 
 <Layout>
   <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <!-- 1. Stream Player & Live Status -->
+    <!-- 1. Stream player & live status -->
     <div class="lg:col-span-2">
-      <div
-        class="aspect-video bg-slate-900 rounded-xl overflow-hidden shadow-[0_0_30px_rgba(145,70,255,0.25)] border border-purple-500/20"
-      >
-        <iframe id="twitch-player" allowfullscreen frameborder="0" class="w-full h-full"></iframe>
+      <div class="relative">
+        <div class="aspect-video bg-(--knk-surface) overflow-hidden border border-(--knk-line)">
+          <iframe id="twitch-player" allowfullscreen class="border-0 w-full h-full"></iframe>
+        </div>
+        <span
+          class="pointer-events-none absolute -top-px -left-px w-5 h-5 border-t-2 border-l-2 border-(--knk-amber)"
+        ></span>
+        <span
+          class="pointer-events-none absolute -top-px -right-px w-5 h-5 border-t-2 border-r-2 border-(--knk-amber)"
+        ></span>
+        <span
+          class="pointer-events-none absolute -bottom-px -left-px w-5 h-5 border-b-2 border-l-2 border-(--knk-amber)"
+        ></span>
+        <span
+          class="pointer-events-none absolute -bottom-px -right-px w-5 h-5 border-b-2 border-r-2 border-(--knk-amber)"
+        ></span>
       </div>
 
-      <div class="mt-4 flex items-center space-x-4">
+      <div class="mt-4 flex flex-wrap items-center gap-4 pb-6 border-b border-(--knk-line)">
         <div
-          class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-600/10 border border-red-500/30 text-red-400 text-xs font-semibold"
+          class="inline-flex items-center gap-2 px-3 py-1 bg-(--knk-live)/10 border bordeborder-(--knk-live)/40-[var(--knk-live)] text-sm font-medium"
         >
-          <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
-          EN VIVO
+          <span class="w-1.5 h-1.5 rounded-full bg-(--knk-live) animate-pulse"></span>
+          En vivo
         </div>
-        <div class="text-sm text-slate-500">Último stream: --</div>
+        <div class="text-sm text-(--knk-text-muted)">
+          Último stream: <span class="text-(--knk-text)">--</span>
+        </div>
       </div>
     </div>
 
-    <!-- 2. Chat: Positioned directly under stream on mobile, right column on desktop -->
+    <!-- 2. Chat -->
     <aside class="lg:col-start-3 lg:row-start-1 lg:row-span-2">
-      <h3 class="text-lg font-medium mb-3">Chat en vivo</h3>
       <div
-        class="h-[450px] lg:h-[calc(100%-2.25rem)] min-h-[500px] rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm bg-slate-900"
+        class="h-112.5 lg:h-[calc(100%-1.5rem)] min-h-125 border border-(--knk-line) bg-(--knk-surface) flex flex-col"
       >
-        <iframe id="twitch-chat" class="w-full h-full" frameborder="0" scrolling="no"></iframe>
+        <div
+          class="flex items-center justify-between px-4 py-2.5 border-b border-(--knk-line) bg-(--knk-surface-2)"
+        >
+          <span class="font-(--font-display) text-sm">Chat en vivo</span>
+          <span class="text-xs text-(--knk-text-muted)">Twitch</span>
+        </div>
+        <iframe id="twitch-chat" class="flex-1 w-full border-0"></iframe>
       </div>
     </aside>
 
-    <!-- 3. YouTube & Posts -->
+    <!-- 3. YouTube & posts -->
     <div class="lg:col-span-2 space-y-8">
-      <section>
-        <h2 class="text-xl font-semibold mb-2">Último video de YouTube</h2>
-        <div class="bg-slate-100 dark:bg-slate-800 p-4 rounded-md">(Feed de YouTube aquí)</div>
+      <section class="border border-(--knk-line) bg-(--knk-surface)">
+        <div class="px-4 py-2.5 border-b border-(--knk-line) bg-(--knk-surface-2)">
+          <span class="font-(--font-display) text-sm">Último video</span>
+        </div>
+        <div class="p-6 text-sm text-(--knk-text-muted)">Feed de YouTube aquí</div>
       </section>
 
       <section>
-        <h2 class="text-xl font-semibold mb-2">Últimas publicaciones</h2>
-        <ul class="space-y-4">
+        <h2 class="text-xl font-semibold mb-4">Publicaciones</h2>
+        <ul class="border-t border-(--knk-line) divide-y">
           {
             latestPosts.length === 0 ? (
-              <li class="text-sm text-slate-500">No hay publicaciones todavía.</li>
+              <li class="py-6 text-sm text-(--knk-text-muted)">No hay publicaciones todavía.</li>
             ) : (
               latestPosts.map((post) => (
-                <li class="p-4 bg-white dark:bg-slate-900 rounded-md shadow-sm">
-                  <a href={`/posts/${post.id}`} class="block">
-                    <h3 class="font-semibold text-lg">{post.title}</h3>
-                    <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">{post.excerpt}</p>
-                    <time class="text-xs text-slate-400 mt-2 block">{new Date(post.created_at).toLocaleString()}</time>
+                <li>
+                  <a
+                    href={`/posts/${post.id}`}
+                    class="group flex gap-4 py-5 pl-4 -ml-4 border-l-2 border-transparent hover:border-(--knk-amber) transition-colors"
+                  >
+                    <div class="flex-1 min-w-0">
+                      <h3 class="font-(--font-display) text-lg group-hover:text-(--knk-amber) transition-colors">
+                        {post.title}
+                      </h3>
+                      <p class="text-sm text-(--knk-text-muted) mt-1 line-clamp-2">{post.excerpt}</p>
+                    </div>
+                    <time class="shrink-0 text-xs text-(--knk-text-muted) pt-1 tabular-nums">
+                      {new Date(post.created_at).toLocaleDateString("es-ES", { day: "2-digit", month: "short" })}
+                    </time>
                   </a>
                 </li>
               ))
