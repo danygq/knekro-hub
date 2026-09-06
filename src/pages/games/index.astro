@@ -3,15 +3,11 @@ import Layout from "../../layouts/Layout.astro";
 import { supabase } from "../../lib/supabase";
 import { GameStatus } from "../../types";
 
-
 // Fetch all game statuses, ordered by id (or name)
-const { data: statuses, error } = await supabase
-  .from('game_status')
-  .select('*')
-  .order('id', { ascending: true });
+const { data: statuses, error } = await supabase.from("game_status").select("*").order("id", { ascending: true });
 
 if (error) {
-  console.error('Error fetching statuses:', error);
+  console.error("Error fetching statuses:", error);
 }
 // If no data, use an empty array to avoid breaking the render
 const gameStatuses = (statuses as GameStatus[]) || [];
@@ -27,14 +23,13 @@ const gameStatuses = (statuses as GameStatus[]) || [];
       <button class="px-3 py-1 rounded-md bg-slate-100 dark:bg-slate-800">Todas</button>
 
       <!-- Dynamic status buttons -->
-      {gameStatuses.map((status) => (
-        <button
-          key={status.id}
-          class="px-3 py-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700"
-        >
-          {status.name}
-        </button>
-      ))}
+      {
+        gameStatuses.map((status) => (
+          <button key={status.id} class="px-3 py-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700">
+            {status.name}
+          </button>
+        ))
+      }
     </div>
   </div>
 

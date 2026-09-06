@@ -1,30 +1,30 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import {supabase} from "../lib/supabase";
+import { supabase } from "../lib/supabase";
 
-const {data: posts, error} = await supabase
-  .from('posts')
-  .select('id,title,excerpt,created_at')
-  .order('created_at', {ascending: false})
+const { data: posts, error } = await supabase
+  .from("posts")
+  .select("id,title,excerpt,created_at")
+  .order("created_at", { ascending: false })
   .limit(10);
 
 const latestPosts = posts ?? [];
 ---
+
 <Layout>
   <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <!-- 1. Stream Player & Live Status -->
     <div class="lg:col-span-2">
-      <div class="aspect-video bg-slate-900 rounded-xl overflow-hidden shadow-[0_0_30px_rgba(145,70,255,0.25)] border border-purple-500/20">
-        <iframe
-          id="twitch-player"
-          allowfullscreen
-          frameborder="0"
-          class="w-full h-full"
-        ></iframe>
+      <div
+        class="aspect-video bg-slate-900 rounded-xl overflow-hidden shadow-[0_0_30px_rgba(145,70,255,0.25)] border border-purple-500/20"
+      >
+        <iframe id="twitch-player" allowfullscreen frameborder="0" class="w-full h-full"></iframe>
       </div>
 
       <div class="mt-4 flex items-center space-x-4">
-        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-600/10 border border-red-500/30 text-red-400 text-xs font-semibold">
+        <div
+          class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-600/10 border border-red-500/30 text-red-400 text-xs font-semibold"
+        >
           <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
           EN VIVO
         </div>
@@ -35,13 +35,10 @@ const latestPosts = posts ?? [];
     <!-- 2. Chat: Positioned directly under stream on mobile, right column on desktop -->
     <aside class="lg:col-start-3 lg:row-start-1 lg:row-span-2">
       <h3 class="text-lg font-medium mb-3">Chat en vivo</h3>
-      <div class="h-[450px] lg:h-[calc(100%-2.25rem)] min-h-[500px] rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm bg-slate-900">
-        <iframe
-          id="twitch-chat"
-          class="w-full h-full"
-          frameborder="0"
-          scrolling="no"
-        ></iframe>
+      <div
+        class="h-[450px] lg:h-[calc(100%-2.25rem)] min-h-[500px] rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm bg-slate-900"
+      >
+        <iframe id="twitch-chat" class="w-full h-full" frameborder="0" scrolling="no"></iframe>
       </div>
     </aside>
 
@@ -55,19 +52,21 @@ const latestPosts = posts ?? [];
       <section>
         <h2 class="text-xl font-semibold mb-2">Últimas publicaciones</h2>
         <ul class="space-y-4">
-          {latestPosts.length === 0 ? (
-            <li class="text-sm text-slate-500">No hay publicaciones todavía.</li>
-          ) : (
-            latestPosts.map(post => (
-              <li class="p-4 bg-white dark:bg-slate-900 rounded-md shadow-sm">
-                <a href={`/posts/${post.id}`} class="block">
-                  <h3 class="font-semibold text-lg">{post.title}</h3>
-                  <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">{post.excerpt}</p>
-                  <time class="text-xs text-slate-400 mt-2 block">{new Date(post.created_at).toLocaleString()}</time>
-                </a>
-              </li>
-            ))
-          )}
+          {
+            latestPosts.length === 0 ? (
+              <li class="text-sm text-slate-500">No hay publicaciones todavía.</li>
+            ) : (
+              latestPosts.map((post) => (
+                <li class="p-4 bg-white dark:bg-slate-900 rounded-md shadow-sm">
+                  <a href={`/posts/${post.id}`} class="block">
+                    <h3 class="font-semibold text-lg">{post.title}</h3>
+                    <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">{post.excerpt}</p>
+                    <time class="text-xs text-slate-400 mt-2 block">{new Date(post.created_at).toLocaleString()}</time>
+                  </a>
+                </li>
+              ))
+            )
+          }
         </ul>
       </section>
     </div>
@@ -77,12 +76,12 @@ const latestPosts = posts ?? [];
     (function () {
       const hostname = window.location.hostname;
 
-      const playerIframe = document.getElementById('twitch-player') as HTMLIFrameElement;
+      const playerIframe = document.getElementById("twitch-player") as HTMLIFrameElement;
       if (playerIframe) {
         playerIframe.src = `https://player.twitch.tv/?channel=knekro&parent=${hostname}`;
       }
 
-      const chatIframe = document.getElementById('twitch-chat') as HTMLIFrameElement;
+      const chatIframe = document.getElementById("twitch-chat") as HTMLIFrameElement;
       if (chatIframe) {
         chatIframe.src = `https://www.twitch.tv/embed/knekro/chat?parent=${hostname}&darkpopout`;
       }
