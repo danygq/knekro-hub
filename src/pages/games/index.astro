@@ -3,6 +3,7 @@ import Layout from "../../layouts/Layout.astro";
 import { supabase } from "../../lib/supabase";
 import { GameStatus } from "../../types";
 
+
 // Fetch all game statuses, ordered by id (or name)
 const { data: statuses, error } = await supabase
   .from('game_status')
