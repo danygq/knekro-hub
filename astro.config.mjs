@@ -1,6 +1,6 @@
 import { defineConfig } from "astro/config";
 
 export default defineConfig({
-  output: "static",
+  output: "server",
   site: "https://knekro.vercel.app/",
 });

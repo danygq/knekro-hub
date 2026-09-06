@@ -1,0 +1,19 @@
+---
+import { supabase } from '../lib/supabase'
+
+async function login() {
+  await supabase.auth.signInWithOAuth({
+    provider: 'twitch',
+    options: {
+      redirectTo: `${window.location.origin}/auth/callback`
+    }
+  })
+}
+---
+
+<button
+  class="px-4 py-2 rounded-md bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium transition"
+  on:click={login}
+>
+  Iniciar sesión con Twitch
+</button>

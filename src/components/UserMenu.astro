@@ -1,0 +1,33 @@
+---
+import { supabase } from '../lib/supabase'
+import { onMount } from 'astro/jsx-runtime'
+
+const { data: { user } } = await supabase.auth.getUser()
+---
+
+{user && (
+<div class="flex items-center gap-3">
+  <!-- Avatar -->
+  <img
+    src={user.user_metadata.avatar_url}
+    alt="Avatar"
+    class="w-8 h-8 rounded-full border border-slate-700"
+  />
+
+  <!-- Nombre -->
+  <span class="text-sm font-medium">
+      {user.user_metadata.name || user.user_metadata.preferred_username}
+    </span>
+
+  <!-- Logout -->
+  <button
+    class="px-3 py-1 rounded-md bg-red-600 hover:bg-red-700 text-white text-xs"
+    on:click={async () => {
+      await supabase.auth.signOut()
+      window.location.reload()
+    }}
+  >
+    Logout
+  </button>
+</div>
+  )}

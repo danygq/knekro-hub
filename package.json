@@ -8,12 +8,14 @@
     "preview": "astro preview"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.115.0",
-    "astro": "^7.3.1"
+    "@astrojs/vercel": "11.0.10",
+    "@supabase/ssr": "0.12.6",
+    "@supabase/supabase-js": "2.115.0",
+    "astro": "7.3.1"
   },
   "devDependencies": {
-    "@types/node": "^26.4.1",
+    "@types/node": "26.4.1",
     "prettier": "3.9.6",
-    "typescript": "^7.0.2"
+    "typescript": "7.0.2"
   }
 }
