@@ -1,6 +1,6 @@
 {
   "name": "knekro-hub",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "private": true,
   "scripts": {
     "dev": "astro dev",
@@ -8,10 +8,12 @@
     "preview": "astro preview"
   },
   "dependencies": {
-    "astro": "^3.0.0",
-    "@supabase/supabase-js": "^2.0.0"
+    "@supabase/supabase-js": "^2.115.0",
+    "astro": "^7.3.1"
   },
   "devDependencies": {
-    "typescript": "^5.0.0"
+    "@types/node": "^26.4.1",
+    "prettier": "3.9.6",
+    "typescript": "^7.0.2"
   }
 }

@@ -1,10 +1,13 @@
 // TypeScript types used across the app
 // Keep interfaces small and focused; expand as you add features.
 
-export type GameStatus = 'ojeadita' | 'en_progreso' | 'completado' | 'volo_alto';
+export interface GameStatus {
+  id: number;
+  name: string;
+}
 
 export interface Category {
-  id: string; // provider/category id (e.g., Twitch category id or UUID)
+  id: number; // provider/category id (e.g., Twitch category id or UUID)
   name: string; // display name, e.g. "Just Chatting"
   game_id?: string; // optional reference to Game.id if this category maps to a known game
   url?: string; // optional link to provider/category page
@@ -12,7 +15,7 @@ export interface Category {
 }
 
 export interface StreamLog {
-  id: string; // UUID or provider ID
+  id: number; // UUID or provider ID
   title: string;
   started_at: string; // ISO timestamp
   ended_at?: string; // ISO timestamp, undefined if live
@@ -25,7 +28,7 @@ export interface StreamLog {
 }
 
 export interface Game {
-  id: string; // UUID or slug
+  id: number; // UUID or slug
   title: string;
   slug?: string; // friendly URL segment
   description?: string;
@@ -39,10 +42,10 @@ export interface Game {
 }
 
 export interface GotyItem {
-  id: string;
+  id: number;
   year: number;
   rank: number; // 1 = top
-  game_id: string; // reference to Game.id
+  game_id: number; // reference to Game.id
   votes?: number;
   notes?: string;
   tier?: string; // optional tier label used by interactive tier list
