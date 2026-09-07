@@ -17,8 +17,7 @@ export function parseStatusIds(raw: string): number[] {
  */
 export function matchesFilter(statusIds: number[], included: Set<number>, excluded: Set<number>): boolean {
   if (included.size > 0 && !statusIds.some((id) => included.has(id))) return false;
-  if (excluded.size > 0 && statusIds.some((id) => excluded.has(id))) return false;
-  return true;
+  return !(excluded.size > 0 && statusIds.some((id) => excluded.has(id)));
 }
 
 /**

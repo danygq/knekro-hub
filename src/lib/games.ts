@@ -38,10 +38,7 @@ export function buildStatusCounts(games: GameListRow[]): Map<number, number> {
 }
 
 /** Merge status rows with per-status game counts for the filter panel. */
-export function buildGameStatuses(
-  statuses: GameStatus[],
-  games: GameListRow[],
-): GameStatusWithCount[] {
+export function buildGameStatuses(statuses: GameStatus[], games: GameListRow[]): GameStatusWithCount[] {
   const counts = buildStatusCounts(games);
   return statuses.map((status) => ({
     id: status.id,
@@ -58,15 +55,8 @@ export function buildGameStatuses(
 export async function loadGamesLibrary(
   client: SupabaseClient,
 ): Promise<{ statuses: GameStatus[]; games: GameListRow[] }> {
-  const [
-    { data: statusesData, error: statusesError },
-    { data: gamesData, error: gamesError },
-  ] = await Promise.all([
-    client
-      .from("game_status")
-      .select("id, name")
-      .order("id", { ascending: true })
-      .limit(24),
+  const [{ data: statusesData, error: statusesError }, { data: gamesData, error: gamesError }] = await Promise.all([
+    client.from("game_status").select("id, name").order("id", { ascending: true }).limit(24),
     client
       .from("games")
       .select("id, name, cover_url, status:game_status!game_status_id(id, name)")
