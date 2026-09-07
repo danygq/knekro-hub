@@ -3,25 +3,34 @@ import Layout from "../../layouts/Layout.astro";
 import { supabase } from "../../lib/supabase";
 import type { GameStatus } from "../../types";
 
-type GameStatusName = Pick<GameStatus, "name">;
+interface GameStatusRef {
+  id: number;
+  name: string;
+}
+
+type GameStatusRefOrList = GameStatusRef | GameStatusRef[] | null;
 
 interface GameListRow {
   id: number;
   name: string;
   cover_url: string | null;
-  status: GameStatusName | GameStatusName[] | null;
+  status: GameStatusRefOrList;
+}
+
+function statusRefs(status: GameListRow["status"]): GameStatusRef[] {
+  if (!status) return [];
+  return Array.isArray(status) ? status : [status];
 }
 
 function statusName(status: GameListRow["status"]): string {
-  if (!status) return "";
-  return Array.isArray(status) ? (status[0]?.name ?? "") : status.name;
+  return statusRefs(status)[0]?.name ?? "";
 }
 
 const [{ data: statuses, error: statusesError }, { data: games, error: gamesError }] = await Promise.all([
   supabase.from("game_status").select("id, name").order("id", { ascending: true }).limit(24),
   supabase
     .from("games")
-    .select("id, name, cover_url, status:game_status!game_status_id(name)")
+    .select("id, name, cover_url, status:game_status!game_status_id(id, name)")
     .order("id", { ascending: true })
     .limit(48),
 ]);
@@ -34,88 +43,443 @@ if (gamesError) {
   console.error("Error fetching games:", gamesError);
 }
 
-const gameStatuses = (statuses as GameStatus[] | null) ?? [];
 const gamesList = (games as GameListRow[] | null) ?? [];
+const statusRows = (statuses as GameStatus[] | null) ?? [];
+
+// Count how many games belong to each status so the panel can show useful numbers.
+const statusCounts = new Map<number, number>();
+for (const game of gamesList) {
+  const seen = new Set<number>();
+  for (const ref of statusRefs(game.status)) {
+    if (seen.has(ref.id)) continue;
+    seen.add(ref.id);
+    statusCounts.set(ref.id, (statusCounts.get(ref.id) ?? 0) + 1);
+  }
+}
+
+const gameStatuses = statusRows.map((status) => ({
+  id: status.id,
+  name: status.name,
+  count: statusCounts.get(status.id) ?? 0,
+}));
 ---
 
 <Layout>
-  <div class="mb-8">
-    <p class="knk-eyebrow mb-2">Biblioteca del canal</p>
-    <h1 class="font-(--font-display) text-3xl sm:text-4xl tracking-tight text-balance">Juegos</h1>
-    <p class="mt-2 text-sm text-(--knk-text-muted) max-w-lg leading-relaxed">
-      Todo lo que se ha jugado, se está jugando o está en la lista para el próximo stream.
-    </p>
-  </div>
+  <div class="mb-8 flex flex-wrap items-start justify-between gap-x-6 gap-y-4">
+    <div class="min-w-0">
+      <p class="knk-eyebrow mb-2">Biblioteca del canal</p>
+      <h1 class="font-(--font-display) text-3xl sm:text-4xl tracking-tight text-balance">Juegos</h1>
+      <p class="mt-2 text-sm text-(--knk-text-muted) max-w-lg leading-relaxed">
+        Todo lo que se ha jugado, ojeado, o volado alto.
+      </p>
+    </div>
 
-  <!-- Category tabs / filters -->
-  <div class="mb-8 flex flex-wrap items-center gap-2 pb-6 border-b border-(--knk-line)">
     <button
-      class="knk-notch-sm px-3.5 py-1.5 text-sm font-medium bg-(--knk-amber) text-[#181000] transition-colors"
+      type="button"
+      id="toggle-filters"
+      aria-expanded="true"
+      aria-controls="filter-panel"
+      class="knk-notch inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium shrink-0
+        bg-(--knk-surface) text-(--knk-text) border border-(--knk-line)
+        hover:text-(--knk-amber) hover:border-(--knk-line-strong) transition-colors"
     >
-      Todas
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true" class="text-(--knk-text-muted)">
+        <rect x="4" y="3" width="16" height="18" rx="2" stroke="currentColor" stroke-width="1.5"></rect>
+        <path d="M6.5 8.5h11M6.5 12h8M6.5 15.5h11" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"
+        ></path>
+      </svg>
+      <span>Filtros</span>
+      <span
+        id="filter-count"
+        hidden
+        class="min-w-4.5 h-4.5 px-1 inline-flex items-center justify-center rounded-full bg-(--knk-amber) text-[#181000] text-xs font-semibold tabular-nums"
+      ></span>
     </button>
-
-    {
-      gameStatuses.map((status) => (
-        <button class="knk-notch-sm px-3.5 py-1.5 text-sm font-medium bg-(--knk-surface) text-(--knk-text-muted) border border-(--knk-line) hover:text-(--knk-text) hover:border-(--knk-line-strong) transition-colors">
-          {status.name}
-        </button>
-      ))
-    }
   </div>
 
-  <!-- Games grid -->
-  {
-    gamesList.length === 0 ? (
-      <p class="text-sm text-(--knk-text-muted)">Todavía no hay juegos en la biblioteca.</p>
-    ) : (
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
-        {gamesList.map((game) => {
-          const status = statusName(game.status);
-          return (
-            <article class="group border border-(--knk-line) bg-(--knk-surface) hover:border-(--knk-line-strong) transition-colors">
-              <div class="relative aspect-2/3 bg-(--knk-surface-2) knk-grid-bg overflow-hidden">
-                {game.cover_url ? (
-                  <img
-                    src={game.cover_url}
-                    alt=""
-                    width="360"
-                    height="540"
-                    loading="lazy"
-                    decoding="async"
-                    class="absolute inset-0 h-full w-full object-cover"
-                  />
-                ) : (
-                  <div class="absolute inset-0 flex items-center justify-center">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" class="text-(--knk-text-faint)">
-                      <path
-                        d="M7 7h10a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-1l-1.5-2h-5L8 17H7a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Z"
-                        stroke="currentColor"
-                        stroke-width="1.5"
-                      ></path>
-                      <path
-                        d="M9.5 11.5v2M8.5 12.5h2M16 11h.01M14.5 12.5h.01"
-                        stroke="currentColor"
-                        stroke-width="1.5"
-                      ></path>
-                    </svg>
-                  </div>
-                )}
-                {status && (
-                  <span class="absolute top-3 right-3 z-10 knk-notch-sm px-2 py-0.5 text-xs font-medium bg-(--knk-bg)/80 text-(--knk-text-muted) border border-(--knk-line)">
-                    {status}
-                  </span>
-                )}
-              </div>
-              <div class="p-4">
-                <h3 class="font-(--font-display) text-base tracking-tight group-hover:text-(--knk-amber) transition-colors">
-                  {game.name}
-                </h3>
-              </div>
-            </article>
-          );
-        })}
+  <div id="games-layout" class="games-layout">
+    <div id="filter-backdrop" class="knk-filter-backdrop" aria-hidden="true"></div>
+
+    <aside id="filter-panel" class="knk-filter-panel" aria-label="Filtros por estado">
+      <div class="flex items-center justify-between px-4 py-3 border-b border-(--knk-line) bg-(--knk-surface-2)">
+        <span class="font-(--font-display) text-sm tracking-tight">Filtros</span>
+        <button
+          type="button"
+          id="close-filters"
+          class="inline-flex items-center justify-center w-7 h-7 text-(--knk-text-muted) hover:text-(--knk-text) transition-colors"
+          aria-label="Cerrar panel de filtros"
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+          </svg>
+        </button>
       </div>
-    )
-  }
+
+      <div class="p-4 space-y-6">
+        <button
+          type="button"
+          id="reset-filters"
+          aria-pressed="true"
+          class="knk-filter-reset knk-notch-sm inline-flex items-center justify-center gap-2 w-full px-3 py-2 text-sm font-medium
+            bg-(--knk-surface) text-(--knk-text-muted) border border-(--knk-line)
+            hover:text-(--knk-text) hover:border-(--knk-line-strong) transition-colors"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.75"></circle>
+            <circle cx="12" cy="12" r="2.5" fill="currentColor"></circle>
+          </svg>
+          Todas
+        </button>
+
+        <div>
+          <h2 class="text-xs font-medium uppercase tracking-wide text-(--knk-text-faint) mb-3">Estado</h2>
+          <ul class="divide-y divide-(--knk-line)">
+            {
+              gameStatuses.map((status) => (
+                <li class="flex items-center justify-between gap-3 py-2">
+                  <button
+                    type="button"
+                    title={`Excluir ${status.name} de la selección`}
+                    data-status-id={status.id}
+                    data-status-mode="minus"
+                    aria-label={`Excluir ${status.name} de la selección`}
+                    aria-pressed="false"
+                    class="knk-filter-minus knk-notch-sm w-7 h-7 inline-flex items-center justify-center shrink-0 text-lg leading-none
+                        bg-(--knk-surface) text-(--knk-text-muted) border border-(--knk-line)
+                        hover:text-(--knk-red) hover:border-(--knk-red) transition-colors"
+                  >
+                    −
+                  </button>
+                  <span class="flex-1 min-w-0 text-sm font-medium text-(--knk-text-muted)">{status.name}</span>
+                  <span class="w-5 text-right text-xs text-(--knk-text-faint) tabular-nums">{status.count}</span>
+                  <button
+                    type="button"
+                    title={`Incluir ${status.name} en la selección`}
+                    data-status-id={status.id}
+                    data-status-mode="plus"
+                    aria-label={`Incluir ${status.name} en la selección`}
+                    aria-pressed="false"
+                    class="knk-filter-plus knk-notch-sm w-7 h-7 inline-flex items-center justify-center shrink-0 text-lg leading-none
+                        bg-(--knk-surface) text-(--knk-text-muted) border border-(--knk-line)
+                        hover:text-(--knk-amber) hover:border-(--knk-amber) transition-colors"
+                  >
+                    +
+                  </button>
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+      </div>
+    </aside>
+
+    <section id="games-results" class="min-w-0">
+      {
+        gamesList.length === 0 ? (
+          <p class="text-sm text-(--knk-text-muted)">Todavía no hay juegos en la biblioteca.</p>
+        ) : (
+          <>
+            <p id="result-count" class="text-xs text-(--knk-text-faint) mb-4" aria-live="polite">
+              Mostrando&nbsp;
+              <span id="visible-count" class="font-medium text-(--knk-text-muted) tabular-nums">
+                {gamesList.length}
+              </span>
+              &nbsp;de&nbsp;
+              <span id="total-count" class="font-medium text-(--knk-text-muted) tabular-nums">
+                {gamesList.length}
+              </span>
+              &nbsp;juegos
+            </p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+              {gamesList.map((game) => {
+                const status = statusName(game.status);
+                const statusIds = statusRefs(game.status)
+                  .map((ref) => String(ref.id))
+                  .join(" ");
+                return (
+                  <article
+                    class="knk-game-card group border border-(--knk-line) bg-(--knk-surface) hover:border-(--knk-line-strong) transition-colors"
+                    data-status-ids={statusIds}
+                  >
+                    <div class="relative aspect-2/3 bg-(--knk-surface-2) knk-grid-bg overflow-hidden">
+                      {game.cover_url ? (
+                        <img
+                          src={game.cover_url}
+                          alt=""
+                          width="360"
+                          height="540"
+                          loading="lazy"
+                          decoding="async"
+                          class="absolute inset-0 h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div class="absolute inset-0 flex items-center justify-center">
+                          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" class="text-(--knk-text-faint)">
+                            <path
+                              d="M7 7h10a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-1l-1.5-2h-5L8 17H7a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Z"
+                              stroke="currentColor"
+                              stroke-width="1.5"
+                            />
+                            <path
+                              d="M9.5 11.5v2M8.5 12.5h2M16 11h.01M14.5 12.5h.01"
+                              stroke="currentColor"
+                              stroke-width="1.5"
+                            />
+                          </svg>
+                        </div>
+                      )}
+                      {status && (
+                        <span class="absolute top-3 right-3 z-10 knk-notch-sm px-2 py-0.5 text-xs font-medium bg-(--knk-bg)/80 text-(--knk-text-muted) border border-(--knk-line)">
+                          {status}
+                        </span>
+                      )}
+                    </div>
+                    <div class="p-4">
+                      <h3 class="font-(--font-display) text-base tracking-tight group-hover:text-(--knk-amber) transition-colors">
+                        {game.name}
+                      </h3>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+
+            <p id="filter-no-results" hidden class="text-sm text-(--knk-text-muted) mt-4">
+              No hay juegos que coincidan con los filtros seleccionados.
+            </p>
+          </>
+        )
+      }
+    </section>
+  </div>
 </Layout>
+
+<style is:global>
+  /* Responsive two-column layout: stacked below lg, sidebar + grid from lg up */
+  .games-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  /* Below lg the filter panel becomes an off-canvas drawer */
+  .knk-filter-panel {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: min(16rem, 82vw);
+    z-index: 70;
+    background: var(--knk-surface);
+    border-right: 1px solid var(--knk-line);
+    overflow-y: auto;
+    transition:
+      transform 250ms ease,
+      visibility 250ms ease;
+  }
+  .knk-filter-panel:not(.open) {
+    transform: translateX(-100%);
+    visibility: hidden;
+    pointer-events: none;
+  }
+  .knk-filter-panel.open {
+    transform: translateX(0);
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  .knk-filter-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 69;
+    background: color-mix(in srgb, var(--knk-bg) 60%, #000);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+      opacity 200ms ease,
+      visibility 200ms ease;
+  }
+  .knk-filter-backdrop.open {
+    opacity: 0.65;
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  @media (min-width: 1024px) {
+    .games-layout {
+      grid-template-columns: 16rem 1fr;
+      column-gap: 2.5rem;
+      align-items: start;
+    }
+    .games-layout.filters-off {
+      grid-template-columns: 1fr;
+    }
+    .knk-filter-panel,
+    .knk-filter-panel:not(.open) {
+      position: static;
+      width: auto;
+      z-index: auto;
+      background: transparent;
+      border: 1px solid var(--knk-line);
+      transform: none;
+      visibility: visible;
+      pointer-events: auto;
+      transition: none;
+    }
+    .knk-filter-panel.closed {
+      display: none;
+    }
+    .knk-filter-backdrop {
+      display: none;
+    }
+  }
+
+  /* Active state for the filter controls.
+     !important keeps these overrides on top of the utility classes already
+     present on the buttons (Tailwind v4 cascade layers put utilities last). */
+  .knk-filter-reset.active,
+  .knk-filter-plus.active {
+    background: var(--knk-amber) !important;
+    color: #181000 !important;
+    border-color: var(--knk-amber) !important;
+  }
+  .knk-filter-minus.active {
+    background: var(--knk-red) !important;
+    color: #fff !important;
+    border-color: var(--knk-red) !important;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .knk-filter-panel,
+    .knk-filter-backdrop {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  (function () {
+    const panel = document.getElementById("filter-panel");
+    const backdrop = document.getElementById("filter-backdrop");
+    const wrapper = document.getElementById("games-layout");
+    const toggle = document.getElementById("toggle-filters");
+    const closeBtn = document.getElementById("close-filters");
+    const resetBtn = document.getElementById("reset-filters");
+    const visibleCount = document.getElementById("visible-count");
+    const badge = document.getElementById("filter-count");
+    const noResults = document.getElementById("filter-no-results");
+
+    if (!panel || !wrapper) return;
+
+    const isDesktop = () =>
+      window.matchMedia ? window.matchMedia("(min-width: 1024px)").matches : window.innerWidth >= 1024;
+
+    const cards = Array.from(document.querySelectorAll(".knk-game-card"));
+    const included = new Set();
+    const excluded = new Set();
+    const state = { open: isDesktop() };
+
+    function syncPanel() {
+      const desktop = isDesktop();
+      panel.classList.toggle("open", state.open && !desktop);
+      panel.classList.toggle("closed", !state.open && desktop);
+      backdrop?.classList.toggle("open", state.open && !desktop);
+      wrapper.classList.toggle("filters-off", !state.open);
+      toggle?.setAttribute("aria-expanded", state.open ? "true" : "false");
+    }
+
+    function refresh() {
+      if (resetBtn) {
+        const active = included.size === 0 && excluded.size === 0;
+        resetBtn.classList.toggle("active", active);
+        resetBtn.setAttribute("aria-pressed", active ? "true" : "false");
+      }
+
+      document.querySelectorAll("[data-status-mode]").forEach((btn) => {
+        const id = Number(btn.dataset.statusId);
+        const plus = btn.dataset.statusMode === "plus";
+        const active = plus ? included.has(id) : excluded.has(id);
+        btn.classList.toggle("active", active);
+        btn.setAttribute("aria-pressed", active ? "true" : "false");
+      });
+
+      let visible = 0;
+      cards.forEach((card) => {
+        const ids = (card.dataset.statusIds || "")
+          .split(" ")
+          .map(Number)
+          .filter((n) => !Number.isNaN(n));
+        let show = true;
+        if (included.size > 0) show = ids.some((id) => included.has(id));
+        if (show && excluded.size > 0) show = !ids.some((id) => excluded.has(id));
+        card.hidden = !show;
+        if (show) visible += 1;
+      });
+
+      if (visibleCount) visibleCount.textContent = String(visible);
+      if (noResults) noResults.hidden = visible > 0;
+      if (badge) {
+        const count = included.size + excluded.size;
+        badge.hidden = count === 0;
+        badge.textContent = String(count);
+      }
+    }
+
+    document.querySelectorAll("[data-status-mode]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = Number(btn.dataset.statusId);
+        const plus = btn.dataset.statusMode === "plus";
+        if (plus) {
+          if (included.has(id)) {
+            included.delete(id);
+          } else {
+            included.add(id);
+            excluded.delete(id);
+          }
+        } else {
+          if (excluded.has(id)) {
+            excluded.delete(id);
+          } else {
+            excluded.add(id);
+            included.delete(id);
+          }
+        }
+        refresh();
+      });
+    });
+
+    toggle?.addEventListener("click", () => {
+      state.open = !state.open;
+      syncPanel();
+    });
+    closeBtn?.addEventListener("click", () => {
+      state.open = false;
+      syncPanel();
+    });
+    resetBtn?.addEventListener("click", () => {
+      included.clear();
+      excluded.clear();
+      refresh();
+    });
+    backdrop?.addEventListener("click", () => {
+      state.open = false;
+      syncPanel();
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && state.open && !isDesktop()) {
+        state.open = false;
+        syncPanel();
+      }
+    });
+
+    let resizeTimer;
+    window.addEventListener("resize", () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(syncPanel, 100);
+    });
+
+    refresh();
+    syncPanel();
+  })();
+</script>
