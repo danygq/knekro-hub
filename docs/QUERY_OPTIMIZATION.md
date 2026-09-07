@@ -1,7 +1,7 @@
 ---
 module: query-optimization
 owner_area: backend
-last_verified_against_commit: 8473325
+last_verified_against_commit: 56bdfc6
 depends_on: [data-layer]
 ---
 
@@ -12,7 +12,8 @@ Hard requirement for this repo: every read is column-scoped, join-aware, and ind
 
 ## Rules (non-negotiable)
 
-1. **Never `select("*")`.** Name exactly the columns the view uses. Fix `games/index.astro`.
+1. **Never `select("*")`.** Name exactly the columns the view uses. The `/games` loader in `lib/games.ts` is the
+   reference implementation — match its shape.
 2. **Join via PostgREST embedding, never N+1.** One request pulls related rows through FKs.
 3. **Every filter/order/join column must be indexed** (FK columns are *not* auto-indexed in Postgres — add them).
 4. **Bound every list** with `.limit()` or `.range()`. No unbounded reads.
@@ -37,6 +38,9 @@ supabase.from("games")
   .select("id, title, status:game_status!inner(name)")
   .eq("status.name", "En progreso");
 ```
+
+When PostgREST needs a nudge (multiple FK paths, or to be explicit), name the FK in the embed — `/games` does this:
+`status:game_status!game_status_id(id, name)`. Same result, no guessing.
 
 Anti-pattern (N+1): fetching games, then a `game_status` query per row. Never.
 

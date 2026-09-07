@@ -1,7 +1,7 @@
 ---
 module: architecture
 owner_area: repo-wide
-last_verified_against_commit: 8473325
+last_verified_against_commit: 56bdfc6
 depends_on: [AGENTS.md, docs/INDEX.md]
 ---
 
@@ -17,7 +17,7 @@ flowchart TD
   V --> L[Layout.astro]
   L -->|getUser via ssr cookie client| SB[(Supabase)]
   V --> Pi[index.astro] -->|select posts| SB
-  V --> Pg[games/index.astro] -->|select game_status| SB
+  V --> Pg[games/index.astro] -->|loadGamesLibrary: game_status + games| SB
   V --> Pgo[goty.astro - static]
   U -->|Login| AS[POST /api/auth/signin] -->|signInWithOAuth twitch| SB
   SB -->|redirect w/ code| CB[GET /auth/callback] -->|exchangeCodeForSession| SB
@@ -31,13 +31,15 @@ flowchart TD
 |---|---|---|---|
 | `layouts/Layout.astro` | Shell: head, nav, footer, session (`getUser`), auth UI switch | `@supabase/ssr`, `LoginButton`, `UserMenu`, `global.css` | all pages |
 | `pages/index.astro` | Home: Twitch player+chat embeds, posts feed | `lib/supabase`, Layout | — |
-| `pages/games/index.astro` | Games library: status filters (live), grid (placeholder) | `lib/supabase`, `types`, Layout | — |
+| `pages/games/index.astro` | Games library: DB-backed status filter panel + grid | `lib/supabase`, `lib/games`, `GameCard`, Layout | — |
 | `pages/goty.astro` | GOTY awards (static placeholder) | Layout | — |
 | `pages/api/auth/*` | `signin` (Twitch OAuth), `signout` | `@supabase/ssr` | LoginButton/UserMenu forms |
 | `pages/auth/callback.ts` | OAuth PKCE code→session exchange | `@supabase/ssr` | Supabase redirect |
 | `lib/supabase.ts` | Browser Supabase client (anon key) + safe placeholder fallback | `@supabase/supabase-js` | `index`, `games` |
-| `types/*` | Domain types, one file per area (`games.ts`, `categories.ts`, `streams.ts`, `goty.ts`) + barrel `index.ts` | — | `games` (others aspirational) |
-| `components/*` | `LoginButton`, `UserMenu`, `TwitchLogo` | — | Layout |
+| `lib/games.ts` | Server-side `/games` loader: statuses + games queries (column-scoped, embedded join, bounded) | `types`, `@supabase/supabase-js` | `pages/games/index.astro` |
+| `lib/client/games-filter.ts` | Browser controller for the `/games` filter drawer (include/exclude, live count) | — | `pages/games/index.astro` (`<script>`) |
+| `types/*` | Domain types, one file per area (`games.ts`, `categories.ts`, `streams.ts`, `goty.ts`) + barrel `index.ts` | — | `games` via `lib/games.ts` (rest aspirational) |
+| `components/*` | `LoginButton`, `UserMenu`, `TwitchLogo`, `GameCard` | — | Layout; `GameCard` by games grid |
 | `styles/global.css` | `--knk-*` design tokens, `.knk-notch` shapes | Tailwind v4 | Layout |
 
 ## Key decisions (inferred)
@@ -45,6 +47,7 @@ flowchart TD
 - **Supabase for data + Twitch OAuth**: single backend; Twitch is the only login provider (audience = Twitch community). See `docs/adr/0002-twitch-only-auth.md`.
 - **`@supabase/ssr` cookie clients** created per request in Layout + each API route (not shared) — correct for SSR, but duplicated (see risks).
 - **Placeholder-fallback client**: `lib/supabase.ts` and server clients fall back to a valid dummy URL/key so pages render while env vars provision. Intentional.
+- **`/games` reads live data**: `lib/games.ts` queries `game_status` + `games` (PostgREST embedding `game_status!game_status_id`, bounded); `games` schema still unconfirmed.
 - **Tailwind v4 token-only theming**: no config file; all theme lives in `global.css` as `--knk-*` vars.
 
 ## Risks / tech debt (by blast radius)
@@ -52,7 +55,7 @@ flowchart TD
 |---|---|---|
 | 1 | `createServerClient` boilerplate duplicated in `Layout` + 3 API routes | Drift, inconsistent cookie handling; extract one helper |
 | 2 | Inconsistent keys: `lib/supabase.ts` uses `ANON`, server clients use `PUBLISHABLE` | Confusing; pick one convention |
-| 3 | `games/index.astro` uses `select("*")` + hardcoded card, not real data | Violates query rule; feature incomplete |
+| 3 | `/games` queries the unconfirmed `games` schema (`id, name, cover_url`, FK `game_status_id`); cards are not links (no `/games/[id]` route) | Breaks if schema drifts; feature incomplete |
 | 4 | `Layout.astro` places `<main>`/`<footer>` outside `</body></html>` | Invalid HTML structure; fix markup |
 | 5 | `posts` table queried but no TS type; `goty` unwired | Type safety gap; incomplete feature |
 | 6 | No tests, near-empty README | Low automated safety net |

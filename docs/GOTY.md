@@ -1,7 +1,7 @@
 ---
 module: goty
 owner_area: product
-last_verified_against_commit: 8473325
+last_verified_against_commit: 56bdfc6
 depends_on: [data-layer, query-optimization]
 ---
 
