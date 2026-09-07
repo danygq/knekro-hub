@@ -36,7 +36,7 @@ flowchart TD
 | `pages/api/auth/*` | `signin` (Twitch OAuth), `signout` | `@supabase/ssr` | LoginButton/UserMenu forms |
 | `pages/auth/callback.ts` | OAuth PKCE code→session exchange | `@supabase/ssr` | Supabase redirect |
 | `lib/supabase.ts` | Browser Supabase client (anon key) + safe placeholder fallback | `@supabase/supabase-js` | `index`, `games` |
-| `types/index.ts` | Domain interfaces (`Game`, `GameStatus`, `GotyItem`, `StreamLog`, `Category`) | — | `games` (others aspirational) |
+| `types/*` | Domain types, one file per area (`games.ts`, `categories.ts`, `streams.ts`, `goty.ts`) + barrel `index.ts` | — | `games` (others aspirational) |
 | `components/*` | `LoginButton`, `UserMenu`, `TwitchLogo` | — | Layout |
 | `styles/global.css` | `--knk-*` design tokens, `.knk-notch` shapes | Tailwind v4 | Layout |
 

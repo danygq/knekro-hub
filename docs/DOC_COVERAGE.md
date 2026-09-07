@@ -25,7 +25,7 @@ Cross-checked against source at commit `8473325`.
 ## Verified vs code
 - Tables `posts`, `game_status`: **verified** — appear in live queries.
 - Column lists for `posts`/`game_status`: verified from `.select()` args only; other columns may exist (unclear).
-- Tables `games`, `goty_items`, `stream_logs`, `categories`, `award_categories`: **inferred** from `types/index.ts` + product intent. Not confirmed against the Supabase schema — confirm before building on them.
+- Tables `games`, `goty_items`, `stream_logs`, `categories`, `award_categories`: **inferred** from `src/types/` + product intent. Not confirmed against the Supabase schema — confirm before building on them.
 - Suggested indexes: **inferred** from documented access patterns; validate with `EXPLAIN ANALYZE`.
 
 ## Could not verify (needs confirmation)

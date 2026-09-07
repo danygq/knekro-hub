@@ -3,30 +3,10 @@
 // `window`/`document` so it never touches the browser.
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { GameStatus } from "../types";
-
-// The `status` column arrives as either a single embedded row, an array of
-// embedded rows (a one-to-many join on game_status), or null.
-export interface GameStatusRef {
-  id: number;
-  name: string;
-}
-
-export type GameStatusRefOrList = GameStatusRef | GameStatusRef[] | null;
-
-export interface GameListRow {
-  id: number;
-  name: string;
-  cover_url: string | null;
-  status: GameStatusRefOrList;
-}
-
-export interface GameStatusWithCount extends GameStatusRef {
-  count: number;
-}
+import type { GameListRow, GameStatus, GameStatusRefOrList, GameStatusWithCount } from "../types";
 
 /** Normalize an embedded-status value into an array of refs. */
-export function statusRefs(status: GameStatusRefOrList | undefined): GameStatusRef[] {
+export function statusRefs(status: GameStatusRefOrList | undefined): GameStatus[] {
   if (!status) return [];
   return Array.isArray(status) ? status : [status];
 }
