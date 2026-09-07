@@ -1,0 +1,54 @@
+---
+interface Props {
+  name: string;
+  coverUrl: string | null;
+  status: string;
+  statusIds: string;
+}
+
+const { name, coverUrl, status, statusIds } = Astro.props;
+---
+
+<article
+  class="knk-game-card group border border-(--knk-line) bg-(--knk-surface) hover:border-(--knk-line-strong) transition-colors"
+  data-status-ids={statusIds}
+>
+  <div class="relative aspect-2/3 bg-(--knk-surface-2) knk-grid-bg overflow-hidden">
+    {
+      coverUrl ? (
+        <img
+          src={coverUrl}
+          alt={name + " cover"}
+          width="360"
+          height="540"
+          loading="lazy"
+          decoding="async"
+          class="absolute inset-0 h-full w-full object-cover"
+        />
+      ) : (
+        <div class="absolute inset-0 flex items-center justify-center">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" class="text-(--knk-text-faint)">
+            <path
+              d="M7 7h10a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-1l-1.5-2h-5L8 17H7a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Z"
+              stroke="currentColor"
+              stroke-width="1.5"
+            />
+            <path d="M9.5 11.5v2M8.5 12.5h2M16 11h.01M14.5 12.5h.01" stroke="currentColor" stroke-width="1.5" />
+          </svg>
+        </div>
+      )
+    }
+    {
+      status && (
+        <span class="absolute top-3 right-3 z-10 knk-notch-sm px-2 py-0.5 text-xs font-medium bg-(--knk-bg)/80 text-(--knk-text-muted) border border-(--knk-line)">
+          {status}
+        </span>
+      )
+    }
+  </div>
+  <div class="p-4">
+    <h3 class="font-(--font-display) text-base tracking-tight group-hover:text-(--knk-amber) transition-colors">
+      {name}
+    </h3>
+  </div>
+</article>

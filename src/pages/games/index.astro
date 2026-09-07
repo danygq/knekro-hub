@@ -1,67 +1,11 @@
 ---
 import Layout from "../../layouts/Layout.astro";
+import GameCard from "../../components/GameCard.astro";
 import { supabase } from "../../lib/supabase";
-import type { GameStatus } from "../../types";
+import { loadGamesLibrary, buildGameStatuses, statusName, statusIdString } from "../../lib/games";
 
-interface GameStatusRef {
-  id: number;
-  name: string;
-}
-
-type GameStatusRefOrList = GameStatusRef | GameStatusRef[] | null;
-
-interface GameListRow {
-  id: number;
-  name: string;
-  cover_url: string | null;
-  status: GameStatusRefOrList;
-}
-
-function statusRefs(status: GameListRow["status"]): GameStatusRef[] {
-  if (!status) return [];
-  return Array.isArray(status) ? status : [status];
-}
-
-function statusName(status: GameListRow["status"]): string {
-  return statusRefs(status)[0]?.name ?? "";
-}
-
-const [{ data: statuses, error: statusesError }, { data: games, error: gamesError }] = await Promise.all([
-  supabase.from("game_status").select("id, name").order("id", { ascending: true }).limit(24),
-  supabase
-    .from("games")
-    .select("id, name, cover_url, status:game_status!game_status_id(id, name)")
-    .order("id", { ascending: true })
-    .limit(48),
-]);
-
-if (statusesError) {
-  console.error("Error fetching statuses:", statusesError);
-}
-
-if (gamesError) {
-  console.error("Error fetching games:", gamesError);
-}
-
-const gamesList = (games as GameListRow[] | null) ?? [];
-const statusRows = (statuses as GameStatus[] | null) ?? [];
-
-// Count how many games belong to each status so the panel can show useful numbers.
-const statusCounts = new Map<number, number>();
-for (const game of gamesList) {
-  const seen = new Set<number>();
-  for (const ref of statusRefs(game.status)) {
-    if (seen.has(ref.id)) continue;
-    seen.add(ref.id);
-    statusCounts.set(ref.id, (statusCounts.get(ref.id) ?? 0) + 1);
-  }
-}
-
-const gameStatuses = statusRows.map((status) => ({
-  id: status.id,
-  name: status.name,
-  count: statusCounts.get(status.id) ?? 0,
-}));
+const { statuses, games } = await loadGamesLibrary(supabase);
+const gameStatuses = buildGameStatuses(statuses, games);
 ---
 
 <Layout>
@@ -175,73 +119,27 @@ const gameStatuses = statusRows.map((status) => ({
 
     <section id="games-results" class="min-w-0">
       {
-        gamesList.length === 0 ? (
+        games.length === 0 ? (
           <p class="text-sm text-(--knk-text-muted)">Todavía no hay juegos en la biblioteca.</p>
         ) : (
           <>
             <p id="result-count" class="text-xs text-(--knk-text-faint) mb-4" aria-live="polite">
               Mostrando&nbsp;
               <span id="visible-count" class="font-medium text-(--knk-text-muted) tabular-nums">
-                {gamesList.length}
+                {games.length}
               </span>
               &nbsp;de&nbsp;
               <span id="total-count" class="font-medium text-(--knk-text-muted) tabular-nums">
-                {gamesList.length}
+                {games.length}
               </span>
               &nbsp;juegos
             </p>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
-              {gamesList.map((game) => {
+              {games.map((game) => {
                 const status = statusName(game.status);
-                const statusIds = statusRefs(game.status)
-                  .map((ref) => String(ref.id))
-                  .join(" ");
-                return (
-                  <article
-                    class="knk-game-card group border border-(--knk-line) bg-(--knk-surface) hover:border-(--knk-line-strong) transition-colors"
-                    data-status-ids={statusIds}
-                  >
-                    <div class="relative aspect-2/3 bg-(--knk-surface-2) knk-grid-bg overflow-hidden">
-                      {game.cover_url ? (
-                        <img
-                          src={game.cover_url}
-                          alt=""
-                          width="360"
-                          height="540"
-                          loading="lazy"
-                          decoding="async"
-                          class="absolute inset-0 h-full w-full object-cover"
-                        />
-                      ) : (
-                        <div class="absolute inset-0 flex items-center justify-center">
-                          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" class="text-(--knk-text-faint)">
-                            <path
-                              d="M7 7h10a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-1l-1.5-2h-5L8 17H7a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Z"
-                              stroke="currentColor"
-                              stroke-width="1.5"
-                            />
-                            <path
-                              d="M9.5 11.5v2M8.5 12.5h2M16 11h.01M14.5 12.5h.01"
-                              stroke="currentColor"
-                              stroke-width="1.5"
-                            />
-                          </svg>
-                        </div>
-                      )}
-                      {status && (
-                        <span class="absolute top-3 right-3 z-10 knk-notch-sm px-2 py-0.5 text-xs font-medium bg-(--knk-bg)/80 text-(--knk-text-muted) border border-(--knk-line)">
-                          {status}
-                        </span>
-                      )}
-                    </div>
-                    <div class="p-4">
-                      <h3 class="font-(--font-display) text-base tracking-tight group-hover:text-(--knk-amber) transition-colors">
-                        {game.name}
-                      </h3>
-                    </div>
-                  </article>
-                );
+                const statusIds = statusIdString(game.status);
+                return <GameCard name={game.name} coverUrl={game.cover_url} status={status} statusIds={statusIds} />;
               })}
             </div>
 
@@ -359,127 +257,7 @@ const gameStatuses = statusRows.map((status) => ({
 </style>
 
 <script>
-  (function () {
-    const panel = document.getElementById("filter-panel");
-    const backdrop = document.getElementById("filter-backdrop");
-    const wrapper = document.getElementById("games-layout");
-    const toggle = document.getElementById("toggle-filters");
-    const closeBtn = document.getElementById("close-filters");
-    const resetBtn = document.getElementById("reset-filters");
-    const visibleCount = document.getElementById("visible-count");
-    const badge = document.getElementById("filter-count");
-    const noResults = document.getElementById("filter-no-results");
+  import { initGamesFilter } from "../../lib/client/games-filter";
 
-    if (!panel || !wrapper) return;
-
-    const isDesktop = () =>
-      window.matchMedia ? window.matchMedia("(min-width: 1024px)").matches : window.innerWidth >= 1024;
-
-    const cards = Array.from(document.querySelectorAll(".knk-game-card"));
-    const included = new Set();
-    const excluded = new Set();
-    const state = { open: isDesktop() };
-
-    function syncPanel() {
-      const desktop = isDesktop();
-      panel.classList.toggle("open", state.open && !desktop);
-      panel.classList.toggle("closed", !state.open && desktop);
-      backdrop?.classList.toggle("open", state.open && !desktop);
-      wrapper.classList.toggle("filters-off", !state.open);
-      toggle?.setAttribute("aria-expanded", state.open ? "true" : "false");
-    }
-
-    function refresh() {
-      if (resetBtn) {
-        const active = included.size === 0 && excluded.size === 0;
-        resetBtn.classList.toggle("active", active);
-        resetBtn.setAttribute("aria-pressed", active ? "true" : "false");
-      }
-
-      document.querySelectorAll("[data-status-mode]").forEach((btn) => {
-        const id = Number(btn.dataset.statusId);
-        const plus = btn.dataset.statusMode === "plus";
-        const active = plus ? included.has(id) : excluded.has(id);
-        btn.classList.toggle("active", active);
-        btn.setAttribute("aria-pressed", active ? "true" : "false");
-      });
-
-      let visible = 0;
-      cards.forEach((card) => {
-        const ids = (card.dataset.statusIds || "")
-          .split(" ")
-          .map(Number)
-          .filter((n) => !Number.isNaN(n));
-        let show = true;
-        if (included.size > 0) show = ids.some((id) => included.has(id));
-        if (show && excluded.size > 0) show = !ids.some((id) => excluded.has(id));
-        card.hidden = !show;
-        if (show) visible += 1;
-      });
-
-      if (visibleCount) visibleCount.textContent = String(visible);
-      if (noResults) noResults.hidden = visible > 0;
-      if (badge) {
-        const count = included.size + excluded.size;
-        badge.hidden = count === 0;
-        badge.textContent = String(count);
-      }
-    }
-
-    document.querySelectorAll("[data-status-mode]").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const id = Number(btn.dataset.statusId);
-        const plus = btn.dataset.statusMode === "plus";
-        if (plus) {
-          if (included.has(id)) {
-            included.delete(id);
-          } else {
-            included.add(id);
-            excluded.delete(id);
-          }
-        } else {
-          if (excluded.has(id)) {
-            excluded.delete(id);
-          } else {
-            excluded.add(id);
-            included.delete(id);
-          }
-        }
-        refresh();
-      });
-    });
-
-    toggle?.addEventListener("click", () => {
-      state.open = !state.open;
-      syncPanel();
-    });
-    closeBtn?.addEventListener("click", () => {
-      state.open = false;
-      syncPanel();
-    });
-    resetBtn?.addEventListener("click", () => {
-      included.clear();
-      excluded.clear();
-      refresh();
-    });
-    backdrop?.addEventListener("click", () => {
-      state.open = false;
-      syncPanel();
-    });
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && state.open && !isDesktop()) {
-        state.open = false;
-        syncPanel();
-      }
-    });
-
-    let resizeTimer;
-    window.addEventListener("resize", () => {
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(syncPanel, 100);
-    });
-
-    refresh();
-    syncPanel();
-  })();
+  initGamesFilter();
 </script>
