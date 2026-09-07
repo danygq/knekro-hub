@@ -14,32 +14,57 @@ const gameStatuses = (statuses as GameStatus[]) || [];
 ---
 
 <Layout>
-  <h1 class="text-2xl font-bold mb-4">Juegos</h1>
-
-  <!-- Category tabs / filters -->
-  <div class="mb-6">
-    <div class="flex flex-wrap gap-2">
-      <!-- "Todas" button (static) -->
-      <button class="px-3 py-1 rounded-md bg-slate-100 dark:bg-slate-800">Todas</button>
-
-      <!-- Dynamic status buttons -->
-      {
-        gameStatuses.map((status) => (
-          <button key={status.id} class="px-3 py-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700">
-            {status.name}
-          </button>
-        ))
-      }
-    </div>
+  <div class="mb-8">
+    <p class="knk-eyebrow mb-2">Biblioteca del canal</p>
+    <h1 class="font-(--font-display) text-3xl sm:text-4xl tracking-tight text-balance">Juegos</h1>
+    <p class="mt-2 text-sm text-(--knk-text-muted) max-w-lg leading-relaxed">
+      Todo lo que se ha jugado, se está jugando o está en la lista para el próximo stream.
+    </p>
   </div>
 
-  <!-- Games grid placeholder (you'll replace later with real games) -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-    <!-- Example card -->
-    <article class="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-md p-4">
-      <div class="h-40 bg-slate-200 dark:bg-slate-700 rounded-md mb-3"></div>
-      <h3 class="font-semibold">Título del juego</h3>
-      <p class="text-sm text-slate-500">Estado: En progreso</p>
+  <!-- Category tabs / filters -->
+  <div class="mb-8 flex flex-wrap items-center gap-2 pb-6 border-b border-(--knk-line)">
+    <button
+      class="knk-notch-sm px-3.5 py-1.5 text-sm font-medium bg-(--knk-amber) text-[#181000] transition-colors"
+    >
+      Todas
+    </button>
+
+    {
+      gameStatuses.map((status) => (
+        <button class="knk-notch-sm px-3.5 py-1.5 text-sm font-medium bg-(--knk-surface) text-(--knk-text-muted) border border-(--knk-line) hover:text-(--knk-text) hover:border-(--knk-line-strong) transition-colors">
+          {status.name}
+        </button>
+      ))
+    }
+  </div>
+
+  <!-- Games grid -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+    <article class="group border border-(--knk-line) bg-(--knk-surface) hover:border-(--knk-line-strong) transition-colors">
+      <div class="relative h-40 bg-(--knk-surface-2) knk-grid-bg overflow-hidden">
+        <div class="absolute inset-0 flex items-center justify-center">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" class="text-(--knk-text-faint)">
+            <path
+              d="M7 7h10a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-1l-1.5-2h-5L8 17H7a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Z"
+              stroke="currentColor"
+              stroke-width="1.5"
+            ></path>
+            <path d="M9.5 11.5v2M8.5 12.5h2M16 11h.01M14.5 12.5h.01" stroke="currentColor" stroke-width="1.5"></path>
+          </svg>
+        </div>
+        <span
+          class="absolute top-3 right-3 knk-notch-sm px-2 py-0.5 text-xs font-medium bg-(--knk-bg)/80 text-(--knk-text-muted) border border-(--knk-line)"
+        >
+          En progreso
+        </span>
+      </div>
+      <div class="p-4">
+        <h3 class="font-(--font-display) text-base tracking-tight group-hover:text-(--knk-amber) transition-colors">
+          Título del juego
+        </h3>
+        <p class="text-sm text-(--knk-text-muted) mt-1">PC · Aventura</p>
+      </div>
     </article>
   </div>
 </Layout>

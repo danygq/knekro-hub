@@ -12,19 +12,21 @@ const displayName =
 ---
 
 <div class="flex items-center gap-3">
-  {avatarUrl && <img src={avatarUrl} alt="Avatar" class="w-8 h-8 rounded-full border border-slate-700 object-cover" />}
+  {
+    avatarUrl && (
+      <img src={avatarUrl} alt="Avatar" class="w-8 h-8 rounded-full border border-(--knk-line-strong) object-cover" />
+    )
+  }
 
-  <span class="text-sm font-medium">
+  <span class="hidden sm:inline text-sm font-medium">
     {displayName}
   </span>
 
   <form action="/api/auth/signout" method="POST">
     <button
       type="submit"
-      class="px-2 py-2 text-xs font-medium cursor-pointer
+      class="knk-notch px-3 py-2 text-xs font-medium cursor-pointer
         bg-(--knk-red) text-[white] hover:bg-(--knk-red-hover) transition-colors"
-      style="clip-path: polygon(0 0,
-        calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));"
     >
       Cerrar sesión
     </button>
