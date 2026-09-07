@@ -1,7 +1,7 @@
 ---
 module: index
 owner_area: repo-wide
-last_verified_against_commit: 8473325
+last_verified_against_commit: 56bdfc6
 depends_on: []
 ---
 

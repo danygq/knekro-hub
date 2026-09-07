@@ -1,13 +1,13 @@
 ---
 module: doc-coverage
 owner_area: repo-wide
-last_verified_against_commit: 8473325
+last_verified_against_commit: 56bdfc6
 depends_on: []
 ---
 
 # Doc coverage
 
-Cross-checked against source at commit `8473325`.
+Cross-checked against source at commit `56bdfc6`.
 
 | Area                          | Documented? | Doc file                     | Confidence                            |
 |-------------------------------|-------------|------------------------------|---------------------------------------|
@@ -26,7 +26,8 @@ Cross-checked against source at commit `8473325`.
 
 - Tables `posts`, `game_status`: **verified** — appear in live queries.
 - Column lists for `posts`/`game_status`: verified from `.select()` args only; other columns may exist (unclear).
-- Tables `games`, `goty_items`, `stream_logs`, `categories`, `award_categories`: **inferred** from `src/types/` +
+- `games`: **queried by `/games`** (`lib/games.ts`) but schema unconfirmed against Supabase — live but at risk.
+- Tables `goty_items`, `stream_logs`, `categories`, `award_categories`: **inferred** from `src/types/` +
   product intent. Not confirmed against the Supabase schema — confirm before building on them.
 - Suggested indexes: **inferred** from documented access patterns; validate with `EXPLAIN ANALYZE`.
 

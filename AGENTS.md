@@ -1,7 +1,7 @@
 ---
 module: agent-onboarding
 owner_area: repo-wide
-last_verified_against_commit: 8473325
+last_verified_against_commit: 56bdfc6
 depends_on: [ARCHITECTURE.md, docs/INDEX.md]
 ---
 
@@ -18,7 +18,7 @@ Astro SSR site (a "hub") for the Twitch streamer **Knekro**: a library of games 
 - **Never commit secrets.** Only `PUBLIC_*` keys are client-safe. Service role key is server-only.
 - **Branch/commit naming:** use `docs/…`, `feat/…`, `fix/…`. **Do not use `v0/…`.**
 - **No new deps without reason.** Check `package.json` first; the stack is deliberately small.
-- **Don't hallucinate schema.** Only `posts` and `game_status` are confirmed in code. Anything else is inferred — verify against Supabase before relying on it. Mark unknowns "unclear — needs confirmation".
+- **Don't hallucinate schema.** `posts` and `game_status` are confirmed; `games` is now queried by `/games` (see `docs/modules/data-layer.md`) but its schema is still unconfirmed. Anything else is inferred — verify against Supabase before relying on it. Mark unknowns "unclear — needs confirmation".
 
 ## Conventions
 | Topic | Rule |
@@ -28,7 +28,7 @@ Astro SSR site (a "hub") for the Twitch streamer **Knekro**: a library of games 
 | Styling | Tailwind v4 utilities + `--knk-*` CSS vars in `src/styles/global.css`. No `tailwind.config`. |
 | UI copy | Spanish (`lang="es"`) |
 | Icons | `lucide-astro`, or inline SVG matching existing stroke style |
-| Data reads | Server-side in `.astro` frontmatter or API routes only |
+| Data reads | Server-side only: `.astro` frontmatter / API routes, or server libs those import (e.g. `lib/games.ts`) |
 | Auth | Supabase Twitch OAuth via `@supabase/ssr` cookie clients |
 
 ## Where NOT to make changes
@@ -44,5 +44,18 @@ npm run preview
 ```
 No test suite exists. Verify changes by building + loading the affected route.
 
+## Docs freshness (checklist — do this before finishing any change)
+
+Docs are snapshots pinned to `last_verified_against_commit` (see `docs/DOC_COVERAGE.md`). Keep them in sync:
+
+- [ ] Did the change touch a documented area? (routes/pages, `Layout`, components, theming/`global.css`, Supabase clients/env,
+      auth flow, DB tables/queries, or new libs/modules) → check the matching file in `docs/` + `ARCHITECTURE.md` +
+      `AGENTS.md`.
+- [ ] If yes: update the doc + **propose a `docs/…` branch** with the suggested changes; don't silently ship doc drift.
+- [ ] Bump `last_verified_against_commit` in any doc you re-verify to the current `HEAD` commit hash.
+- [ ] If the change was small/self-contained, include the doc edit in the same branch; otherwise split `docs/…` from the
+      feature branch.
+- [ ] Never claim a schema/table as confirmed unless it appears in live queries (rule: don't hallucinate schema).
+
 ## Open work (status)
-`/games` grid and `/goty` are placeholders not yet wired to data. See `docs/DOC_COVERAGE.md` and `docs/GOTY.md`.
+`/games` is wired to Supabase (`games` + `game_status`) via `lib/games.ts`; `/goty` remains a static placeholder (design in `docs/GOTY.md`).
