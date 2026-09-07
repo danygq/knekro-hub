@@ -5,12 +5,11 @@ import TwitchLogo from "./TwitchLogo.astro";
 <form action="/api/auth/signin" method="POST">
   <button
     type="submit"
-    class="px-4 py-2 text-sm font-medium cursor-pointer
+    class="knk-notch inline-flex items-center gap-2 px-4 py-2 text-sm font-medium cursor-pointer
         bg-(--knk-twitch) text-[white] hover:bg-(--knk-twitch-hover) transition-colors"
-    style="clip-path: polygon(0 0,
-        calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));"
   >
-    <TwitchLogo width={28} height={28} />
-    Iniciar sesión con Twitch
+    <TwitchLogo width={20} height={20} />
+    <span class="hidden sm:inline">Iniciar sesión con Twitch</span>
+    <span class="sm:hidden">Iniciar sesión</span>
   </button>
 </form>

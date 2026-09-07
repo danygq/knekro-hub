@@ -6,8 +6,8 @@ import LoginButton from "../components/LoginButton.astro";
 import UserMenu from "../components/UserMenu.astro";
 
 const supabase = createServerClient(
-  import.meta.env.PUBLIC_SUPABASE_URL!,
-  import.meta.env.PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+  import.meta.env.PUBLIC_SUPABASE_URL || "https://placeholder.supabase.co",
+  import.meta.env.PUBLIC_SUPABASE_PUBLISHABLE_KEY || "placeholder-anon-key",
   {
     cookies: {
       getAll() {
@@ -20,9 +20,11 @@ const supabase = createServerClient(
   },
 );
 
+// Guard against network/config failures while Supabase env vars are still
+// provisioning, so a missing session never takes down the whole layout.
 const {
   data: { user },
-} = await supabase.auth.getUser();
+} = await supabase.auth.getUser().catch(() => ({ data: { user: null } }));
 
 const currentPath = Astro.url.pathname;
 ---
@@ -41,60 +43,55 @@ const currentPath = Astro.url.pathname;
     <slot name="head" />
     <title>Knekro Hub</title>
   </head>
-  <body class="min-h-screen bg-(--knk-bg) text-(--knk-text)">
-    <header class="sticky top-0 z-50 bg-(--knk-bg)/95 backdrop-blur-sm border-b border-(--knk-line)">
+  <body class="min-h-screen bg-(--knk-bg) text-(--knk-text) antialiased">
+    <header class="sticky top-0 z-50 bg-(--knk-bg)/90 backdrop-blur-md border-b border-(--knk-line)">
       <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-16">
           <div class="flex items-center gap-8">
-            <a href="/" class="flex items-center gap-2">
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" class="text-(--knk-amber)">
+            <a href="/" class="flex items-center gap-2.5 shrink-0">
+              <svg width="20" height="20" viewBox="0 0 18 18" fill="none" class="text-(--knk-amber)">
                 <path d="M1 5V1H5" stroke="currentColor" stroke-width="1.5"></path>
                 <path d="M13 1H17V5" stroke="currentColor" stroke-width="1.5"></path>
                 <path d="M17 13V17H13" stroke="currentColor" stroke-width="1.5"></path>
                 <path d="M5 17H1V13" stroke="currentColor" stroke-width="1.5"></path>
               </svg>
-              <span class="font-(--font-display) text-lg tracking-tight">Knekro Hub</span>
+              <span class="font-(--font-display) text-lg tracking-tight">Knekro <span class="text-(--knk-amber)">Hub</span></span>
             </a>
             <nav class="hidden sm:flex items-center gap-6" aria-label="Primary">
               <a
                 href="/games"
-                class={`text-sm pb-0.75 border-b-2 transition-colors ${
+                class={`text-sm font-medium pb-0.75 border-b-2 transition-colors ${
                   currentPath.startsWith("/games")
                     ? "border-(--knk-amber) text-(--knk-text)"
-                    : "border-transparent text-(--knk-text-muted) hover:text-(--knk-text) hover:border-(--knk-line)"
+                    : "border-transparent text-(--knk-text-muted) hover:text-(--knk-text) hover:border-(--knk-line-strong)"
                 }`}>Juegos</a
               >
               <a
                 href="/goty"
-                class={`text-sm pb-0.75 border-b-2 transition-colors ${
+                class={`text-sm font-medium pb-0.75 border-b-2 transition-colors ${
                   currentPath.startsWith("/goty")
                     ? "border-(--knk-amber) text-(--knk-text)"
-                    : "border-transparent text-(--knk-text-muted) hover:text-(--knk-text) hover:border-(--knk-line)"
+                    : "border-transparent text-(--knk-text-muted) hover:text-(--knk-text) hover:border-(--knk-line-strong)"
                 }`}>GOTY</a
               >
             </nav>
           </div>
-          <div class="flex items-center gap-4">
+          <div class="flex items-center gap-3">
             <a
               href="https://twitch.tv/knekro"
               target="_blank"
               rel="noopener"
-              class="px-4 py-2 text-sm font-medium
-        bg-(--knk-twitch) text-[white] hover:bg-(--knk-twitch-hover) transition-colors"
-              style="clip-path: polygon(0 0,
-        calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));"
+              class="knk-notch hidden md:inline-flex px-4 py-2 text-sm font-medium bg-(--knk-twitch) text-[white] hover:bg-(--knk-twitch-hover) transition-colors"
               >Ver en Twitch</a
             >
             <a
               href="https://discord.com/invite/knekro"
               target="_blank"
               rel="noopener"
-              class="px-4 py-2 text-sm font-medium
-        bg-(--knk-discord) text-[white] hover:bg-(--knk-discord-hover) transition-colors"
-              style="clip-path: polygon(0 0,
-        calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));"
+              class="knk-notch hidden md:inline-flex px-4 py-2 text-sm font-medium bg-(--knk-discord) text-[white] hover:bg-(--knk-discord-hover) transition-colors"
               >Discord</a
             >
+            <div class="w-px h-6 bg-(--knk-line) hidden md:block"></div>
             {user ? <UserMenu user={user} /> : <LoginButton />}
           </div>
         </div>
@@ -103,15 +100,23 @@ const currentPath = Astro.url.pathname;
   </body>
 </html>
 
-<main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
   <slot />
 </main>
 
-<footer class="border-t border-(--knk-line)">
-  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-sm text-(--knk-text-muted)">
-    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-      <div>© {new Date().getFullYear()} Knekro Hub — creado con ❤️</div>
-      <div class="flex items-center gap-4">
+<footer class="border-t border-(--knk-line) mt-8">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-sm text-(--knk-text-muted)">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+      <div class="flex items-center gap-2">
+        <svg width="14" height="14" viewBox="0 0 18 18" fill="none" class="text-(--knk-text-faint)">
+          <path d="M1 5V1H5" stroke="currentColor" stroke-width="1.5"></path>
+          <path d="M13 1H17V5" stroke="currentColor" stroke-width="1.5"></path>
+          <path d="M17 13V17H13" stroke="currentColor" stroke-width="1.5"></path>
+          <path d="M5 17H1V13" stroke="currentColor" stroke-width="1.5"></path>
+        </svg>
+        <span>© {new Date().getFullYear()} Knekro Hub</span>
+      </div>
+      <div class="flex items-center gap-5">
         <a href="/" class="hover:text-(--knk-text) transition-colors">Inicio</a>
         <a href="/games" class="hover:text-(--knk-text) transition-colors">Juegos</a>
         <a href="/goty" class="hover:text-(--knk-text) transition-colors">GOTY</a>
