@@ -25,7 +25,7 @@ Astro SSR site (a "hub") for the Twitch streamer **Knekro**: a library of games 
 |---|---|
 | Language | TypeScript, `.astro` components |
 | Imports | Relative paths (no tsconfig/aliases) |
-| Styling | Tailwind v4 utilities + `--knk-*` CSS vars in `src/styles/global.css`. No `tailwind.config`. |
+| Styling | Tailwind v4 utilities + all CSS in `src/styles/` (single folder: `global.css` entry importing `tokens.css`/`base.css`/`utilities.css`; per-page files in `src/styles/pages/*.css`). No `tailwind.config`. |
 | UI copy | Spanish (`lang="es"`) |
 | Icons | `lucide-astro`, or inline SVG matching existing stroke style |
 | Data reads | Server-side only: `.astro` frontmatter / API routes, or server libs those import (e.g. `lib/games.ts`) |
@@ -48,7 +48,7 @@ No test suite exists. Verify changes by building + loading the affected route.
 
 Docs are snapshots pinned to `last_verified_against_commit` (see `docs/DOC_COVERAGE.md`). Keep them in sync:
 
-- [ ] Did the change touch a documented area? (routes/pages, `Layout`, components, theming/`global.css`, Supabase clients/env,
+- [ ] Did the change touch a documented area? (routes/pages, `Layout`, components, theming/`src/styles`, Supabase clients/env,
       auth flow, DB tables/queries, or new libs/modules) → check the matching file in `docs/` + `ARCHITECTURE.md` +
       `AGENTS.md`.
 - [ ] If yes: update the doc + **propose a `docs/…` branch** with the suggested changes; don't silently ship doc drift.

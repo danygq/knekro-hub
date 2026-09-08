@@ -1,0 +1,25 @@
+/* Base element styles + global a11y overrides. Imported via src/styles/global.css. */
+
+body {
+    font-family: var(--font-body), sans-serif;
+    background-image: radial-gradient(ellipse 80% 50% at 50% -10%, color-mix(in srgb, var(--knk-amber) 7%, transparent), transparent);
+    background-repeat: no-repeat;
+}
+
+::selection {
+    background: var(--knk-amber);
+    color: #181000;
+}
+
+a:focus-visible,
+button:focus-visible {
+    outline: 2px solid var(--knk-amber);
+    outline-offset: 2px;
+}
+
+/* Low-motion users: kill the live pulse animation */
+@media (prefers-reduced-motion: reduce) {
+    .animate-pulse {
+        animation: none !important;
+    }
+}

@@ -3,6 +3,7 @@ import Layout from "../../layouts/Layout.astro";
 import GameCard from "../../components/GameCard.astro";
 import { supabase } from "../../lib/supabase";
 import { loadGamesLibrary, buildGameStatuses, statusName, statusIdString } from "../../lib/games";
+import "../../styles/pages/games.css";
 
 const { statuses, games } = await loadGamesLibrary(supabase);
 const gameStatuses = buildGameStatuses(statuses, games);
@@ -152,109 +153,6 @@ const gameStatuses = buildGameStatuses(statuses, games);
     </section>
   </div>
 </Layout>
-
-<style is:global>
-  /* Responsive two-column layout: stacked below lg, sidebar + grid from lg up */
-  .games-layout {
-    display: grid;
-    grid-template-columns: 1fr;
-  }
-
-  /* Below lg the filter panel becomes an off-canvas drawer */
-  .knk-filter-panel {
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    width: min(16rem, 82vw);
-    z-index: 70;
-    background: var(--knk-surface);
-    border-right: 1px solid var(--knk-line);
-    overflow-y: auto;
-    transition:
-      transform 250ms ease,
-      visibility 250ms ease;
-  }
-  .knk-filter-panel:not(.open) {
-    transform: translateX(-100%);
-    visibility: hidden;
-    pointer-events: none;
-  }
-  .knk-filter-panel.open {
-    transform: translateX(0);
-    visibility: visible;
-    pointer-events: auto;
-  }
-
-  .knk-filter-backdrop {
-    position: fixed;
-    inset: 0;
-    z-index: 69;
-    background: color-mix(in srgb, var(--knk-bg) 60%, #000);
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
-    transition:
-      opacity 200ms ease,
-      visibility 200ms ease;
-  }
-  .knk-filter-backdrop.open {
-    opacity: 0.65;
-    visibility: visible;
-    pointer-events: auto;
-  }
-
-  @media (min-width: 1024px) {
-    .games-layout {
-      grid-template-columns: 16rem 1fr;
-      column-gap: 2.5rem;
-      align-items: start;
-    }
-    .games-layout.filters-off {
-      grid-template-columns: 1fr;
-    }
-    .knk-filter-panel,
-    .knk-filter-panel:not(.open) {
-      position: static;
-      width: auto;
-      z-index: auto;
-      background: transparent;
-      border: 1px solid var(--knk-line);
-      transform: none;
-      visibility: visible;
-      pointer-events: auto;
-      transition: none;
-    }
-    .knk-filter-panel.closed {
-      display: none;
-    }
-    .knk-filter-backdrop {
-      display: none;
-    }
-  }
-
-  /* Active state for the filter controls.
-     !important keeps these overrides on top of the utility classes already
-     present on the buttons (Tailwind v4 cascade layers put utilities last). */
-  .knk-filter-reset.active,
-  .knk-filter-plus.active {
-    background: var(--knk-amber) !important;
-    color: #181000 !important;
-    border-color: var(--knk-amber) !important;
-  }
-  .knk-filter-minus.active {
-    background: var(--knk-red) !important;
-    color: #fff !important;
-    border-color: var(--knk-red) !important;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .knk-filter-panel,
-    .knk-filter-backdrop {
-      transition: none;
-    }
-  }
-</style>
 
 <script>
   import { initGamesFilter } from "../../lib/client/games-filter";

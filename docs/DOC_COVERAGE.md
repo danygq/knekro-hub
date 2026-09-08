@@ -1,13 +1,13 @@
 ---
 module: doc-coverage
 owner_area: repo-wide
-last_verified_against_commit: 56bdfc6
+last_verified_against_commit: e12fc05
 depends_on: []
 ---
 
 # Doc coverage
 
-Cross-checked against source at commit `56bdfc6`.
+Cross-checked against source at commit `e12fc05`.
 
 | Area                          | Documented? | Doc file                     | Confidence                            |
 |-------------------------------|-------------|------------------------------|---------------------------------------|

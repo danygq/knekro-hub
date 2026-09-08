@@ -1,0 +1,23 @@
+/* Design tokens: --knk-* CSS variables + fonts. Imported via src/styles/global.css. */
+
+:root {
+    --knk-bg: #0a0d12;
+    --knk-surface: #11161e;
+    --knk-surface-2: #161c26;
+    --knk-line: #222a35;
+    --knk-line-strong: #2e3847;
+    --knk-text: #eef1f4;
+    --knk-text-muted: #8c98a6;
+    --knk-text-faint: #5b6673;
+    --knk-amber: #ffb020;
+    --knk-amber-dim: color-mix(in srgb, var(--knk-bg) 70%, var(--knk-amber));
+    --knk-live: #ff4d4d;
+    --knk-red: #eb0400;
+    --knk-red-hover: color-mix(in srgb, white 10%, var(--knk-red));
+    --knk-discord: #5865f2;
+    --knk-discord-hover: color-mix(in srgb, white 10%, var(--knk-discord));
+    --knk-twitch: #9147ff;
+    --knk-twitch-hover: color-mix(in srgb, white 10%, var(--knk-twitch));
+    --font-display: "Space Grotesk", sans-serif;
+    --font-body: "Inter", system-ui, sans-serif;
+}

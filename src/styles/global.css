@@ -1,72 +1,10 @@
+/* Entry point for all site styles. All CSS lives in src/styles/, split by
+   responsibility: tokens.css (design tokens), base.css (element defaults),
+   utilities.css (.knk-* helpers) and pages/*.css (per-page CSS imported by the
+   page that needs it, e.g. pages/games.css).
+   Note: @import statements must stay at the top of this file. */
+
 @import "tailwindcss";
-
-:root {
-    --knk-bg: #0a0d12;
-    --knk-surface: #11161e;
-    --knk-surface-2: #161c26;
-    --knk-line: #222a35;
-    --knk-line-strong: #2e3847;
-    --knk-text: #eef1f4;
-    --knk-text-muted: #8c98a6;
-    --knk-text-faint: #5b6673;
-    --knk-amber: #ffb020;
-    --knk-amber-dim: color-mix(in srgb, var(--knk-bg) 70%, var(--knk-amber));
-    --knk-live: #ff4d4d;
-    --knk-red: #eb0400;
-    --knk-red-hover: color-mix(in srgb, white 10%, var(--knk-red));
-    --knk-discord: #5865f2;
-    --knk-discord-hover: color-mix(in srgb, white 10%, var(--knk-discord));
-    --knk-twitch: #9147ff;
-    --knk-twitch-hover: color-mix(in srgb, white 10%, var(--knk-twitch));
-    --font-display: "Space Grotesk", sans-serif;
-    --font-body: "Inter", system-ui, sans-serif;
-}
-
-body {
-    font-family: var(--font-body), sans-serif;
-    background-image: radial-gradient(ellipse 80% 50% at 50% -10%, color-mix(in srgb, var(--knk-amber) 7%, transparent), transparent);
-    background-repeat: no-repeat;
-}
-
-::selection {
-    background: var(--knk-amber);
-    color: #181000;
-}
-
-a:focus-visible,
-button:focus-visible {
-    outline: 2px solid var(--knk-amber);
-    outline-offset: 2px;
-}
-
-/* Angular clipped-corner shape used for buttons, badges & card accents throughout the site */
-.knk-notch {
-    clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
-}
-
-.knk-notch-sm {
-    clip-path: polygon(0 0, calc(100% - 5px) 0, 100% 5px, 100% 100%, 5px 100%, 0 calc(100% - 5px));
-}
-
-/* Small uppercase tracked label used above section headings */
-.knk-eyebrow {
-    font-family: var(--font-display), sans-serif;
-    font-size: 0.6875rem;
-    font-weight: 600;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--knk-amber);
-}
-
-/* Fine background grid for elevated/hero panels */
-.knk-grid-bg {
-    background-image: linear-gradient(to right, color-mix(in srgb, var(--knk-line) 60%, transparent) 1px, transparent 1px),
-    linear-gradient(to bottom, color-mix(in srgb, var(--knk-line) 60%, transparent) 1px, transparent 1px);
-    background-size: 28px 28px;
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .animate-pulse {
-        animation: none !important;
-    }
-}
+@import "./tokens.css";
+@import "./base.css";
+@import "./utilities.css";
