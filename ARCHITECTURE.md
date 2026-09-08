@@ -29,7 +29,7 @@ flowchart TD
 
 | Module | Responsibility | Depends on | Depended on by |
 |---|---|---|---|
-| `layouts/Layout.astro` | Shell: head, nav, footer, session (`getUser`), auth UI switch | `@supabase/ssr`, `LoginButton`, `UserMenu`, `global.css` | all pages |
+| `layouts/Layout.astro` | Shell: head, nav, footer, session (`getUser`), auth UI switch | `@supabase/ssr`, `LoginButton`, `UserMenu`, `styles/` | all pages |
 | `pages/index.astro` | Home: Twitch player+chat embeds, posts feed | `lib/supabase`, Layout | — |
 | `pages/games/index.astro` | Games library: DB-backed status filter panel + grid | `lib/supabase`, `lib/games`, `GameCard`, Layout | — |
 | `pages/goty.astro` | GOTY awards (static placeholder) | Layout | — |
@@ -40,7 +40,7 @@ flowchart TD
 | `lib/client/games-filter.ts` | Browser controller for the `/games` filter drawer (include/exclude, live count) | — | `pages/games/index.astro` (`<script>`) |
 | `types/*` | Domain types, one file per area (`games.ts`, `categories.ts`, `streams.ts`, `goty.ts`) + barrel `index.ts` | — | `games` via `lib/games.ts` (rest aspirational) |
 | `components/*` | `LoginButton`, `UserMenu`, `TwitchLogo`, `GameCard` | — | Layout; `GameCard` by games grid |
-| `styles/global.css` | `--knk-*` design tokens, `.knk-notch` shapes | Tailwind v4 | Layout |
+| `styles/*` | `global.css` entry → `tokens.css` (design tokens), `base.css`, `utilities.css`; per-page `pages/games.css` | Tailwind v4 | Layout (`global.css`); `pages/games/index.astro` (`pages/games.css`)
 
 ## Key decisions (inferred)
 - **Astro SSR + Vercel adapter** (`output:"server"`): per-request session + fresh data without a client SPA. See `docs/adr/0001-astro-ssr.md`.
@@ -48,7 +48,7 @@ flowchart TD
 - **`@supabase/ssr` cookie clients** created per request in Layout + each API route (not shared) — correct for SSR, but duplicated (see risks).
 - **Placeholder-fallback client**: `lib/supabase.ts` and server clients fall back to a valid dummy URL/key so pages render while env vars provision. Intentional.
 - **`/games` reads live data**: `lib/games.ts` queries `game_status` + `games` (PostgREST embedding `game_status!game_status_id`, bounded); `games` schema still unconfirmed.
-- **Tailwind v4 token-only theming**: no config file; all theme lives in `global.css` as `--knk-*` vars.
+- **Tailwind v4 token-only theming**: no config file; all theme lives in `src/styles/tokens.css` as `--knk-*` vars.
 
 ## Risks / tech debt (by blast radius)
 | Rank | Issue | Impact |

@@ -1,7 +1,7 @@
 ---
 module: routing-ui
 owner_area: frontend
-last_verified_against_commit: 56bdfc6
+last_verified_against_commit: e12fc05
 depends_on: [data-layer, auth]
 ---
 
@@ -40,10 +40,19 @@ from Google Fonts.
 | `TwitchLogo.astro`  | Inline SVG mark                                                    |
 | `GameCard.astro`    | 2:3 cover card for the grid (`data-status-ids`, status badge)     |
 
-## Theming (`styles/global.css`)
+## Theming (`src/styles/`)
 
-Tailwind v4 via `@tailwindcss/vite`; **no config file**. Theme = `--knk-*` CSS vars on `:root`. Use
-`bg-(--knk-surface)`, `text-(--knk-text-muted)`, etc.
+All CSS lives in one folder, split by responsibility. Tailwind v4 via `@tailwindcss/vite`; **no config file**.
+
+| File | Contents | Loaded by |
+|---|---|---|
+| `global.css` | entry: `@import "tailwindcss"` + tokens/base/utilities | Layout (all pages) |
+| `tokens.css` | `--knk-*` CSS vars on `:root` | via `global.css` |
+| `base.css` | `body`, `::selection`, focus ring, reduced-motion | via `global.css` |
+| `utilities.css` | `.knk-notch` / `.knk-notch-sm`, `.knk-eyebrow`, `.knk-grid-bg` | via `global.css` |
+| `pages/games.css` | `/games` filter panel + off-canvas drawer (moved out of the old `<style is:global>` block) | `pages/games/index.astro` frontmatter |
+
+Use `bg-(--knk-surface)`, `text-(--knk-text-muted)`, etc.
 
 Palette: `--knk-bg #0a0d12`, `--knk-surface` / `--knk-surface-2`, `--knk-line` / `--knk-line-strong`,
 `--knk-text` / `-muted` / `-faint`, accent `--knk-amber #ffb020` (+ `--knk-amber-dim`), brand `--knk-twitch`,
