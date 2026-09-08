@@ -5,6 +5,7 @@
    Note: @import statements must stay at the top of this file. */
 
 @import "tailwindcss";
+@import "./fonts.css";
 @import "./tokens.css";
 @import "./base.css";
 @import "./utilities.css";

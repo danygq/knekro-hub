@@ -26,8 +26,8 @@ Referenced but **not present**: `/posts/[id]` (linked from home feed). Add when 
 ## Layout
 
 `Layout.astro`: sticky header (logo, nav `Juegos`/`GOTY`, Twitch/Discord CTAs), active-nav via `Astro.url.pathname`,
-session via SSR client `getUser()`, renders `UserMenu` or `LoginButton`. Fonts: Space Grotesk (display) + Inter (body)
-from Google Fonts.
+session via SSR client `getUser()`, renders `UserMenu` or `LoginButton`. Fonts: Space Grotesk (display) + Inter (body),
+self-hosted from `public/fonts/` (see `src/styles/fonts.css`).
 
 > Bug: `<main>` and `<footer>` are emitted **after** `</body></html>`. Fix markup so they sit inside `<body>`.
 
