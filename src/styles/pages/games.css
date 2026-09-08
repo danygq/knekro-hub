@@ -85,14 +85,14 @@
    present on the buttons (Tailwind v4 cascade layers put utilities last). */
 .knk-filter-reset.active,
 .knk-filter-plus.active {
-    background: var(--knk-amber) !important;
-    color: #181000 !important;
-    border-color: var(--knk-amber) !important;
+    background: var(--knk-primary) !important;
+    color: var(--knk-primary-text) !important;
+    border-color: var(--knk-primary) !important;
 }
 .knk-filter-minus.active {
-    background: var(--knk-red) !important;
+    background: var(--knk-danger) !important;
     color: #fff !important;
-    border-color: var(--knk-red) !important;
+    border-color: var(--knk-danger) !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
