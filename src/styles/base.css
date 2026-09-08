@@ -2,19 +2,23 @@
 
 body {
     font-family: var(--font-body), sans-serif;
-    background-image: radial-gradient(ellipse 80% 50% at 50% -10%, color-mix(in srgb, var(--knk-amber) 7%, transparent), transparent);
+    background-image: radial-gradient(ellipse 80% 50% at 50% -10%, color-mix(in srgb, var(--knk-primary) 7%, transparent), transparent);
     background-repeat: no-repeat;
 }
 
 ::selection {
-    background: var(--knk-amber);
+    background: var(--knk-primary);
     color: #181000;
 }
 
 a:focus-visible,
 button:focus-visible {
-    outline: 2px solid var(--knk-amber);
+    outline: 2px solid var(--knk-primary);
     outline-offset: 2px;
+}
+
+button {
+    cursor: pointer;
 }
 
 /* Low-motion users: kill the live pulse animation */

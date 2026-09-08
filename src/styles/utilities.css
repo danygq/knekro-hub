@@ -16,7 +16,7 @@
     font-weight: 600;
     letter-spacing: 0.16em;
     text-transform: uppercase;
-    color: var(--knk-amber);
+    color: var(--knk-primary);
 }
 
 /* Fine background grid for elevated/hero panels */

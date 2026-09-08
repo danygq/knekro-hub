@@ -24,9 +24,9 @@ const gameStatuses = buildGameStatuses(statuses, games);
       id="toggle-filters"
       aria-expanded="true"
       aria-controls="filter-panel"
-      class="knk-notch inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium shrink-0
+      class=" knk-notch inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium shrink-0
         bg-(--knk-surface) text-(--knk-text) border border-(--knk-line)
-        hover:text-(--knk-amber) hover:border-(--knk-line-strong) transition-colors"
+        hover:text-(--knk-primary) hover:border-(--knk-line-strong) transition-colors"
     >
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true" class="text-(--knk-text-muted)">
         <rect x="4" y="3" width="16" height="18" rx="2" stroke="currentColor" stroke-width="1.5"></rect>
@@ -37,7 +37,7 @@ const gameStatuses = buildGameStatuses(statuses, games);
       <span
         id="filter-count"
         hidden
-        class="min-w-4.5 h-4.5 px-1 inline-flex items-center justify-center rounded-full bg-(--knk-amber) text-[#181000] text-xs font-semibold tabular-nums"
+        class="min-w-4.5 h-4.5 px-1 inline-flex items-center justify-center rounded-full bg-(--knk-primary) text-[--knk-blue-50] text-xs font-semibold tabular-nums"
       ></span>
     </button>
   </div>
@@ -91,7 +91,7 @@ const gameStatuses = buildGameStatuses(statuses, games);
                     aria-pressed="false"
                     class="knk-filter-minus knk-notch-sm w-7 h-7 inline-flex items-center justify-center shrink-0 text-lg leading-none
                         bg-(--knk-surface) text-(--knk-text-muted) border border-(--knk-line)
-                        hover:text-(--knk-red) hover:border-(--knk-red) transition-colors"
+                        hover:text-(--knk-danger) hover:border-(--knk-danger) transition-colors"
                   >
                     −
                   </button>
@@ -106,7 +106,7 @@ const gameStatuses = buildGameStatuses(statuses, games);
                     aria-pressed="false"
                     class="knk-filter-plus knk-notch-sm w-7 h-7 inline-flex items-center justify-center shrink-0 text-lg leading-none
                         bg-(--knk-surface) text-(--knk-text-muted) border border-(--knk-line)
-                        hover:text-(--knk-amber) hover:border-(--knk-amber) transition-colors"
+                        hover:text-(--knk-primary) hover:border-(--knk-primary) transition-colors"
                   >
                     +
                   </button>

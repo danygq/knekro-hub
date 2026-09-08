@@ -48,15 +48,9 @@ const currentPath = Astro.url.pathname;
       <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-16">
           <div class="flex items-center gap-8">
-            <a href="/" class="flex items-center gap-2.5 shrink-0">
-              <svg width="20" height="20" viewBox="0 0 18 18" fill="none" class="text-(--knk-amber)">
-                <path d="M1 5V1H5" stroke="currentColor" stroke-width="1.5"></path>
-                <path d="M13 1H17V5" stroke="currentColor" stroke-width="1.5"></path>
-                <path d="M17 13V17H13" stroke="currentColor" stroke-width="1.5"></path>
-                <path d="M5 17H1V13" stroke="currentColor" stroke-width="1.5"></path>
-              </svg>
-              <span class="font-(--font-display) text-lg tracking-tight"
-                >Knekro <span class="text-(--knk-amber)">Hub</span></span
+            <a href="/" class="flex items-center gap-2.5 shrink-0 font-bold">
+              <span class="font-(--font-display) text-3xl tracking-tight"
+                >Knekro <span class="px-0.5 py-0.5 rounded-xs bg-(--knk-primary) text-(--knk-bg)">hub</span></span
               >
             </a>
             <nav class="hidden sm:flex items-center gap-6" aria-label="Primary">
@@ -64,7 +58,7 @@ const currentPath = Astro.url.pathname;
                 href="/games"
                 class={`text-sm font-medium pb-0.75 border-b-2 transition-colors ${
                   currentPath.startsWith("/games")
-                    ? "border-(--knk-amber) text-(--knk-text)"
+                    ? "border-(--knk-primary) text-(--knk-text)"
                     : "border-transparent text-(--knk-text-muted) hover:text-(--knk-text) hover:border-(--knk-line-strong)"
                 }`}>Juegos</a
               >
@@ -72,7 +66,7 @@ const currentPath = Astro.url.pathname;
                 href="/goty"
                 class={`text-sm font-medium pb-0.75 border-b-2 transition-colors ${
                   currentPath.startsWith("/goty")
-                    ? "border-(--knk-amber) text-(--knk-text)"
+                    ? "border-(--knk-primary) text-(--knk-text)"
                     : "border-transparent text-(--knk-text-muted) hover:text-(--knk-text) hover:border-(--knk-line-strong)"
                 }`}>GOTY</a
               >

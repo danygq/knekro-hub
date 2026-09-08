@@ -1,6 +1,14 @@
-/* Design tokens: --knk-* CSS variables + fonts. Imported via src/styles/global.css. */
+/* Design tokens: --knk-* CSS variables + fonts. Imported via src/styles/global.css.
+   Organization (inspired by Radix UI / Tailwind color scales):
+   - Neutral bg/text tokens (existing, backward compatible)
+   - Color scales (50-950): red, orange, amber, green, blue, purple
+   - Semantic status colors: success, danger, warning, info
+   - Brand colors: primary, secondary
+   - Extended bg/text variants
+   - Fonts */
 
 :root {
+    /* ── Neutral bg / surface / line tokens (existing) ── */
     --knk-bg: #0a0d12;
     --knk-surface: #11161e;
     --knk-surface-2: #161c26;
@@ -9,15 +17,148 @@
     --knk-text: #eef1f4;
     --knk-text-muted: #8c98a6;
     --knk-text-faint: #5b6673;
-    --knk-amber: #ffb020;
-    --knk-amber-dim: color-mix(in srgb, var(--knk-bg) 70%, var(--knk-amber));
-    --knk-live: #ff4d4d;
-    --knk-red: #eb0400;
-    --knk-red-hover: color-mix(in srgb, white 10%, var(--knk-red));
-    --knk-discord: #5865f2;
-    --knk-discord-hover: color-mix(in srgb, white 10%, var(--knk-discord));
+
+    /* ── Third-party brand colors ── */
     --knk-twitch: #9147ff;
     --knk-twitch-hover: color-mix(in srgb, white 10%, var(--knk-twitch));
+    --knk-discord: #5865f2;
+    --knk-discord-hover: color-mix(in srgb, white 10%, var(--knk-discord));
+
+    /* ── Color scales (50 = lightest → 950 = darkest) ──
+       Each scale follows the same luminance curve so variants are
+       perceptually consistent. Use 50-200 for text on dark surfaces,
+       400-600 for primary UI, 700-900 for hover/active states. */
+
+    /* Red */
+    --knk-red-50: #fef2f2;
+    --knk-red-100: #fee2e2;
+    --knk-red-200: #fecaca;
+    --knk-red-300: #fca5a5;
+    --knk-red-400: #f87171;
+    --knk-red-500: #ef4444;
+    --knk-red-600: #eb0400;
+    --knk-red-700: #b91c1c;
+    --knk-red-800: #991b1b;
+    --knk-red-900: #7f1d1d;
+    --knk-red-950: #450a0a;
+
+    /* Orange */
+    --knk-orange-50: #fff7ed;
+    --knk-orange-100: #ffedd5;
+    --knk-orange-200: #fed7aa;
+    --knk-orange-300: #fdba74;
+    --knk-orange-400: #fb923c;
+    --knk-orange-500: #f97316;
+    --knk-orange-600: #ea580c;
+    --knk-orange-700: #c2410c;
+    --knk-orange-800: #9a3412;
+    --knk-orange-900: #7c2d12;
+    --knk-orange-950: #431407;
+
+    /* Amber */
+    --knk-amber-50: #fffbeb;
+    --knk-amber-100: #fef3c7;
+    --knk-amber-200: #fde68a;
+    --knk-amber-300: #fcd34d;
+    --knk-amber-400: #fbbf24;
+    --knk-amber-500: #ffb020;
+    --knk-amber-600: #d97706;
+    --knk-amber-700: #b45309;
+    --knk-amber-800: #92400e;
+    --knk-amber-900: #78350f;
+    --knk-amber-950: #451a03;
+
+    /* Green */
+    --knk-green-50: #f0fdf4;
+    --knk-green-100: #dcfce7;
+    --knk-green-200: #bbf7d0;
+    --knk-green-300: #86efac;
+    --knk-green-400: #4ade80;
+    --knk-green-500: #22c55e;
+    --knk-green-600: #16a34a;
+    --knk-green-700: #15803d;
+    --knk-green-800: #166534;
+    --knk-green-900: #14532d;
+    --knk-green-950: #052e16;
+
+    /* Blue */
+    --knk-blue-50: #eff6ff;
+    --knk-blue-100: #dbeafe;
+    --knk-blue-200: #bfdbfe;
+    --knk-blue-300: #93c5fd;
+    --knk-blue-400: #60a5fa;
+    --knk-blue-500: #3b82f6;
+    --knk-blue-600: #2563eb;
+    --knk-blue-700: #1d4ed8;
+    --knk-blue-800: #1e40af;
+    --knk-blue-900: #1e3a8a;
+    --knk-blue-950: #172554;
+
+    /* Purple (Twitch brand) */
+    --knk-purple-50: #faf5ff;
+    --knk-purple-100: #f3e8ff;
+    --knk-purple-200: #e9d5ff;
+    --knk-purple-300: #d8b4fe;
+    --knk-purple-400: #c084fc;
+    --knk-purple-500: #9147ff;
+    --knk-purple-600: #7c3aed;
+    --knk-purple-700: #6d28d9;
+    --knk-purple-800: #5b21b6;
+    --knk-purple-900: #4c1d95;
+    --knk-purple-950: #2e1065;
+
+    /* ── Semantic status colors ──
+       Map intent to a single token. Each has -bg (subtle surface),
+       -text (readable on light/dark), and -border variants. */
+
+    --knk-success: var(--knk-green-500);
+    --knk-success-bg: var(--knk-green-950);
+    --knk-success-text: var(--knk-green-300);
+    --knk-success-border: var(--knk-green-700);
+
+    --knk-danger: var(--knk-red-500);
+    --knk-danger-hover: var(--knk-red-400);
+    --knk-danger-bg: var(--knk-red-950);
+    --knk-danger-text: var(--knk-red-300);
+    --knk-danger-border: var(--knk-red-700);
+
+    --knk-warning: var(--knk-amber-500);
+    --knk-warning-bg: var(--knk-amber-950);
+    --knk-warning-text: var(--knk-amber-300);
+    --knk-warning-border: var(--knk-amber-700);
+
+    --knk-info: var(--knk-blue-500);
+    --knk-info-bg: var(--knk-blue-950);
+    --knk-info-text: var(--knk-blue-300);
+    --knk-info-border: var(--knk-blue-700);
+
+    /* ── Brand colors ──
+       Primary = Knekro blue (#3b82f6 ≈ logo #1296fb). Secondary = amber.
+       Each has interactive states + contrast tokens for use on the color's surface. */
+
+    --knk-primary: var(--knk-blue-500);
+    --knk-primary-hover: var(--knk-blue-400);
+    --knk-primary-active: var(--knk-blue-600);
+    --knk-primary-bg: var(--knk-blue-950);
+    --knk-primary-text: var(--knk-blue-50);
+
+    --knk-secondary: var(--knk-amber-500);
+    --knk-secondary-hover: var(--knk-amber-400);
+    --knk-secondary-active: var(--knk-amber-600);
+    --knk-secondary-bg: var(--knk-amber-950);
+    --knk-secondary-text: var(--knk-amber-50);
+
+    /* ── Extended background variants ── */
+    --knk-bg-elevated: var(--knk-surface-2);
+    --knk-bg-overlay: color-mix(in srgb, var(--knk-bg) 92%, transparent);
+    --knk-bg-inset: color-mix(in srgb, black 30%, var(--knk-bg));
+
+    /* ── Extended text variants ── */
+    --knk-text-inverse: var(--knk-bg);
+    --knk-text-link: var(--knk-blue-400);
+    --knk-text-link-hover: var(--knk-blue-300);
+
+    /* ── Fonts ── */
     --font-display: "Space Grotesk", sans-serif;
     --font-body: "Inter", system-ui, sans-serif;
 }

@@ -23,23 +23,23 @@ const latestPosts = posts ?? [];
         <div class="aspect-video bg-(--knk-surface) overflow-hidden border border-(--knk-line)">
           <iframe id="twitch-player" allowfullscreen class="border-0 w-full h-full"></iframe>
         </div>
-        <span class="pointer-events-none absolute -top-px -left-px w-5 h-5 border-t-2 border-l-2 border-(--knk-amber)"
+        <span class="pointer-events-none absolute -top-px -left-px w-5 h-5 border-t-2 border-l-2 border-(--knk-primary)"
         ></span>
-        <span class="pointer-events-none absolute -top-px -right-px w-5 h-5 border-t-2 border-r-2 border-(--knk-amber)"
-        ></span>
-        <span
-          class="pointer-events-none absolute -bottom-px -left-px w-5 h-5 border-b-2 border-l-2 border-(--knk-amber)"
+        <span class="pointer-events-none absolute -top-px -right-px w-5 h-5 border-t-2 border-r-2 border-(--knk-primary)"
         ></span>
         <span
-          class="pointer-events-none absolute -bottom-px -right-px w-5 h-5 border-b-2 border-r-2 border-(--knk-amber)"
+          class="pointer-events-none absolute -bottom-px -left-px w-5 h-5 border-b-2 border-l-2 border-(--knk-primary)"
+        ></span>
+        <span
+          class="pointer-events-none absolute -bottom-px -right-px w-5 h-5 border-b-2 border-r-2 border-(--knk-primary)"
         ></span>
       </div>
 
       <div class="mt-4 flex flex-wrap items-center gap-4 pb-6 border-b border-(--knk-line)">
         <div
-          class="knk-notch-sm inline-flex items-center gap-2 px-3 py-1 bg-(--knk-live)/10 border border-(--knk-live)/40 text-sm font-medium text-(--knk-text)"
+          class="knk-notch-sm inline-flex items-center gap-2 px-3 py-1 bg-(--knk-red-400)/10 border border-(--knk-red-400)/40 text-sm font-medium text-(--knk-text)"
         >
-          <span class="w-1.5 h-1.5 rounded-full bg-(--knk-live) animate-pulse"></span>
+          <span class="w-1.5 h-1.5 rounded-full bg-(--knk-red-400) animate-pulse"></span>
           En vivo
         </div>
         <div class="text-sm text-(--knk-text-muted)">
@@ -84,10 +84,10 @@ const latestPosts = posts ?? [];
                 <li>
                   <a
                     href={`/posts/${post.id}`}
-                    class="group flex gap-4 py-5 pl-4 -ml-4 border-l-2 border-transparent hover:border-(--knk-amber) hover:bg-(--knk-surface)/60 transition-colors"
+                    class="group flex gap-4 py-5 pl-4 -ml-4 border-l-2 border-transparent hover:border-(--knk-primary) hover:bg-(--knk-surface)/60 transition-colors"
                   >
                     <div class="flex-1 min-w-0">
-                      <h3 class="font-(--font-display) text-lg tracking-tight group-hover:text-(--knk-amber) transition-colors">
+                      <h3 class="font-(--font-display) text-lg tracking-tight group-hover:text-(--knk-primary) transition-colors">
                         {post.title}
                       </h3>
                       <p class="text-sm text-(--knk-text-muted) mt-1 leading-relaxed line-clamp-2">{post.excerpt}</p>

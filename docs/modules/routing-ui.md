@@ -55,7 +55,8 @@ All CSS lives in one folder, split by responsibility. Tailwind v4 via `@tailwind
 Use `bg-(--knk-surface)`, `text-(--knk-text-muted)`, etc.
 
 Palette: `--knk-bg #0a0d12`, `--knk-surface` / `--knk-surface-2`, `--knk-line` / `--knk-line-strong`,
-`--knk-text` / `-muted` / `-faint`, accent `--knk-amber #ffb020` (+ `--knk-amber-dim`), brand `--knk-twitch`,
-`--knk-discord`, status `--knk-live` / `--knk-red` (each with a `-hover` variant). Fonts: `--font-display`
+`--knk-text` / `-muted` / `-faint`, primary `--knk-primary` (blue), secondary `--knk-secondary` (amber),
+third-party brand `--knk-twitch` / `--knk-discord` (each with `-hover`), danger `--knk-danger`
+(+ `--knk-danger-hover`). Fonts: `--font-display`
 (Space Grotesk), `--font-body` (Inter). Signature shapes: `.knk-notch` / `.knk-notch-sm` (clipped corners),
 `.knk-grid-bg`, `.knk-eyebrow`.
