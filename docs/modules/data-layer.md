@@ -1,7 +1,7 @@
 ---
 module: data-layer
 owner_area: backend
-last_verified_against_commit: 56bdfc6
+last_verified_against_commit: 449aef0
 depends_on: []
 ---
 
@@ -12,21 +12,16 @@ writing queries.
 
 ## Clients
 
-| Client            | File                                                | Key                               | Use                              |
-|-------------------|-----------------------------------------------------|-----------------------------------|----------------------------------|
-| Browser client    | `lib/supabase.ts`                                   | `PUBLIC_SUPABASE_ANON_KEY`        | Public reads in page frontmatter |
-| SSR cookie client | inline in `Layout` + `api/auth/*` + `auth/callback` | `PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Auth/session                     |
+| Client | File | Key | Use |
+|---|---|---|---|
+| Per-request SSR client | `lib/db-client.ts` | `PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Auth + data queries in page frontmatter & API routes |
 
-Both fall back to a valid placeholder URL/key when env is absent so import-time `createClient` can't crash the page.
-Intentional — keep it.
-
-> Inconsistency to resolve: anon vs publishable key across clients. Pick one project-wide.
+Created per request (not shared) so each call carries the user's cookies/JWT. Falls back to a valid placeholder URL/key when env is absent so import-time `createClient` can't crash the page. Intentional — keep it.
 
 ## Env vars (already set in Vercel — do not re-add)
 
 Referenced in `src/` (confirmed):
-- `PUBLIC_SUPABASE_URL`, `PUBLIC_SUPABASE_ANON_KEY` — `lib/supabase.ts` (browser client)
-- `PUBLIC_SUPABASE_PUBLISHABLE_KEY` — SSR cookie clients in `Layout` + `api/auth/*` + `auth/callback`
+- `PUBLIC_SUPABASE_URL`, `PUBLIC_SUPABASE_PUBLISHABLE_KEY` — `lib/db-client.ts` (per-request SSR client)
 
 `.env.example` additionally declares `SUPABASE_SERVICE_ROLE_KEY` — server-only, never client. Other names (e.g.
 `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `POSTGRES_*`, `NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL`) appear in old

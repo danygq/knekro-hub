@@ -1,11 +1,11 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import { createSupabaseServerClient } from "../lib/supabase-server";
+import { createDbClient } from "../lib/db-client";
 
-const ssrClient = createSupabaseServerClient(Astro.request, Astro.cookies);
+const dbClient = createDbClient(Astro.request, Astro.cookies);
 const {
   data: { user },
-} = await ssrClient.auth.getUser().catch(() => ({ data: { user: null } }));
+} = await dbClient.auth.getUser().catch(() => ({ data: { user: null } }));
 ---
 
 <Layout user={user}>

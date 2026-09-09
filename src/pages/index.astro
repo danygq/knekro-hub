@@ -1,14 +1,13 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import { supabase } from "../lib/supabase";
-import { createSupabaseServerClient } from "../lib/supabase-server";
+import { createDbClient } from "../lib/db-client";
 
-const ssrClient = createSupabaseServerClient(Astro.request, Astro.cookies);
+const dbClient = createDbClient(Astro.request, Astro.cookies);
 const {
   data: { user },
-} = await ssrClient.auth.getUser().catch(() => ({ data: { user: null } }));
+} = await dbClient.auth.getUser().catch(() => ({ data: { user: null } }));
 
-const { data: posts, error } = await supabase
+const { data: posts, error } = await dbClient
   .from("posts")
   .select("id,title,excerpt,created_at")
   .order("created_at", { ascending: false })

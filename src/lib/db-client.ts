@@ -1,17 +1,20 @@
 import { createServerClient, parseCookieHeader } from "@supabase/ssr";
 
 /**
- * Create a Supabase server client for Astro SSR.
+ * Create a per-request database client for Astro SSR.
  *
  * IMPORTANT: this must be called in page frontmatter (not in layouts or
  * imported components). Astro.cookies.set() only works before the response
  * headers are sent — layouts/components run too late and throw
- * ResponseSentError when Supabase refreshes the auth token.
+ * ResponseSentError when the auth token is refreshed.
+ *
+ * Use this single client for both auth and data queries so that every
+ * request carries the user's JWT and respects Row Level Security policies.
  *
  * @param request - Astro.request (pages) or the `request` param (API routes)
  * @param cookieStore - Astro.cookies (pages) or the `cookies` param (API routes)
  */
-export function createSupabaseServerClient(
+export function createDbClient(
   request: Request,
   cookieStore: { set: (name: string, value: string, options?: any) => void },
 ) {
