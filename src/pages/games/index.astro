@@ -1,17 +1,16 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import GameCard from "../../components/GameCard.astro";
-import { supabase } from "../../lib/supabase";
-import { createSupabaseServerClient } from "../../lib/supabase-server";
+import { createDbClient } from "../../lib/db-client";
 import { loadGamesLibrary, buildGameStatuses, statusName, statusIdString } from "../../lib/games";
 import "../../styles/pages/games.css";
 
-const ssrClient = createSupabaseServerClient(Astro.request, Astro.cookies);
+const dbClient = createDbClient(Astro.request, Astro.cookies);
 const {
   data: { user },
-} = await ssrClient.auth.getUser().catch(() => ({ data: { user: null } }));
+} = await dbClient.auth.getUser().catch(() => ({ data: { user: null } }));
 
-const { statuses, games } = await loadGamesLibrary(supabase);
+const { statuses, games } = await loadGamesLibrary(dbClient);
 const gameStatuses = buildGameStatuses(statuses, games);
 ---
 

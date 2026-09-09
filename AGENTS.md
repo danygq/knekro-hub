@@ -1,7 +1,7 @@
 ---
 module: agent-onboarding
 owner_area: repo-wide
-last_verified_against_commit: 56bdfc6
+last_verified_against_commit: 449aef0
 depends_on: [ARCHITECTURE.md, docs/INDEX.md]
 ---
 
@@ -32,7 +32,7 @@ Astro SSR site (a "hub") for the Twitch streamer **Knekro**: a library of games 
 | Auth | Supabase Twitch OAuth via `@supabase/ssr` cookie clients |
 
 ## Where NOT to make changes
-- `src/lib/supabase.ts` placeholder-fallback pattern exists on purpose (keeps pages rendering while env provisions) — don't "fix" it away.
+- `src/lib/db-client.ts` placeholder-fallback pattern exists on purpose (keeps pages rendering while env provisions) — don't "fix" it away.
 - Env var names — they are wired in Vercel; renaming breaks deploy.
 
 ## Run / verify
