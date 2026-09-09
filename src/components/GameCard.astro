@@ -12,7 +12,7 @@ interface Props {
 }
 
 const { name, coverUrl, status, statusIds, gameId, communityAvg, voteCount, userVote, loggedIn } = Astro.props;
-const avgLabel = communityAvg != null ? communityAvg.toFixed(1) : "−";
+const avgLabel = communityAvg != null ? (Number.isInteger(communityAvg) ? String(communityAvg) : communityAvg.toFixed(1)) : "−";
 const hasVote = userVote != null;
 ---
 

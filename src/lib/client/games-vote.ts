@@ -14,6 +14,11 @@ function voteValue(btn: HTMLElement): number {
   return Number(btn.dataset.voteValue);
 }
 
+/** Format an average: whole numbers as integers, otherwise max 1 decimal. */
+function formatAvg(avg: number): string {
+  return Number.isInteger(avg) ? String(avg) : avg.toFixed(1);
+}
+
 /** Close every open picker except the one on `current` (optionally). */
 function closeAllPickers(current?: HTMLElement): void {
   document.querySelectorAll<HTMLElement>("[data-vote-picker]").forEach((picker) => {
@@ -53,7 +58,7 @@ function updateAverage(card: GameCardEls, oldVote: number | null, newVote: numbe
   if (nextAvg !== null && nextCount > 0) {
     card.root.dataset.avg = String(nextAvg);
     card.root.dataset.avgCount = String(nextCount);
-    avgBadge.textContent = `${nextAvg.toFixed(1)}/10`;
+    avgBadge.textContent = `${formatAvg(nextAvg)}/10`;
     avgBadge.title = `Media de la comunidad (${nextCount} votos)`;
   } else {
     card.root.dataset.avg = "";
