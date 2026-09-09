@@ -14,6 +14,25 @@ interface Props {
 const { name, coverUrl, status, statusIds, gameId, communityAvg, voteCount, userVote, loggedIn } = Astro.props;
 const avgLabel = communityAvg != null ? (Number.isInteger(communityAvg) ? String(communityAvg) : communityAvg.toFixed(1)) : "−";
 const hasVote = userVote != null;
+
+// Map a vote value (1-10) to a badge CSS color class. Returns "" for null.
+const voteClass = (vote: number | null): string => {
+  if (vote == null) return "";
+  if (vote < 3) return "knk-vote-red";
+  if (vote < 5) return "knk-vote-orange";
+  if (vote < 7) return "knk-vote-amber";
+  if (vote < 9) return "knk-vote-green";
+  return "knk-vote-blue";
+};
+
+// Map a number button (1-10) to its picker color class.
+const voteNumClass = (n: number): string => {
+  if (n < 3) return "knk-vote-num-red";
+  if (n < 5) return "knk-vote-num-orange";
+  if (n < 7) return "knk-vote-num-amber";
+  if (n < 9) return "knk-vote-num-green";
+  return "knk-vote-num-blue";
+};
 ---
 
 <article
@@ -59,7 +78,7 @@ const hasVote = userVote != null;
     <div class="absolute bottom-3 left-3 right-3 z-10 flex items-end justify-between gap-2">
       <span
         data-personal-badge
-        class="knk-notch-sm px-2.5 py-1 text-sm font-medium bg-(--knk-primary)/15 text-(--knk-primary) border border-(--knk-primary)/30 tabular-nums"
+        class=`knk-notch-sm px-2.5 py-1 text-sm font-medium border tabular-nums transition-colors ${voteClass(userVote)}`
         title="Tu voto"
         hidden={!hasVote}
       >
@@ -67,7 +86,7 @@ const hasVote = userVote != null;
       </span>
       <span
         data-avg-badge
-        class="ml-auto knk-notch-sm px-2.5 py-1 text-sm font-medium bg-(--knk-bg)/80 text-(--knk-text-muted) border border-(--knk-line) tabular-nums"
+        class=`ml-auto knk-notch-sm px-2.5 py-1 text-sm font-medium border tabular-nums transition-colors ${voteClass(communityAvg) || "knk-vote-muted"}`
         title={voteCount > 0 ? `Media de la comunidad (${voteCount} votos)` : "Sin votos todavía"}
       >
         {avgLabel}/10
@@ -94,20 +113,14 @@ const hasVote = userVote != null;
         >
           <span class="text-sm font-medium text-(--knk-text-muted)">¿Cuál es tu puntuación?</span>
           <div class="grid grid-cols-5 gap-2">
-            {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
-              <button
-                type="button"
-                data-vote-value={n}
-                class={`knk-vote-num knk-notch-sm w-11 h-11 text-base font-medium border transition-colors
-                  ${
-                    n === userVote
-                      ? "bg-(--knk-primary) text-(--knk-primary-text) border-(--knk-primary)"
-                      : "bg-(--knk-surface) text-(--knk-text-muted) border-(--knk-line) hover:text-(--knk-primary) hover:border-(--knk-line-strong)"
-                  }`}
-              >
-                {n}
-              </button>
-            ))}
+            {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => {
+              const numCls = `${voteNumClass(n)} knk-vote-num knk-notch-sm w-11 h-11 text-base font-medium border transition-colors${n === userVote ? " active" : ""}`;
+              return (
+                <button type="button" data-vote-value={n} class={numCls}>
+                  {n}
+                </button>
+              );
+            })}
           </div>
         </div>
       )

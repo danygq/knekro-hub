@@ -14,6 +14,29 @@ function voteValue(btn: HTMLElement): number {
   return Number(btn.dataset.voteValue);
 }
 
+// Mirror of the server-side voteClass(): map a vote (1-10) to a badge color class.
+function voteClassClient(vote: number): string {
+  if (vote < 3) return "knk-vote-red";
+  if (vote < 5) return "knk-vote-orange";
+  if (vote < 7) return "knk-vote-amber";
+  if (vote < 9) return "knk-vote-green";
+  return "knk-vote-blue";
+}
+
+// Swap a badge's vote-color class. Pass null for the neutral muted state.
+function applyVoteColor(el: HTMLElement, vote: number | null): void {
+  const next = vote == null ? "knk-vote-muted" : voteClassClient(vote);
+  el.classList.remove(
+    "knk-vote-red",
+    "knk-vote-orange",
+    "knk-vote-amber",
+    "knk-vote-green",
+    "knk-vote-blue",
+    "knk-vote-muted",
+  );
+  el.classList.add(next);
+}
+
 /** Format an average: whole numbers as integers, otherwise max 1 decimal. */
 function formatAvg(avg: number): string {
   return Number.isInteger(avg) ? String(avg) : avg.toFixed(1);
@@ -60,11 +83,13 @@ function updateAverage(card: GameCardEls, oldVote: number | null, newVote: numbe
     card.root.dataset.avgCount = String(nextCount);
     avgBadge.textContent = `${formatAvg(nextAvg)}/10`;
     avgBadge.title = `Media de la comunidad (${nextCount} votos)`;
+    applyVoteColor(avgBadge, nextAvg);
   } else {
     card.root.dataset.avg = "";
     card.root.dataset.avgCount = "0";
     avgBadge.textContent = "−/10";
     avgBadge.title = "Sin votos todavía";
+    applyVoteColor(avgBadge, null);
   }
 }
 
@@ -74,17 +99,12 @@ function reflectVote(card: GameCardEls, vote: number | null): void {
   if (card.personalBadge) {
     card.personalBadge.hidden = vote == null;
     card.personalBadge.textContent = `Tu puntuación: ${vote}`;
+    if (vote != null) applyVoteColor(card.personalBadge, vote);
   }
 
   card.picker.querySelectorAll<HTMLElement>("[data-vote-value]").forEach((btn) => {
     const n = voteValue(btn);
-    const active = n === vote;
-    btn.classList.toggle("bg-(--knk-primary)", active);
-    btn.classList.toggle("text-(--knk-primary-text)", active);
-    btn.classList.toggle("border-(--knk-primary)", active);
-    btn.classList.toggle("bg-(--knk-surface)", !active);
-    btn.classList.toggle("text-(--knk-text-muted)", !active);
-    btn.classList.toggle("border-(--knk-line)", !active);
+    btn.classList.toggle("active", n === vote);
   });
 }
 
