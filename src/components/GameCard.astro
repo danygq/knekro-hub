@@ -90,8 +90,8 @@ const voteNumClass = (n: number): string => {
         title={voteCount > 0 ? `Media de la comunidad (${voteCount} votos)` : "Sin votos todavía"}
       >
         <span class="flex flex-col items-center leading-tight">
-          <span class="text-sm">{avgLabel}/10</span>
-          {voteCount > 0 && <span class="text-[10px] font-normal opacity-70">{voteCount} voto{voteCount > 1 && "s"}</span>}
+          <span data-avg-label class="text-sm">{avgLabel}/10</span>
+          <span data-vote-count class="text-[10px] font-normal opacity-70" hidden={voteCount === 0}>{voteCount} voto{voteCount > 1 && "s"}</span>
         </span>
       </span>
     </div>
