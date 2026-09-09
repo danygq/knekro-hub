@@ -1,6 +1,12 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import { supabase } from "../lib/supabase";
+import { createSupabaseServerClient } from "../lib/supabase-server";
+
+const ssrClient = createSupabaseServerClient(Astro.request, Astro.cookies);
+const {
+  data: { user },
+} = await ssrClient.auth.getUser().catch(() => ({ data: { user: null } }));
 
 const { data: posts, error } = await supabase
   .from("posts")
@@ -11,7 +17,7 @@ const { data: posts, error } = await supabase
 const latestPosts = posts ?? [];
 ---
 
-<Layout>
+<Layout user={user}>
   <div class="mb-8">
     <p class="knk-eyebrow mb-2">Directo desde Twitch</p>
   </div>

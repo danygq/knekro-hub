@@ -2,14 +2,20 @@
 import Layout from "../../layouts/Layout.astro";
 import GameCard from "../../components/GameCard.astro";
 import { supabase } from "../../lib/supabase";
+import { createSupabaseServerClient } from "../../lib/supabase-server";
 import { loadGamesLibrary, buildGameStatuses, statusName, statusIdString } from "../../lib/games";
 import "../../styles/pages/games.css";
+
+const ssrClient = createSupabaseServerClient(Astro.request, Astro.cookies);
+const {
+  data: { user },
+} = await ssrClient.auth.getUser().catch(() => ({ data: { user: null } }));
 
 const { statuses, games } = await loadGamesLibrary(supabase);
 const gameStatuses = buildGameStatuses(statuses, games);
 ---
 
-<Layout>
+<Layout user={user}>
   <div class="mb-8 flex flex-wrap items-start justify-between gap-x-6 gap-y-4">
     <div class="min-w-0">
       <p class="knk-eyebrow mb-2">Biblioteca del canal</p>
