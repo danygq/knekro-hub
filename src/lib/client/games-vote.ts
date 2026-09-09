@@ -4,42 +4,19 @@
 //
 // Per-card interaction:
 //   - "Votar" / "Tu puntuación: X" toggle reveals the 1-10 picker.
-//   - Clicking a number submits the vote. Clicking the user's current number
-//     again clears it (sends vote: null). The community average updates
-//   -   optimistically from data-avg / data-avg-count so the UI feels instant.
+//   - Clicking a number submits the vote via the browser Supabase client.
+//     Clicking the user's current number again clears it (sets vote: null).
+//   - The community average updates optimistically from data-avg / data-avg-count.
+//   - Votes from OTHER users arrive via the realtime subscription
+//     (games-realtime.ts) and update the average live.
 
 import type { GameCardEls } from "../../types";
+import { supabaseClient } from "../db-client";
+import { updateAverage, reflectVote } from "./games-vote-state";
+import { justVotedGames } from "./games-realtime";
 
 function voteValue(btn: HTMLElement): number {
   return Number(btn.dataset.voteValue);
-}
-
-// Mirror of the server-side voteClass(): map a vote (1-10) to a badge color class.
-function voteClassClient(vote: number): string {
-  if (vote < 3) return "knk-vote-red";
-  if (vote < 5) return "knk-vote-orange";
-  if (vote < 7) return "knk-vote-amber";
-  if (vote < 9) return "knk-vote-green";
-  return "knk-vote-blue";
-}
-
-// Swap a badge's vote-color class. Pass null for the neutral muted state.
-function applyVoteColor(el: HTMLElement, vote: number | null): void {
-  const next = vote == null ? "knk-vote-muted" : voteClassClient(vote);
-  el.classList.remove(
-    "knk-vote-red",
-    "knk-vote-orange",
-    "knk-vote-amber",
-    "knk-vote-green",
-    "knk-vote-blue",
-    "knk-vote-muted",
-  );
-  el.classList.add(next);
-}
-
-/** Format an average: whole numbers as integers, otherwise max 1 decimal. */
-function formatAvg(avg: number): string {
-  return Number.isInteger(avg) ? String(avg) : avg.toFixed(1);
 }
 
 /** Close every open picker except the one on `current` (optionally). */
@@ -50,70 +27,26 @@ function closeAllPickers(current?: HTMLElement): void {
   });
 }
 
-/** Recompute the displayed average after a vote change, optimistically. */
-function updateAverage(card: GameCardEls, oldVote: number | null, newVote: number | null): void {
-  const avgBadge = card.avgBadge;
-  if (!avgBadge) return;
+/** Submit a vote (or clear it) directly via the browser Supabase client. */
+async function submitVote(gameId: number, vote: number | null): Promise<boolean> {
+  const {
+    data: { user },
+  } = await supabaseClient.auth.getUser();
+  if (!user) return false;
 
-  const prevAvg = Number(card.root.dataset.avg);
-  const prevCount = Number(card.root.dataset.avgCount);
-  const hasPrev = card.root.dataset.avg !== "" && prevCount > 0;
+  // Upsert on (user_id, game_id): inserts a new row or updates the existing one.
+  // A null vote clears the user's vote (row is kept, vote column set to null).
+  const { error } = await supabaseClient
+    .from("games_user_votes")
+    .upsert(
+      { user_id: user.id, game_id: gameId, vote },
+      { onConflict: "user_id,game_id" },
+    );
 
-  let nextAvg: number | null = null;
-  let nextCount = prevCount;
-
-  if (oldVote === null && newVote !== null) {
-    // new vote
-    nextCount = prevCount + 1;
-    nextAvg = hasPrev ? (prevAvg * prevCount + newVote) / nextCount : newVote;
-  } else if (oldVote !== null && newVote !== null) {
-    // changed vote — count unchanged
-    nextCount = prevCount;
-    nextAvg = hasPrev ? (prevAvg * prevCount - oldVote + newVote) / prevCount : newVote;
-  } else if (oldVote !== null && newVote === null) {
-    // cleared vote
-    nextCount = prevCount - 1;
-    if (nextCount > 0 && hasPrev) {
-      nextAvg = (prevAvg * prevCount - oldVote) / nextCount;
-    }
-  }
-
-  if (nextAvg !== null && nextCount > 0) {
-    card.root.dataset.avg = String(nextAvg);
-    card.root.dataset.avgCount = String(nextCount);
-    if (card.avgLabel) card.avgLabel.textContent = `${formatAvg(nextAvg)}/10`;
-    if (card.voteCount) {
-      card.voteCount.textContent = `${nextCount} voto${nextCount > 1 ? "s" : ""}`;
-      card.voteCount.hidden = false;
-    }
-    avgBadge.title = `Media de la comunidad (${nextCount} votos)`;
-    applyVoteColor(avgBadge, nextAvg);
-  } else {
-    card.root.dataset.avg = "";
-    card.root.dataset.avgCount = "0";
-    if (card.avgLabel) card.avgLabel.textContent = "−/10";
-    if (card.voteCount) card.voteCount.hidden = true;
-    avgBadge.title = "Sin votos todavía";
-    applyVoteColor(avgBadge, null);
-  }
+  return !error;
 }
 
-/** Reflect a confirmed vote on the toggle button + number highlights. */
-function reflectVote(card: GameCardEls, vote: number | null): void {
-  card.root.dataset.vote = vote != null ? String(vote) : "";
-  if (card.personalBadge) {
-    card.personalBadge.hidden = vote == null;
-    card.personalBadge.textContent = `Tu puntuación: ${vote}`;
-    if (vote != null) applyVoteColor(card.personalBadge, vote);
-  }
-
-  card.picker.querySelectorAll<HTMLElement>("[data-vote-value]").forEach((btn) => {
-    const n = voteValue(btn);
-    btn.classList.toggle("active", n === vote);
-  });
-}
-
-export function initGameVotes(): void {
+export function initGameVotes(): () => void {
   const cards = document.querySelectorAll<HTMLElement>(".knk-game-card");
 
   cards.forEach((root) => {
@@ -157,36 +90,42 @@ export function initGameVotes(): void {
         const currentVote = root.dataset.vote ? Number(root.dataset.vote) : null;
         const clearing = value === currentVote;
 
+        const nextVote = clearing ? null : value;
+        const gameId = Number(root.dataset.gameId);
+
         // optimistic UI
-        reflectVote(card, clearing ? null : value);
-        updateAverage(card, currentVote, clearing ? null : value);
+        reflectVote(card, nextVote);
+        updateAverage(card, currentVote, nextVote);
         picker.hidden = true;
 
-        try {
-          const res = await fetch("/api/games/vote", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ game_id: Number(root.dataset.gameId), vote: clearing ? null : value }),
-          });
-          if (!res.ok) {
-            // revert optimistic change on failure
-            reflectVote(card, currentVote);
-            updateAverage(card, clearing ? null : value, currentVote);
-            console.error("Vote failed", await res.text());
-          }
-        } catch (err) {
+        // flag this game so the realtime event doesn't double-count
+        justVotedGames.add(gameId);
+        setTimeout(() => justVotedGames.delete(gameId), 1000);
+
+        const ok = await submitVote(gameId, nextVote);
+        if (!ok) {
+          // revert optimistic change on failure
           reflectVote(card, currentVote);
-          updateAverage(card, clearing ? null : value, currentVote);
-          console.error("Vote error", err);
+          updateAverage(card, nextVote, currentVote);
+          console.error("Vote failed");
         }
       });
     });
   });
 
   // close pickers on outside click
-  document.addEventListener("click", () => closeAllPickers());
+  const outsideClick = () => closeAllPickers();
+  document.addEventListener("click", outsideClick);
+
   // close on Escape
-  document.addEventListener("keydown", (e) => {
+  const keyHandler = (e: KeyboardEvent) => {
     if (e.key === "Escape") closeAllPickers();
-  });
+  };
+  document.addEventListener("keydown", keyHandler);
+
+  // cleanup function for view transitions
+  return () => {
+    document.removeEventListener("click", outsideClick);
+    document.removeEventListener("keydown", keyHandler);
+  };
 }
