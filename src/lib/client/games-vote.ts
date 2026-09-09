@@ -8,12 +8,7 @@
 //     again clears it (sends vote: null). The community average updates
 //   -   optimistically from data-avg / data-avg-count so the UI feels instant.
 
-interface CardEls {
-  root: HTMLElement;
-  toggle: HTMLButtonElement;
-  picker: HTMLElement;
-  avgBadge: HTMLElement | null;
-}
+import type { GameCardEls } from "../../types";
 
 function voteValue(btn: HTMLElement): number {
   return Number(btn.dataset.voteValue);
@@ -28,7 +23,7 @@ function closeAllPickers(current?: HTMLElement): void {
 }
 
 /** Recompute the displayed average after a vote change, optimistically. */
-function updateAverage(card: CardEls, oldVote: number | null, newVote: number | null): void {
+function updateAverage(card: GameCardEls, oldVote: number | null, newVote: number | null): void {
   const avgBadge = card.avgBadge;
   if (!avgBadge) return;
 
@@ -69,9 +64,12 @@ function updateAverage(card: CardEls, oldVote: number | null, newVote: number | 
 }
 
 /** Reflect a confirmed vote on the toggle button + number highlights. */
-function reflectVote(card: CardEls, vote: number | null): void {
+function reflectVote(card: GameCardEls, vote: number | null): void {
   card.root.dataset.vote = vote != null ? String(vote) : "";
-  card.toggle.textContent = vote != null ? `Tu puntuación: ${vote}` : "Votar";
+  if (card.personalBadge) {
+    card.personalBadge.hidden = vote == null;
+    card.personalBadge.textContent = `Tu puntuación: ${vote}`;
+  }
 
   card.picker.querySelectorAll<HTMLElement>("[data-vote-value]").forEach((btn) => {
     const n = voteValue(btn);
@@ -93,7 +91,23 @@ export function initGameVotes(): void {
     const picker = root.querySelector<HTMLElement>("[data-vote-picker]");
     if (!toggle || !picker) return; // not logged in — no voting UI on this card
 
-    const card: CardEls = { root, toggle, picker, avgBadge: root.querySelector<HTMLElement>("[data-avg-badge]") };
+    const card: GameCardEls = {
+      root,
+      toggle,
+      picker,
+      avgBadge: root.querySelector<HTMLElement>("[data-avg-badge]"),
+      personalBadge: root.querySelector<HTMLElement>("[data-personal-badge]"),
+    };
+
+    // clicking the card opens the picker (mobile-friendly)
+    root.addEventListener("click", (e) => {
+      const target = e.target as HTMLElement;
+      if (target.closest("[data-vote-toggle]") || target.closest("[data-vote-picker]")) return;
+      e.stopPropagation();
+      const willOpen = picker.hidden;
+      closeAllPickers(picker);
+      picker.hidden = !willOpen;
+    });
 
     // toggle reveals / hides this card's picker
     toggle.addEventListener("click", (e) => {

@@ -17,7 +17,7 @@ const hasVote = userVote != null;
 ---
 
 <article
-  class="knk-game-card group border border-(--knk-line) bg-(--knk-surface) hover:border-(--knk-line-strong) transition-colors"
+  class=`knk-game-card group border border-(--knk-line) bg-(--knk-surface) hover:border-(--knk-line-strong) transition-colors${loggedIn ? " cursor-pointer" : ""}`
   data-status-ids={statusIds}
   data-game-id={gameId}
   data-avg={communityAvg != null ? String(communityAvg) : ""}
@@ -51,60 +51,70 @@ const hasVote = userVote != null;
     }
     {
       status && (
-        <span class="absolute top-3 right-3 z-10 knk-notch-sm px-2 py-0.5 text-xs font-medium bg-(--knk-bg)/80 text-(--knk-text-muted) border border-(--knk-line)">
+        <span class="absolute top-3 right-3 z-10 knk-notch-sm px-2.5 py-1 text-sm font-medium bg-(--knk-bg)/80 text-(--knk-text-muted) border border-(--knk-line)">
           {status}
         </span>
       )
     }
-    <span
-      data-avg-badge
-      class="absolute bottom-3 right-3 z-10 knk-notch-sm px-2 py-0.5 text-xs font-medium bg-(--knk-bg)/80 text-(--knk-text-muted) border border-(--knk-line) tabular-nums"
-      title={voteCount > 0 ? `Media de la comunidad (${voteCount} votos)` : "Sin votos todavía"}
-    >
-      {avgLabel}/10
-    </span>
+    <div class="absolute bottom-3 left-3 right-3 z-10 flex items-end justify-between gap-2">
+      <span
+        data-personal-badge
+        class="knk-notch-sm px-2.5 py-1 text-sm font-medium bg-(--knk-primary)/15 text-(--knk-primary) border border-(--knk-primary)/30 tabular-nums"
+        title="Tu voto"
+        hidden={!hasVote}
+      >
+        Tu puntuación: {userVote}
+      </span>
+      <span
+        data-avg-badge
+        class="ml-auto knk-notch-sm px-2.5 py-1 text-sm font-medium bg-(--knk-bg)/80 text-(--knk-text-muted) border border-(--knk-line) tabular-nums"
+        title={voteCount > 0 ? `Media de la comunidad (${voteCount} votos)` : "Sin votos todavía"}
+      >
+        {avgLabel}/10
+      </span>
+    </div>
     {
       loggedIn && (
-        <div class="absolute inset-x-0 bottom-0 z-20 p-3">
+        <div class="absolute inset-x-0 top-1/2 -translate-y-1/2 z-20 p-3">
           <button
             type="button"
             data-vote-toggle
-            class="knk-vote-toggle knk-notch-sm w-full px-3 py-1.5 text-xs font-medium
+            class="knk-vote-toggle knk-notch-sm w-full px-3 py-2 text-sm font-medium
               bg-(--knk-bg)/85 text-(--knk-text-muted) border border-(--knk-line)
-              opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity
+              opacity-0 group-hover:opacity-100 transition-opacity
               hover:text-(--knk-primary) hover:border-(--knk-line-strong)"
           >
-            {hasVote ? `Tu puntuación: ${userVote}` : "Votar"}
+            Votar
           </button>
-          <div
-            data-vote-picker
-            hidden
-            class="absolute inset-0 z-30 flex flex-col items-center justify-center gap-2 bg-(--knk-bg)/85 backdrop-blur-sm"
-          >
-            <span class="text-xs font-medium text-(--knk-text-muted)">¿Tu puntuación?</span>
-            <div class="grid grid-cols-5 gap-1.5">
-              {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
-                <button
-                  type="button"
-                  data-vote-value={n}
-                  class={`knk-vote-num knk-notch-sm w-9 h-9 text-sm font-medium border transition-colors
-                      ${
-                        n === userVote
-                          ? "bg-(--knk-primary) text-(--knk-primary-text) border-(--knk-primary)"
-                          : "bg-(--knk-surface) text-(--knk-text-muted) border-(--knk-line) hover:text-(--knk-primary) hover:border-(--knk-line-strong)"
-                      }`}
-                >
-                  {n}
-                </button>
-              ))}
-            </div>
+        </div>
+        <div
+          data-vote-picker
+          hidden
+          class="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 bg-(--knk-bg)/85 backdrop-blur-sm"
+        >
+          <span class="text-sm font-medium text-(--knk-text-muted)">¿Cuál es tu puntuación?</span>
+          <div class="grid grid-cols-5 gap-2">
+            {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
+              <button
+                type="button"
+                data-vote-value={n}
+                class={`knk-vote-num knk-notch-sm w-11 h-11 text-base font-medium border transition-colors
+                  ${
+                    n === userVote
+                      ? "bg-(--knk-primary) text-(--knk-primary-text) border-(--knk-primary)"
+                      : "bg-(--knk-surface) text-(--knk-text-muted) border-(--knk-line) hover:text-(--knk-primary) hover:border-(--knk-line-strong)"
+                  }`}
+              >
+                {n}
+              </button>
+            ))}
           </div>
         </div>
       )
     }
   </div>
   <div class="p-4">
-    <h3 class="font-(--font-display) text-base tracking-tight group-hover:text-(--knk-primary) transition-colors">
+    <h3 class="font-(--font-display) text-base tracking-tight group-hover:text-(--knk-primary) transition-colors cursor-default">
       {name}
     </h3>
   </div>
