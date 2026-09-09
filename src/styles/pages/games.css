@@ -101,3 +101,21 @@
         transition: none;
     }
 }
+
+/* Voting UI on game cards.
+   The toggle button is hidden until the card is hovered/focused. On touch
+   devices (no hover capability) it stays visible so voting still works. */
+.knk-vote-toggle {
+    cursor: pointer;
+}
+
+@media (hover: none) {
+    .knk-vote-toggle {
+        opacity: 1 !important;
+    }
+}
+
+.knk-vote-num {
+    cursor: pointer;
+    user-select: none;
+}

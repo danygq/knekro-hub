@@ -4,14 +4,25 @@ interface Props {
   coverUrl: string | null;
   status: string;
   statusIds: string;
+  gameId: number;
+  communityAvg: number | null;
+  voteCount: number;
+  userVote: number | null;
+  loggedIn: boolean;
 }
 
-const { name, coverUrl, status, statusIds } = Astro.props;
+const { name, coverUrl, status, statusIds, gameId, communityAvg, voteCount, userVote, loggedIn } = Astro.props;
+const avgLabel = communityAvg != null ? communityAvg.toFixed(1) : "−";
+const hasVote = userVote != null;
 ---
 
 <article
   class="knk-game-card group border border-(--knk-line) bg-(--knk-surface) hover:border-(--knk-line-strong) transition-colors"
   data-status-ids={statusIds}
+  data-game-id={gameId}
+  data-avg={communityAvg != null ? String(communityAvg) : ""}
+  data-avg-count={String(voteCount)}
+  data-vote={hasVote ? String(userVote) : ""}
 >
   <div class="relative aspect-2/3 bg-(--knk-surface-2) knk-grid-bg overflow-hidden">
     {
@@ -43,6 +54,52 @@ const { name, coverUrl, status, statusIds } = Astro.props;
         <span class="absolute top-3 right-3 z-10 knk-notch-sm px-2 py-0.5 text-xs font-medium bg-(--knk-bg)/80 text-(--knk-text-muted) border border-(--knk-line)">
           {status}
         </span>
+      )
+    }
+    <span
+      data-avg-badge
+      class="absolute bottom-3 right-3 z-10 knk-notch-sm px-2 py-0.5 text-xs font-medium bg-(--knk-bg)/80 text-(--knk-text-muted) border border-(--knk-line) tabular-nums"
+      title={voteCount > 0 ? `Media de la comunidad (${voteCount} votos)` : "Sin votos todavía"}
+    >
+      {avgLabel}/10
+    </span>
+    {
+      loggedIn && (
+        <div class="absolute inset-x-0 bottom-0 z-20 p-3">
+          <button
+            type="button"
+            data-vote-toggle
+            class="knk-vote-toggle knk-notch-sm w-full px-3 py-1.5 text-xs font-medium
+              bg-(--knk-bg)/85 text-(--knk-text-muted) border border-(--knk-line)
+              opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity
+              hover:text-(--knk-primary) hover:border-(--knk-line-strong)"
+          >
+            {hasVote ? `Tu puntuación: ${userVote}` : "Votar"}
+          </button>
+          <div
+            data-vote-picker
+            hidden
+            class="absolute inset-0 z-30 flex flex-col items-center justify-center gap-2 bg-(--knk-bg)/85 backdrop-blur-sm"
+          >
+            <span class="text-xs font-medium text-(--knk-text-muted)">¿Tu puntuación?</span>
+            <div class="grid grid-cols-5 gap-1.5">
+              {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
+                <button
+                  type="button"
+                  data-vote-value={n}
+                  class={`knk-vote-num knk-notch-sm w-9 h-9 text-sm font-medium border transition-colors
+                      ${
+                        n === userVote
+                          ? "bg-(--knk-primary) text-(--knk-primary-text) border-(--knk-primary)"
+                          : "bg-(--knk-surface) text-(--knk-text-muted) border-(--knk-line) hover:text-(--knk-primary) hover:border-(--knk-line-strong)"
+                      }`}
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
       )
     }
   </div>

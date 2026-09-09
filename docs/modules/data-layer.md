@@ -1,7 +1,7 @@
 ---
 module: data-layer
 owner_area: backend
-last_verified_against_commit: 449aef0
+last_verified_against_commit: 30ebd45
 depends_on: []
 ---
 
@@ -29,10 +29,15 @@ Supabase/Vercel docs but are **not referenced anywhere in `src/`** — unclear, 
 
 ## Tables — CONFIRMED in code
 
-| Table         | Columns used                     | Where                                             |
-|---------------|----------------------------------|---------------------------------------------------|
-| `posts`       | `id, title, excerpt, created_at` | `index.astro` (order `created_at` desc, limit 10) |
-| `game_status` | `id, name`                       | `lib/games.ts` → `games/index.astro` (order `id`) |
+| Table | Columns used | Where |
+|---|---|---|
+| `posts` | `id, title, excerpt, created_at` | `index.astro` (order `created_at` desc, limit 10) |
+| `game_status` | `id, name` | `lib/games.ts` → `games/index.astro` (order `id`) |
+| `games_user_votes` | `id, user_id, game_id, vote` | `lib/games.ts` (averages + user votes) · `pages/api/games/vote.ts` (insert/update/clear) |
+
+> **Prerequisite**: `games_user_votes` must exist in Supabase for the community-voting feature to work. Expected
+> columns: `id` (PK), `user_id` (FK → auth.users), `game_id` (FK → games), `vote` (integer, nullable). A null `vote`
+> means the user cleared their vote (row is kept). Unique constraint on `(user_id, game_id)` recommended.
 
 ## Tables — INFERRED from `src/types/` (unclear — needs confirmation against Supabase)
 
@@ -47,6 +52,14 @@ Supabase/Vercel docs but are **not referenced anywhere in `src/`** — unclear, 
 
 > Type caveat: `src/types/*` marks ids as `number` while comments say "UUID or slug". Reconcile with actual column types
 > before building queries/joins.
+
+## Writes
+
+`games_user_votes` is the only table written from `src/`:
+- `POST /api/games/vote` (`pages/api/games/vote.ts`) — inserts, updates, or clears a vote. Authenticated via the SSR
+  cookie client (`getUser`); the `user_id` always comes from the session, never the request body. A `vote` of `null`
+  clears the vote (row kept, `vote` column set to null). An existing row for `(user_id, game_id)` is updated in place
+  rather than duplicated.
 
 ## Reads are server-side
 

@@ -1,13 +1,13 @@
 ---
 module: architecture
 owner_area: repo-wide
-last_verified_against_commit: 449aef0
+last_verified_against_commit: 30ebd45
 depends_on: [AGENTS.md, docs/INDEX.md]
 ---
 
 # Architecture
 
-Knekro Hub is a server-rendered Astro site for Twitch streamer Knekro. It surfaces a live Twitch embed + posts feed (`/`), a browsable library of games played on stream (`/games`), and a separate awards section (`/goty`) covering Game of the Year, "Ojeadita of the Year", and per-genre picks. Supabase provides Postgres + Twitch OAuth; Vercel hosts the SSR output. Core constraints: small dependency surface, all data reads server-side, Postgres queries must be column-scoped and index-aware, and the schema is meant to stay maintainable and extensible.
+Knekro Hub is a server-rendered Astro site for Twitch streamer Knekro. It surfaces a live Twitch embed + posts feed (`/`), a browsable library of games played on stream (`/games`) with community voting, and a separate awards section (`/goty`) covering Game of the Year, "Ojeadita of the Year", and per-genre picks. Supabase provides Postgres + Twitch OAuth; Vercel hosts the SSR output. Core constraints: small dependency surface, all data reads server-side, Postgres queries must be column-scoped and index-aware, and the schema is meant to stay maintainable and extensible.
 
 ## Data flow
 
@@ -16,11 +16,12 @@ flowchart TD
   U[Visitor] -->|HTTP| V[Vercel SSR / Astro]
   V --> L[Layout.astro]
   V --> Pi[index.astro] -->|dbClient: getUser + select posts| SB[(Supabase)]
-  V --> Pg[games/index.astro] -->|dbClient: getUser + loadGamesLibrary| SB
+  V --> Pg[games/index.astro] -->|dbClient: getUser + loadGamesLibrary + community averages + user votes: game_status + games + games_user_votes| SB
   V --> Pgo[goty.astro - static]
   U -->|Login| AS[POST /api/auth/signin] -->|signInWithOAuth twitch| SB
   SB -->|redirect w/ code| CB[GET /auth/callback] -->|exchangeCodeForSession| SB
   U -->|Logout| AO[POST /api/auth/signout] --> SB
+  U -->|Vote| PV[POST /api/games/vote] -->|insert/update/clear games_user_votes| SB
   L --> TW[[Twitch embeds: player + chat]]
 ```
 
@@ -30,13 +31,15 @@ flowchart TD
 |---|---|---|---|
 | `layouts/Layout.astro` | Shell: head, nav, footer, auth UI switch | `LoginButton`, `UserMenu`, `styles/` | all pages |
 | `pages/index.astro` | Home: Twitch player+chat embeds, posts feed | `lib/db-client`, Layout | — |
-| `pages/games/index.astro` | Games library: DB-backed status filter panel + grid | `lib/db-client`, `lib/games`, `GameCard`, Layout | — |
+| `pages/games/index.astro` | Games library: DB-backed status filter panel + grid + community voting | `lib/db-client`, `lib/games`, `GameCard`, Layout | — |
 | `pages/goty.astro` | GOTY awards (static placeholder) | Layout | — |
 | `pages/api/auth/*` | `signin` (Twitch OAuth), `signout` | `lib/db-client` | LoginButton/UserMenu forms |
 | `pages/auth/callback.ts` | OAuth PKCE code→session exchange | `lib/db-client` | Supabase redirect |
+| `pages/api/games/vote.ts` | Insert/update/clear a game vote (auth via SSR cookie client) | `lib/db-client` | `pages/games/index.astro` (`<script>`) |
 | `lib/db-client.ts` | Per-request SSR database client (auth + data) with placeholder fallback | `@supabase/ssr` | all pages, API routes |
-| `lib/games.ts` | Server-side `/games` loader: statuses + games queries (column-scoped, embedded join, bounded) | `types`, `@supabase/supabase-js` | `pages/games/index.astro` |
+| `lib/games.ts` | Server-side `/games` loader: statuses + games + community averages + user votes (column-scoped, embedded join, bounded) | `types`, `@supabase/supabase-js` | `pages/games/index.astro` |
 | `lib/client/games-filter.ts` | Browser controller for the `/games` filter drawer (include/exclude, live count) | — | `pages/games/index.astro` (`<script>`) |
+| `lib/client/games-vote.ts` | Browser controller for the `/games` voting UI (picker, optimistic average) | — | `pages/games/index.astro` (`<script>`) |
 | `types/*` | Domain types, one file per area (`games.ts`, `categories.ts`, `streams.ts`, `goty.ts`) + barrel `index.ts` | — | `games` via `lib/games.ts` (rest aspirational) |
 | `components/*` | `LoginButton`, `UserMenu`, `TwitchLogo`, `GameCard` | — | Layout; `GameCard` by games grid |
 | `styles/*` | `global.css` entry → `tokens.css` (design tokens), `base.css`, `utilities.css`; per-page `pages/games.css` | Tailwind v4 | Layout (`global.css`); `pages/games/index.astro` (`pages/games.css`)
@@ -46,7 +49,8 @@ flowchart TD
 - **Supabase for data + Twitch OAuth**: single backend; Twitch is the only login provider (audience = Twitch community). See `docs/adr/0002-twitch-only-auth.md`.
 - **Single per-request client**: `lib/db-client.ts` creates one auth-aware client per request via `@supabase/ssr`, used for both auth and data queries. Carries the user JWT so RLS policies apply.
 - **Placeholder-fallback client**: `lib/db-client.ts` falls back to a valid dummy URL/key so pages render while env vars provision. Intentional.
-- **`/games` reads live data**: `lib/games.ts` queries `game_status` + `games` (PostgREST embedding `game_status!game_status_id`, bounded); `games` schema still unconfirmed.
+- **`/games` reads live data**: `lib/games.ts` queries `game_status` + `games` (PostgREST embedding `game_status!game_status_id`, bounded) + community averages and the signed-in user's votes from `games_user_votes`; `games` schema still unconfirmed.
+- **Community voting**: votes 1–10 stored in `games_user_votes`; the community average (1 decimal) is shown to everyone, voting controls to signed-in users only. Clearing a vote sets `vote = null` (row kept) rather than deleting.
 - **Tailwind v4 token-only theming**: no config file; all theme lives in `src/styles/tokens.css` as `--knk-*` vars.
 
 ## Risks / tech debt (by blast radius)
