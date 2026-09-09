@@ -81,13 +81,18 @@ function updateAverage(card: GameCardEls, oldVote: number | null, newVote: numbe
   if (nextAvg !== null && nextCount > 0) {
     card.root.dataset.avg = String(nextAvg);
     card.root.dataset.avgCount = String(nextCount);
-    avgBadge.textContent = `${formatAvg(nextAvg)}/10`;
+    if (card.avgLabel) card.avgLabel.textContent = `${formatAvg(nextAvg)}/10`;
+    if (card.voteCount) {
+      card.voteCount.textContent = `${nextCount} voto${nextCount > 1 ? "s" : ""}`;
+      card.voteCount.hidden = false;
+    }
     avgBadge.title = `Media de la comunidad (${nextCount} votos)`;
     applyVoteColor(avgBadge, nextAvg);
   } else {
     card.root.dataset.avg = "";
     card.root.dataset.avgCount = "0";
-    avgBadge.textContent = "−/10";
+    if (card.avgLabel) card.avgLabel.textContent = "−/10";
+    if (card.voteCount) card.voteCount.hidden = true;
     avgBadge.title = "Sin votos todavía";
     applyVoteColor(avgBadge, null);
   }
@@ -121,6 +126,8 @@ export function initGameVotes(): void {
       toggle,
       picker,
       avgBadge: root.querySelector<HTMLElement>("[data-avg-badge]"),
+      avgLabel: root.querySelector<HTMLElement>("[data-avg-label]"),
+      voteCount: root.querySelector<HTMLElement>("[data-vote-count]"),
       personalBadge: root.querySelector<HTMLElement>("[data-personal-badge]"),
     };
 
