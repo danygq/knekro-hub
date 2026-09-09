@@ -1,7 +1,7 @@
 ---
 module: data-layer
 owner_area: backend
-last_verified_against_commit: 30ebd45
+last_verified_against_commit: 90a8b68
 depends_on: []
 ---
 
@@ -15,13 +15,16 @@ writing queries.
 | Client | File | Key | Use |
 |---|---|---|---|
 | Per-request SSR client | `lib/db-client.ts` | `PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Auth + data queries in page frontmatter & API routes |
+| Browser client | `lib/db-client.ts` | `PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Realtime subscriptions + direct DB writes from client `<script>` blocks |
 
-Created per request (not shared) so each call carries the user's cookies/JWT. Falls back to a valid placeholder URL/key when env is absent so import-time `createClient` can't crash the page. Intentional — keep it.
+The SSR client is created per request (not shared) so each call carries the user's cookies/JWT. The browser client is a
+singleton using the publishable key — safe for the browser when RLS policies are in place. Both fall back to a valid
+placeholder URL/key when env is absent so import-time `createClient` can't crash the page. Intentional — keep it.
 
 ## Env vars (already set in Vercel — do not re-add)
 
 Referenced in `src/` (confirmed):
-- `PUBLIC_SUPABASE_URL`, `PUBLIC_SUPABASE_PUBLISHABLE_KEY` — `lib/db-client.ts` (per-request SSR client)
+- `PUBLIC_SUPABASE_URL`, `PUBLIC_SUPABASE_PUBLISHABLE_KEY` — `lib/db-client.ts` (both SSR + browser clients)
 
 `.env.example` additionally declares `SUPABASE_SERVICE_ROLE_KEY` — server-only, never client. Other names (e.g.
 `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `POSTGRES_*`, `NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL`) appear in old
@@ -33,11 +36,11 @@ Supabase/Vercel docs but are **not referenced anywhere in `src/`** — unclear, 
 |---|---|---|
 | `posts` | `id, title, excerpt, created_at` | `index.astro` (order `created_at` desc, limit 10) |
 | `game_status` | `id, name` | `lib/games.ts` → `games/index.astro` (order `id`) |
-| `games_user_votes` | `id, user_id, game_id, vote` | `lib/games.ts` (averages + user votes) · `pages/api/games/vote.ts` (insert/update/clear) |
+| `games_user_votes` | `id, user_id, game_id, vote` | `lib/games.ts` (averages + user votes) · `lib/client/games-vote.ts` (insert/update/clear) · `lib/client/games-realtime.ts` (realtime subscription) |
 
 > **Prerequisite**: `games_user_votes` must exist in Supabase for the community-voting feature to work. Expected
 > columns: `id` (PK), `user_id` (FK → auth.users), `game_id` (FK → games), `vote` (integer, nullable). A null `vote`
-> means the user cleared their vote (row is kept). Unique constraint on `(user_id, game_id)` recommended.
+> means the user cleared their vote (row is kept). Unique constraint on `(user_id, game_id)` required for upsert.
 
 ## Tables — INFERRED from `src/types/` (unclear — needs confirmation against Supabase)
 
@@ -56,10 +59,16 @@ Supabase/Vercel docs but are **not referenced anywhere in `src/`** — unclear, 
 ## Writes
 
 `games_user_votes` is the only table written from `src/`:
-- `POST /api/games/vote` (`pages/api/games/vote.ts`) — inserts, updates, or clears a vote. Authenticated via the SSR
-  cookie client (`getUser`); the `user_id` always comes from the session, never the request body. A `vote` of `null`
-  clears the vote (row kept, `vote` column set to null). An existing row for `(user_id, game_id)` is updated in place
-  rather than duplicated.
+- `lib/client/games-vote.ts` - inserts, updates, or clears a vote via the browser Supabase client (`upsert` on
+  `user_id,game_id`). Authenticated via the synced SSR session (`setSession`); the `user_id` comes from the
+  authenticated user, never from user input. A `vote` of `null` clears the vote (row kept, `vote` column set to null).
+
+## Realtime
+
+`games_user_votes` has a Postgres Changes subscription via the browser client (`lib/client/games-realtime.ts`):
+listens for INSERT/UPDATE events so the community average updates live on all connected clients. Free-tier limit is
+200 concurrent Realtime connections. Requires the table to be added to the `supabase_realtime` publication and an
+RLS policy allowing `anon` SELECT.
 
 ## Reads are server-side
 
