@@ -2,7 +2,14 @@
 import Layout from "../../layouts/Layout.astro";
 import GameCard from "../../components/GameCard.astro";
 import { createDbClient } from "../../lib/db-client";
-import { loadGamesLibrary, buildGameStatuses, statusName, statusIdString } from "../../lib/games";
+import {
+  loadGamesLibrary,
+  buildGameStatuses,
+  statusName,
+  statusIdString,
+  loadCommunityAverages,
+  loadUserVotes,
+} from "../../lib/games";
 import "../../styles/pages/games.css";
 
 const dbClient = createDbClient(Astro.request, Astro.cookies);
@@ -12,6 +19,13 @@ const {
 
 const { statuses, games } = await loadGamesLibrary(dbClient);
 const gameStatuses = buildGameStatuses(statuses, games);
+
+// Community averages + the signed-in user's own votes. Reuses dbClient (the
+// per-request SSR cookie client) — it already carries the user's JWT, so no
+// second client is needed.
+const gameIds = games.map((g) => g.id);
+const communityAverages = await loadCommunityAverages(dbClient, gameIds);
+const userVotes = user ? await loadUserVotes(dbClient, user.id, gameIds) : new Map();
 ---
 
 <Layout user={user}>
@@ -29,7 +43,7 @@ const gameStatuses = buildGameStatuses(statuses, games);
       id="toggle-filters"
       aria-expanded="true"
       aria-controls="filter-panel"
-      class=" knk-notch inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium shrink-0
+      class="knk-notch inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium shrink-0
         bg-(--knk-surface) text-(--knk-text) border border-(--knk-line)
         hover:text-(--knk-primary) hover:border-(--knk-line-strong) transition-colors"
     >
@@ -145,7 +159,21 @@ const gameStatuses = buildGameStatuses(statuses, games);
               {games.map((game) => {
                 const status = statusName(game.status);
                 const statusIds = statusIdString(game.status);
-                return <GameCard name={game.name} coverUrl={game.cover_url} status={status} statusIds={statusIds} />;
+                const community = communityAverages.get(game.id);
+                const myVote = userVotes.get(game.id);
+                return (
+                  <GameCard
+                    name={game.name}
+                    coverUrl={game.cover_url}
+                    status={status}
+                    statusIds={statusIds}
+                    gameId={game.id}
+                    communityAvg={community?.avg ?? null}
+                    voteCount={community?.count ?? 0}
+                    userVote={myVote?.vote ?? null}
+                    loggedIn={!!user}
+                  />
+                );
               })}
             </div>
 
@@ -161,6 +189,8 @@ const gameStatuses = buildGameStatuses(statuses, games);
 
 <script>
   import { initGamesFilter } from "../../lib/client/games-filter";
+  import { initGameVotes } from "../../lib/client/games-vote";
 
   initGamesFilter();
+  initGameVotes();
 </script>

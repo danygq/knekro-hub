@@ -101,3 +101,83 @@
         transition: none;
     }
 }
+
+/* Voting UI on game cards.
+   The toggle button is hidden until the card is hovered/focused. On touch
+   devices (no hover capability) it stays visible so voting still works. */
+.knk-vote-toggle {
+    cursor: pointer;
+}
+
+.knk-vote-num {
+    cursor: pointer;
+    user-select: none;
+}
+
+/* Vote score badge color system.
+   Map a numeric vote (1-10) to a color class:
+   1-2.9 red · 3-4.9 orange · 5-6.9 amber · 7-8.9 green · 9-10 blue (primary).
+   Each class sets bg, text, and border-color; !important keeps them on top
+   of the structural utility classes on the badge (same rationale as
+   .knk-filter-*.active above). */
+.knk-vote-red {
+    background: color-mix(in srgb, var(--knk-red-500) 15%, transparent) !important;
+    color: var(--knk-red-400) !important;
+    border-color: color-mix(in srgb, var(--knk-red-500) 30%, transparent) !important;
+}
+.knk-vote-orange {
+    background: color-mix(in srgb, var(--knk-orange-500) 15%, transparent) !important;
+    color: var(--knk-orange-400) !important;
+    border-color: color-mix(in srgb, var(--knk-orange-500) 30%, transparent) !important;
+}
+.knk-vote-amber {
+    background: color-mix(in srgb, var(--knk-amber-500) 15%, transparent) !important;
+    color: var(--knk-amber-400) !important;
+    border-color: color-mix(in srgb, var(--knk-amber-500) 30%, transparent) !important;
+}
+.knk-vote-green {
+    background: color-mix(in srgb, var(--knk-green-500) 15%, transparent) !important;
+    color: var(--knk-green-400) !important;
+    border-color: color-mix(in srgb, var(--knk-green-500) 30%, transparent) !important;
+}
+.knk-vote-blue {
+    background: color-mix(in srgb, var(--knk-blue-500) 15%, transparent) !important;
+    color: var(--knk-blue-400) !important;
+    border-color: color-mix(in srgb, var(--knk-blue-500) 30%, transparent) !important;
+}
+
+/* Neutral state for the avg badge when there is no vote data yet. */
+.knk-vote-muted {
+    background: color-mix(in srgb, var(--knk-bg) 80%, transparent) !important;
+    color: var(--knk-text-muted) !important;
+    border-color: var(--knk-line) !important;
+}
+
+/* Number button color scale for the voting picker.
+   Each button sets --vote-c from its range. Buttons are neutral by default;
+   the tier color shows on hover and solid-fills the active (selected) vote.
+   Ranges mirror the badge system: 1-2 red · 3-4 orange · 5-6 amber · 7-8 green · 9-10 blue. */
+.knk-vote-num-red { --vote-c: var(--knk-red-500); }
+.knk-vote-num-orange { --vote-c: var(--knk-orange-500); }
+.knk-vote-num-amber { --vote-c: var(--knk-amber-500); }
+.knk-vote-num-green { --vote-c: var(--knk-green-500); }
+.knk-vote-num-blue { --vote-c: var(--knk-blue-500); }
+
+.knk-vote-num {
+    background: var(--knk-surface);
+    color: var(--knk-text-muted);
+    border-color: var(--knk-line);
+}
+
+/* Reveal the tier color on hover (and on the active vote, see .active below). */
+.knk-vote-num:hover {
+    background: color-mix(in srgb, var(--vote-c) 15%, transparent);
+    color: color-mix(in srgb, var(--vote-c) 70%, var(--knk-text));
+    border-color: color-mix(in srgb, var(--vote-c) 30%, transparent);
+}
+
+.knk-vote-num.active {
+    background: var(--vote-c) !important;
+    color: var(--knk-text-inverse) !important;
+    border-color: var(--vote-c) !important;
+}

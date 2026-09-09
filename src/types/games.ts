@@ -30,6 +30,22 @@ export interface GameStatusWithCount extends GameStatus {
 }
 
 /**
+ * One row of the games_user_votes table as the /games page reads it.
+ * `vote` is null when the user cleared their vote (a row may still exist).
+ */
+export interface UserVote {
+  id: number;
+  game_id: number;
+  vote: number | null;
+}
+
+/** Community average for a game, derived from all non-null votes. */
+export interface CommunityAverage {
+  avg: number;
+  count: number;
+}
+
+/**
  * Full game entity (aspirational: not yet confirmed against the schema).
  * NOTE: `status` is typed as a single `GameStatus`, but the DB embed can also
  * return an array/null — for raw rows use `GameStatusRefOrList`.
