@@ -18,15 +18,16 @@
     background: var(--knk-surface);
     border-right: 1px solid var(--knk-line);
     overflow-y: auto;
-    transition:
-      transform 250ms ease,
-      visibility 250ms ease;
+    transition: transform 250ms ease,
+    visibility 250ms ease;
 }
+
 .knk-filter-panel:not(.open) {
     transform: translateX(-100%);
     visibility: hidden;
     pointer-events: none;
 }
+
 .knk-filter-panel.open {
     transform: translateX(0);
     visibility: visible;
@@ -41,10 +42,10 @@
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
-    transition:
-      opacity 200ms ease,
-      visibility 200ms ease;
+    transition: opacity 200ms ease,
+    visibility 200ms ease;
 }
+
 .knk-filter-backdrop.open {
     opacity: 0.65;
     visibility: visible;
@@ -57,9 +58,11 @@
         column-gap: 2.5rem;
         align-items: start;
     }
+
     .games-layout.filters-off {
         grid-template-columns: 1fr;
     }
+
     .knk-filter-panel,
     .knk-filter-panel:not(.open) {
         position: static;
@@ -72,9 +75,11 @@
         pointer-events: auto;
         transition: none;
     }
+
     .knk-filter-panel.closed {
         display: none;
     }
+
     .knk-filter-backdrop {
         display: none;
     }
@@ -89,6 +94,7 @@
     color: var(--knk-primary-text) !important;
     border-color: var(--knk-primary) !important;
 }
+
 .knk-filter-minus.active {
     background: var(--knk-danger) !important;
     color: #fff !important;
@@ -121,29 +127,33 @@
    of the structural utility classes on the badge (same rationale as
    .knk-filter-*.active above). */
 .knk-vote-red {
-    background: color-mix(in srgb, var(--knk-red-500) 15%, transparent) !important;
-    color: var(--knk-red-400) !important;
-    border-color: color-mix(in srgb, var(--knk-red-500) 30%, transparent) !important;
+    background: color-mix(in srgb, var(--knk-red-600) 15%, transparent) !important;
+    color: var(--knk-red-500) !important;
+    border-color: color-mix(in srgb, var(--knk-red-600) 30%, transparent) !important;
 }
+
 .knk-vote-orange {
-    background: color-mix(in srgb, var(--knk-orange-500) 15%, transparent) !important;
-    color: var(--knk-orange-400) !important;
-    border-color: color-mix(in srgb, var(--knk-orange-500) 30%, transparent) !important;
+    background: color-mix(in srgb, var(--knk-orange-600) 15%, transparent) !important;
+    color: var(--knk-orange-500) !important;
+    border-color: color-mix(in srgb, var(--knk-orange-600) 30%, transparent) !important;
 }
+
 .knk-vote-amber {
-    background: color-mix(in srgb, var(--knk-amber-500) 15%, transparent) !important;
-    color: var(--knk-amber-400) !important;
-    border-color: color-mix(in srgb, var(--knk-amber-500) 30%, transparent) !important;
+    background: color-mix(in srgb, var(--knk-amber-600) 15%, transparent) !important;
+    color: var(--knk-amber-500) !important;
+    border-color: color-mix(in srgb, var(--knk-amber-600) 30%, transparent) !important;
 }
+
 .knk-vote-green {
-    background: color-mix(in srgb, var(--knk-green-500) 15%, transparent) !important;
-    color: var(--knk-green-400) !important;
-    border-color: color-mix(in srgb, var(--knk-green-500) 30%, transparent) !important;
+    background: color-mix(in srgb, var(--knk-green-600) 15%, transparent) !important;
+    color: var(--knk-green-500) !important;
+    border-color: color-mix(in srgb, var(--knk-green-600) 30%, transparent) !important;
 }
+
 .knk-vote-blue {
-    background: color-mix(in srgb, var(--knk-blue-500) 15%, transparent) !important;
-    color: var(--knk-blue-400) !important;
-    border-color: color-mix(in srgb, var(--knk-blue-500) 30%, transparent) !important;
+    background: color-mix(in srgb, var(--knk-blue-600) 15%, transparent) !important;
+    color: var(--knk-blue-500) !important;
+    border-color: color-mix(in srgb, var(--knk-blue-600) 30%, transparent) !important;
 }
 
 /* Neutral state for the avg badge when there is no vote data yet. */
@@ -157,11 +167,25 @@
    Each button sets --vote-c from its range. Buttons are neutral by default;
    the tier color shows on hover and solid-fills the active (selected) vote.
    Ranges mirror the badge system: 1-2 red · 3-4 orange · 5-6 amber · 7-8 green · 9-10 blue. */
-.knk-vote-num-red { --vote-c: var(--knk-red-500); }
-.knk-vote-num-orange { --vote-c: var(--knk-orange-500); }
-.knk-vote-num-amber { --vote-c: var(--knk-amber-500); }
-.knk-vote-num-green { --vote-c: var(--knk-green-500); }
-.knk-vote-num-blue { --vote-c: var(--knk-blue-500); }
+.knk-vote-num-red {
+    --vote-c: var(--knk-red-500);
+}
+
+.knk-vote-num-orange {
+    --vote-c: var(--knk-orange-500);
+}
+
+.knk-vote-num-amber {
+    --vote-c: var(--knk-amber-500);
+}
+
+.knk-vote-num-green {
+    --vote-c: var(--knk-green-500);
+}
+
+.knk-vote-num-blue {
+    --vote-c: var(--knk-blue-500);
+}
 
 .knk-vote-num {
     background: var(--knk-surface);
