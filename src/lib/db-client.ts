@@ -38,9 +38,9 @@ export function createDbClient(
 }
 
 /**
- * Browser-side Supabase client for realtime subscriptions and direct DB
- * operations from client <script> blocks. Uses the publishable key — safe
- * for the browser when RLS policies are in place.
+ * Browser-side Supabase client for direct DB operations from client <script>
+ * blocks. Uses the publishable key — safe for the browser when RLS policies
+ * are in place.
  *
  * For writes, the caller must first sync the SSR auth session via
  * `supabaseClient.auth.setSession(session)` so the user's JWT is attached

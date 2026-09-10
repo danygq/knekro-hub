@@ -15,12 +15,16 @@ export type GameStatusRefOrList = GameStatus | GameStatus[] | null;
 
 /**
  * One row of the games grid: exactly the columns `/games` selects from
- * `games` (id, name, cover_url) plus the embedded `status` join.
+ * `games` (id, name, cover_url, vote_count, avg_vote) plus the embedded
+ * `status` join. `vote_count`/`avg_vote` are maintained by the
+ * `on_vote_change` trigger on `games_user_votes`.
  */
 export interface GameListRow {
   id: number;
   name: string;
   cover_url: string | null;
+  vote_count: number | null;
+  avg_vote: number | null;
   status: GameStatusRefOrList;
 }
 
@@ -39,7 +43,7 @@ export interface UserVote {
   vote: number | null;
 }
 
-/** Community average for a game, derived from all non-null votes. */
+/** Community average for a game, read from the DB-maintained `vote_count`/`avg_vote` columns on `games`. */
 export interface CommunityAverage {
   avg: number;
   count: number;

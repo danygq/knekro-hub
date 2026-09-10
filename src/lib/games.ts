@@ -66,7 +66,7 @@ export async function loadGamesLibrary(
     client.from("game_status").select("id, name").order("id", { ascending: true }).limit(24),
     client
       .from("games")
-      .select("id, name, cover_url, status:game_status!game_status_id(id, name)")
+      .select("id, name, cover_url, vote_count, avg_vote, status:game_status!game_status_id(id, name)")
       .order("id", { ascending: true })
       .limit(48),
   ]);
@@ -85,39 +85,17 @@ export async function loadGamesLibrary(
 }
 
 /**
- * Community average score per game, computed from every non-null vote in
- * `games_user_votes`. Column-scoped and bounded to the passed game ids so it
- * only reads what the grid renders. Returns a map of game_id -> { avg, count }
- * (only games with at least one vote appear).
+ * Community average per game, read from the DB-maintained `vote_count` and
+ * `avg_vote` columns on `games` (kept in sync by the `on_vote_change`
+ * trigger). Returns a map of game_id -> { avg, count } — only games with at
+ * least one vote appear.
  */
-export async function loadCommunityAverages(
-  client: SupabaseClient,
-  gameIds: number[],
-): Promise<Map<number, CommunityAverage>> {
+export function buildCommunityAverages(games: GameListRow[]): Map<number, CommunityAverage> {
   const result = new Map<number, CommunityAverage>();
-  if (gameIds.length === 0) return result;
-
-  const { data, error } = await client
-    .from("games_user_votes")
-    .select("game_id, vote")
-    .in("game_id", gameIds)
-    .not("vote", "is", null);
-
-  if (error) {
-    console.error("Error fetching community votes:", error);
-    return result;
-  }
-
-  const sums = new Map<number, { sum: number; count: number }>();
-  for (const row of (data as { game_id: number; vote: number }[] | null) ?? []) {
-    const entry = sums.get(row.game_id) ?? { sum: 0, count: 0 };
-    entry.sum += row.vote;
-    entry.count += 1;
-    sums.set(row.game_id, entry);
-  }
-
-  for (const [gameId, { sum, count }] of sums) {
-    result.set(gameId, { avg: sum / count, count });
+  for (const game of games) {
+    if (game.vote_count != null && game.vote_count > 0 && game.avg_vote != null) {
+      result.set(game.id, { avg: game.avg_vote, count: game.vote_count });
+    }
   }
   return result;
 }

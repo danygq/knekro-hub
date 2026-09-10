@@ -6,14 +6,12 @@
 //   - "Votar" / "Tu puntuación: X" toggle reveals the 1-10 picker.
 //   - Clicking a number submits the vote via the browser Supabase client.
 //     Clicking the user's current number again clears it (sets vote: null).
-//   - The community average updates optimistically from data-avg / data-avg-count.
-//   - Votes from OTHER users arrive via the realtime subscription
-//     (games-realtime.ts) and update the average live.
+//   - The personal vote reflects instantly; the community average is then
+//     re-fetched from the server for that game so the card shows the true value.
 
 import type { GameCardEls } from "../../types";
 import { supabaseClient } from "../db-client";
-import { updateAverage, reflectVote } from "./games-vote-state";
-import { justVotedGames } from "./games-realtime";
+import { setCommunityAverage, reflectVote } from "./games-vote-state";
 
 function voteValue(btn: HTMLElement): number {
   return Number(btn.dataset.voteValue);
@@ -44,6 +42,30 @@ async function submitVote(gameId: number, vote: number | null): Promise<boolean>
     );
 
   return !error;
+}
+
+/**
+ * Fetch the real community average + vote count for a single game from the
+ * DB-maintained `vote_count`/`avg_vote` columns on `games`. Returns null if
+ * the game has no votes (or on error).
+ */
+async function fetchCommunityAverage(gameId: number): Promise<{ avg: number; count: number } | null> {
+  const { data, error } = await supabaseClient
+    .from("games")
+    .select("vote_count, avg_vote")
+    .eq("id", gameId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Error fetching community average:", error);
+    return null;
+  }
+
+  const count = data?.vote_count ?? 0;
+  const avg = data?.avg_vote ?? null;
+  if (count <= 0 || avg == null) return null;
+
+  return { avg, count };
 }
 
 export function initGameVotes(): () => void {
@@ -93,21 +115,24 @@ export function initGameVotes(): () => void {
         const nextVote = clearing ? null : value;
         const gameId = Number(root.dataset.gameId);
 
-        // optimistic UI
+        // instant personal feedback
         reflectVote(card, nextVote);
-        updateAverage(card, currentVote, nextVote);
         picker.hidden = true;
-
-        // flag this game so the realtime event doesn't double-count
-        justVotedGames.add(gameId);
-        setTimeout(() => justVotedGames.delete(gameId), 1000);
 
         const ok = await submitVote(gameId, nextVote);
         if (!ok) {
-          // revert optimistic change on failure
+          // revert personal vote on failure
           reflectVote(card, currentVote);
-          updateAverage(card, nextVote, currentVote);
           console.error("Vote failed");
+          return;
+        }
+
+        // fetch the real community average for this game and update the card
+        const community = await fetchCommunityAverage(gameId);
+        if (community) {
+          setCommunityAverage(card, community.avg, community.count);
+        } else {
+          setCommunityAverage(card, 0, 0);
         }
       });
     });
