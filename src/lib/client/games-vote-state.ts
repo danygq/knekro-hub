@@ -37,7 +37,11 @@ export function formatAvg(avg: number): string {
  * Pure rendering — no math. Call this after querying the real average
  * from the server so the card reflects the true community value.
  */
-export function setCommunityAverage(card: GameCardEls, avg: number, count: number): void {
+export function setCommunityAverage(
+  card: GameCardEls,
+  avg: number,
+  count: number,
+): void {
   const avgBadge = card.avgBadge;
   if (!avgBadge) return;
 
@@ -73,8 +77,10 @@ export function reflectVote(card: GameCardEls, vote: number | null): void {
     if (vote != null) applyVoteColor(card.personalBadge, vote);
   }
 
-  card.picker.querySelectorAll<HTMLElement>("[data-vote-value]").forEach((btn) => {
-    const n = Number(btn.dataset.voteValue);
-    btn.classList.toggle("active", n === vote);
-  });
+  card.picker
+    .querySelectorAll<HTMLElement>("[data-vote-value]")
+    .forEach((btn) => {
+      const n = Number(btn.dataset.voteValue);
+      btn.classList.toggle("active", n === vote);
+    });
 }

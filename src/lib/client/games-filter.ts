@@ -15,8 +15,13 @@ export function parseStatusIds(raw: string): number[] {
  * A card shows when at least one of its status ids is included (if any are
  * required) AND none of its status ids is excluded.
  */
-export function matchesFilter(statusIds: number[], included: Set<number>, excluded: Set<number>): boolean {
-  if (included.size > 0 && !statusIds.some((id) => included.has(id))) return false;
+export function matchesFilter(
+  statusIds: number[],
+  included: Set<number>,
+  excluded: Set<number>,
+): boolean {
+  if (included.size > 0 && !statusIds.some((id) => included.has(id)))
+    return false;
   return !(excluded.size > 0 && statusIds.some((id) => excluded.has(id)));
 }
 
@@ -39,9 +44,13 @@ export function initGamesFilter(): void {
   if (!panel || !wrapper) return;
 
   const isDesktop = () =>
-    window.matchMedia ? window.matchMedia("(min-width: 1024px)").matches : window.innerWidth >= 1024;
+    window.matchMedia
+      ? window.matchMedia("(min-width: 1024px)").matches
+      : window.innerWidth >= 1024;
 
-  const cards: HTMLElement[] = Array.from(document.querySelectorAll(".knk-game-card"));
+  const cards: HTMLElement[] = Array.from(
+    document.querySelectorAll(".knk-game-card"),
+  );
   const included = new Set<number>();
   const excluded = new Set<number>();
   const state = { open: isDesktop() };

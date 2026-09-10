@@ -8,13 +8,20 @@ interface Props {
 const { user } = Astro.props;
 const avatarUrl = user.user_metadata?.avatar_url;
 const displayName =
-  user.user_metadata?.full_name || user.user_metadata?.name || user.user_metadata?.preferred_username || "Usuario";
+  user.user_metadata?.full_name ||
+  user.user_metadata?.name ||
+  user.user_metadata?.preferred_username ||
+  "Usuario";
 ---
 
 <div class="flex items-center gap-3">
   {
     avatarUrl && (
-      <img src={avatarUrl} alt="Avatar" class="w-8 h-8 rounded-full border border-(--knk-line-strong) object-cover" />
+      <img
+        src={avatarUrl}
+        alt="Avatar"
+        class="w-8 h-8 rounded-full border border-(--knk-line-strong) object-cover"
+      />
     )
   }
 

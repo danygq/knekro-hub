@@ -25,12 +25,19 @@ const latestPosts = posts ?? [];
     <!-- 1. Stream player & live status -->
     <div class="lg:col-span-2">
       <div class="relative">
-        <div class="aspect-video bg-(--knk-surface) overflow-hidden border border-(--knk-line)">
-          <iframe id="twitch-player" allowfullscreen class="border-0 w-full h-full"></iframe>
+        <div
+          class="aspect-video bg-(--knk-surface) overflow-hidden border border-(--knk-line)"
+        >
+          <iframe
+            id="twitch-player"
+            allowfullscreen
+            class="border-0 w-full h-full"></iframe>
         </div>
-        <span class="pointer-events-none absolute -top-px -left-px w-5 h-5 border-t-2 border-l-2 border-(--knk-primary)"
+        <span
+          class="pointer-events-none absolute -top-px -left-px w-5 h-5 border-t-2 border-l-2 border-(--knk-primary)"
         ></span>
-        <span class="pointer-events-none absolute -top-px -right-px w-5 h-5 border-t-2 border-r-2 border-(--knk-primary)"
+        <span
+          class="pointer-events-none absolute -top-px -right-px w-5 h-5 border-t-2 border-r-2 border-(--knk-primary)"
         ></span>
         <span
           class="pointer-events-none absolute -bottom-px -left-px w-5 h-5 border-b-2 border-l-2 border-(--knk-primary)"
@@ -40,11 +47,15 @@ const latestPosts = posts ?? [];
         ></span>
       </div>
 
-      <div class="mt-4 flex flex-wrap items-center gap-4 pb-6 border-b border-(--knk-line)">
+      <div
+        class="mt-4 flex flex-wrap items-center gap-4 pb-6 border-b border-(--knk-line)"
+      >
         <div
           class="knk-notch-sm inline-flex items-center gap-2 px-3 py-1 bg-(--knk-red-400)/10 border border-(--knk-red-400)/40 text-sm font-medium text-(--knk-text)"
         >
-          <span class="w-1.5 h-1.5 rounded-full bg-(--knk-red-400) animate-pulse"></span>
+          <span
+            class="w-1.5 h-1.5 rounded-full bg-(--knk-red-400) animate-pulse"
+          ></span>
           En vivo
         </div>
         <div class="text-sm text-(--knk-text-muted)">
@@ -58,9 +69,15 @@ const latestPosts = posts ?? [];
       <div
         class="h-112.5 lg:h-[calc(100%-1.5rem)] min-h-125 border border-(--knk-line) bg-(--knk-surface) flex flex-col"
       >
-        <div class="flex items-center justify-between px-4 py-2.5 border-b border-(--knk-line) bg-(--knk-surface-2)">
-          <span class="font-(--font-display) text-sm tracking-tight">Chat en vivo</span>
-          <span class="text-xs text-(--knk-text-muted) uppercase tracking-wide">Twitch</span>
+        <div
+          class="flex items-center justify-between px-4 py-2.5 border-b border-(--knk-line) bg-(--knk-surface-2)"
+        >
+          <span class="font-(--font-display) text-sm tracking-tight"
+            >Chat en vivo</span
+          >
+          <span class="text-xs text-(--knk-text-muted) uppercase tracking-wide"
+            >Twitch</span
+          >
         </div>
         <iframe id="twitch-chat" class="flex-1 w-full border-0"></iframe>
       </div>
@@ -69,21 +86,33 @@ const latestPosts = posts ?? [];
     <!-- 3. YouTube & posts -->
     <div class="lg:col-span-2 space-y-10">
       <section class="border border-(--knk-line) bg-(--knk-surface)">
-        <div class="px-4 py-2.5 border-b border-(--knk-line) bg-(--knk-surface-2)">
-          <span class="font-(--font-display) text-sm tracking-tight">Último video</span>
+        <div
+          class="px-4 py-2.5 border-b border-(--knk-line) bg-(--knk-surface-2)"
+        >
+          <span class="font-(--font-display) text-sm tracking-tight"
+            >Último video</span
+          >
         </div>
-        <div class="p-6 text-sm text-(--knk-text-muted)">Feed de YouTube aquí</div>
+        <div class="p-6 text-sm text-(--knk-text-muted)">
+          Feed de YouTube aquí
+        </div>
       </section>
 
       <section>
         <div class="flex items-center justify-between mb-4">
-          <h2 class="font-(--font-display) text-lg tracking-tight">Publicaciones</h2>
-          <span class="text-xs text-(--knk-text-faint) uppercase tracking-wide">{latestPosts.length} recientes</span>
+          <h2 class="font-(--font-display) text-lg tracking-tight">
+            Publicaciones
+          </h2>
+          <span class="text-xs text-(--knk-text-faint) uppercase tracking-wide"
+            >{latestPosts.length} recientes</span
+          >
         </div>
         <ul class="border-t border-(--knk-line) divide-y divide-(--knk-line)">
           {
             latestPosts.length === 0 ? (
-              <li class="py-8 text-sm text-(--knk-text-muted)">No hay publicaciones todavía.</li>
+              <li class="py-8 text-sm text-(--knk-text-muted)">
+                No hay publicaciones todavía.
+              </li>
             ) : (
               latestPosts.map((post) => (
                 <li>
@@ -95,10 +124,15 @@ const latestPosts = posts ?? [];
                       <h3 class="font-(--font-display) text-lg tracking-tight group-hover:text-(--knk-primary) transition-colors">
                         {post.title}
                       </h3>
-                      <p class="text-sm text-(--knk-text-muted) mt-1 leading-relaxed line-clamp-2">{post.excerpt}</p>
+                      <p class="text-sm text-(--knk-text-muted) mt-1 leading-relaxed line-clamp-2">
+                        {post.excerpt}
+                      </p>
                     </div>
                     <time class="shrink-0 text-xs text-(--knk-text-faint) pt-1 tabular-nums">
-                      {new Date(post.created_at).toLocaleDateString("es-ES", { day: "2-digit", month: "short" })}
+                      {new Date(post.created_at).toLocaleDateString("es-ES", {
+                        day: "2-digit",
+                        month: "short",
+                      })}
                     </time>
                   </a>
                 </li>
@@ -114,12 +148,16 @@ const latestPosts = posts ?? [];
     (function () {
       const hostname = window.location.hostname;
 
-      const playerIframe = document.getElementById("twitch-player") as HTMLIFrameElement;
+      const playerIframe = document.getElementById(
+        "twitch-player",
+      ) as HTMLIFrameElement;
       if (playerIframe) {
         playerIframe.src = `https://player.twitch.tv/?channel=knekro&parent=${hostname}`;
       }
 
-      const chatIframe = document.getElementById("twitch-chat") as HTMLIFrameElement;
+      const chatIframe = document.getElementById(
+        "twitch-chat",
+      ) as HTMLIFrameElement;
       if (chatIframe) {
         chatIframe.src = `https://www.twitch.tv/embed/knekro/chat?parent=${hostname}&darkpopout`;
       }

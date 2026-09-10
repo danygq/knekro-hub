@@ -22,13 +22,18 @@ const currentPath = Astro.url.pathname;
     <title>Knekro Hub</title>
   </head>
   <body class="min-h-screen bg-(--knk-bg) text-(--knk-text) antialiased">
-    <header class="sticky top-0 z-50 bg-(--knk-bg)/90 backdrop-blur-md border-b border-(--knk-line)">
+    <header
+      class="sticky top-0 z-50 bg-(--knk-bg)/90 backdrop-blur-md border-b border-(--knk-line)"
+    >
       <div class="mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-16">
           <div class="flex items-center gap-8">
             <a href="/" class="flex items-center gap-2.5 shrink-0 font-bold">
               <span class="font-(--font-display) text-3xl tracking-tight"
-                >Knekro <span class="px-0.75 py-0.5 rounded-xs bg-(--knk-primary) text-(--knk-bg)">hub</span></span
+                >Knekro <span
+                  class="px-0.75 py-0.5 rounded-xs bg-(--knk-primary) text-(--knk-bg)"
+                  >hub</span
+                ></span
               >
             </a>
             <nav class="hidden sm:flex items-center gap-6" aria-label="Primary">
@@ -79,15 +84,23 @@ const currentPath = Astro.url.pathname;
 </main>
 
 <footer class="border-t border-(--knk-line) mt-8">
-  <div class="mx-auto px-4 sm:px-6 lg:px-8 py-8 text-sm text-(--knk-text-muted)">
-    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+  <div
+    class="mx-auto px-4 sm:px-6 lg:px-8 py-8 text-sm text-(--knk-text-muted)"
+  >
+    <div
+      class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
+    >
       <div class="flex items-center gap-2">
         <span>© {new Date().getFullYear()} Knekro Hub</span>
       </div>
       <div class="flex items-center gap-5">
         <a href="/" class="hover:text-(--knk-text) transition-colors">Inicio</a>
-        <a href="/games" class="hover:text-(--knk-text) transition-colors">Juegos</a>
-        <a href="/goty" class="hover:text-(--knk-text) transition-colors">GOTY</a>
+        <a href="/games" class="hover:text-(--knk-text) transition-colors"
+          >Juegos</a
+        >
+        <a href="/goty" class="hover:text-(--knk-text) transition-colors"
+          >GOTY</a
+        >
       </div>
     </div>
   </div>

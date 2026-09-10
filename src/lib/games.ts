@@ -13,7 +13,9 @@ import type {
 } from "../types";
 
 /** Normalize an embedded-status value into an array of refs. */
-export function statusRefs(status: GameStatusRefOrList | undefined): GameStatus[] {
+export function statusRefs(
+  status: GameStatusRefOrList | undefined,
+): GameStatus[] {
   if (!status) return [];
   return Array.isArray(status) ? status : [status];
 }
@@ -24,7 +26,9 @@ export function statusName(status: GameStatusRefOrList | undefined): string {
 }
 
 /** Space-separated status ids, matching the `data-status-ids` card attribute. */
-export function statusIdString(status: GameStatusRefOrList | undefined): string {
+export function statusIdString(
+  status: GameStatusRefOrList | undefined,
+): string {
   return statusRefs(status)
     .map((ref) => String(ref.id))
     .join(" ");
@@ -45,7 +49,10 @@ export function buildStatusCounts(games: GameListRow[]): Map<number, number> {
 }
 
 /** Merge status rows with per-status game counts for the filter panel. */
-export function buildGameStatuses(statuses: GameStatus[], games: GameListRow[]): GameStatusWithCount[] {
+export function buildGameStatuses(
+  statuses: GameStatus[],
+  games: GameListRow[],
+): GameStatusWithCount[] {
   const counts = buildStatusCounts(games);
   return statuses.map((status) => ({
     id: status.id,
@@ -62,11 +69,20 @@ export function buildGameStatuses(statuses: GameStatus[], games: GameListRow[]):
 export async function loadGamesLibrary(
   client: SupabaseClient,
 ): Promise<{ statuses: GameStatus[]; games: GameListRow[] }> {
-  const [{ data: statusesData, error: statusesError }, { data: gamesData, error: gamesError }] = await Promise.all([
-    client.from("game_status").select("id, name").order("id", { ascending: true }).limit(24),
+  const [
+    { data: statusesData, error: statusesError },
+    { data: gamesData, error: gamesError },
+  ] = await Promise.all([
+    client
+      .from("game_status")
+      .select("id, name")
+      .order("id", { ascending: true })
+      .limit(24),
     client
       .from("games")
-      .select("id, name, cover_url, vote_count, avg_vote, status:game_status!game_status_id(id, name)")
+      .select(
+        "id, name, cover_url, vote_count, avg_vote, status:game_status!game_status_id(id, name)",
+      )
       .order("id", { ascending: true })
       .limit(48),
   ]);
@@ -90,10 +106,16 @@ export async function loadGamesLibrary(
  * trigger). Returns a map of game_id -> { avg, count } — only games with at
  * least one vote appear.
  */
-export function buildCommunityAverages(games: GameListRow[]): Map<number, CommunityAverage> {
+export function buildCommunityAverages(
+  games: GameListRow[],
+): Map<number, CommunityAverage> {
   const result = new Map<number, CommunityAverage>();
   for (const game of games) {
-    if (game.vote_count != null && game.vote_count > 0 && game.avg_vote != null) {
+    if (
+      game.vote_count != null &&
+      game.vote_count > 0 &&
+      game.avg_vote != null
+    ) {
       result.set(game.id, { avg: game.avg_vote, count: game.vote_count });
     }
   }

@@ -11,7 +11,7 @@
 
 import type { GameCardEls } from "../../types";
 import { supabaseClient } from "../db-client";
-import { setCommunityAverage, reflectVote } from "./games-vote-state";
+import { reflectVote, setCommunityAverage } from "./games-vote-state";
 
 function voteValue(btn: HTMLElement): number {
   return Number(btn.dataset.voteValue);
@@ -19,14 +19,19 @@ function voteValue(btn: HTMLElement): number {
 
 /** Close every open picker except the one on `current` (optionally). */
 function closeAllPickers(current?: HTMLElement): void {
-  document.querySelectorAll<HTMLElement>("[data-vote-picker]").forEach((picker) => {
-    if (picker === current) return;
-    picker.hidden = true;
-  });
+  document
+    .querySelectorAll<HTMLElement>("[data-vote-picker]")
+    .forEach((picker) => {
+      if (picker === current) return;
+      picker.hidden = true;
+    });
 }
 
 /** Submit a vote (or clear it) directly via the browser Supabase client. */
-async function submitVote(gameId: number, vote: number | null): Promise<boolean> {
+async function submitVote(
+  gameId: number,
+  vote: number | null,
+): Promise<boolean> {
   const {
     data: { user },
   } = await supabaseClient.auth.getUser();
@@ -49,7 +54,9 @@ async function submitVote(gameId: number, vote: number | null): Promise<boolean>
  * DB-maintained `vote_count`/`avg_vote` columns on `games`. Returns null if
  * the game has no votes (or on error).
  */
-async function fetchCommunityAverage(gameId: number): Promise<{ avg: number; count: number } | null> {
+async function fetchCommunityAverage(
+  gameId: number,
+): Promise<{ avg: number; count: number } | null> {
   const { data, error } = await supabaseClient
     .from("games")
     .select("vote_count, avg_vote")
@@ -89,7 +96,11 @@ export function initGameVotes(): () => void {
     // clicking the card opens the picker (mobile-friendly)
     root.addEventListener("click", (e) => {
       const target = e.target as HTMLElement;
-      if (target.closest("[data-vote-toggle]") || target.closest("[data-vote-picker]")) return;
+      if (
+        target.closest("[data-vote-toggle]") ||
+        target.closest("[data-vote-picker]")
+      )
+        return;
       e.stopPropagation();
       const willOpen = picker.hidden;
       closeAllPickers(picker);
@@ -109,7 +120,9 @@ export function initGameVotes(): () => void {
       btn.addEventListener("click", async (e) => {
         e.stopPropagation();
         const value = voteValue(btn);
-        const currentVote = root.dataset.vote ? Number(root.dataset.vote) : null;
+        const currentVote = root.dataset.vote
+          ? Number(root.dataset.vote)
+          : null;
         const clearing = value === currentVote;
 
         const nextVote = clearing ? null : value;
