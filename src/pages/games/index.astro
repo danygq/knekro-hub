@@ -7,7 +7,7 @@ import {
   buildGameStatuses,
   statusName,
   statusIdString,
-  loadCommunityAverages,
+  buildCommunityAverages,
   loadUserVotes,
 } from "../../lib/games";
 import "../../styles/pages/games.css";
@@ -17,7 +17,7 @@ const {
   data: { user },
 } = await dbClient.auth.getUser().catch(() => ({ data: { user: null } }));
 
-// Session for the browser Supabase client (realtime + direct writes).
+// Session for the browser Supabase client (direct writes + reads).
 // Rendered into a non-executable JSON script block so the client script can
 // sync the auth session and attach the JWT to Supabase requests.
 const { data: { session } } = await dbClient.auth.getSession().catch(() => ({ data: { session: null } }));
@@ -25,11 +25,11 @@ const { data: { session } } = await dbClient.auth.getSession().catch(() => ({ da
 const { statuses, games } = await loadGamesLibrary(dbClient);
 const gameStatuses = buildGameStatuses(statuses, games);
 
-// Community averages + the signed-in user's own votes. Reuses dbClient (the
-// per-request SSR cookie client) — it already carries the user's JWT, so no
-// second client is needed.
+// Community averages are read from the DB-maintained vote_count/avg_vote
+// columns on `games` (kept in sync by the on_vote_change trigger). The
+// signed-in user's own votes come from games_user_votes via dbClient.
 const gameIds = games.map((g) => g.id);
-const communityAverages = await loadCommunityAverages(dbClient, gameIds);
+const communityAverages = buildCommunityAverages(games);
 const userVotes = user ? await loadUserVotes(dbClient, user.id, gameIds) : new Map();
 ---
 

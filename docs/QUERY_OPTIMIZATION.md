@@ -50,7 +50,7 @@ Anti-pattern (N+1): fetching games, then a `game_status` query per row. Never.
 |---------------|-----------------------------------------------------|------------------------------------|
 | `posts`       | `(created_at desc)`                                 | home feed order+limit              |
 | `games`       | `(status_id)`, `(updated_at desc)`, `(slug) unique` | status filter, sort, detail lookup |
-| `games_user_votes` | `(game_id, vote)`, `(user_id, game_id)`         | community-average aggregation + per-user lookup/upsert |
+| `games_user_votes` | `(user_id, game_id)` unique                  | per-user lookup/upsert (votes); community averages live on `games.vote_count`/`avg_vote`, maintained by the `on_vote_change` trigger |
 | `goty_items`  | `(year, rank)` composite, `(game_id)` FK            | year ranking, embed join           |
 | `stream_logs` | `(started_at desc)`, `(is_live)` partial            | timeline, live lookup              |
 | join table    | `(stream_log_id)`, `(category_id)`, unique pair     | M:N categories                     |

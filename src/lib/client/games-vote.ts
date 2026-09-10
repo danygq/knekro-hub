@@ -46,25 +46,26 @@ async function submitVote(gameId: number, vote: number | null): Promise<boolean>
 
 /**
  * Fetch the real community average + vote count for a single game from the
- * server. Returns null if the game has no votes (or on error).
+ * DB-maintained `vote_count`/`avg_vote` columns on `games`. Returns null if
+ * the game has no votes (or on error).
  */
 async function fetchCommunityAverage(gameId: number): Promise<{ avg: number; count: number } | null> {
   const { data, error } = await supabaseClient
-    .from("games_user_votes")
-    .select("vote")
-    .eq("game_id", gameId)
-    .not("vote", "is", null);
+    .from("games")
+    .select("vote_count, avg_vote")
+    .eq("id", gameId)
+    .maybeSingle();
 
   if (error) {
     console.error("Error fetching community average:", error);
     return null;
   }
 
-  const votes = (data as { vote: number }[] | null) ?? [];
-  if (votes.length === 0) return null;
+  const count = data?.vote_count ?? 0;
+  const avg = data?.avg_vote ?? null;
+  if (count <= 0 || avg == null) return null;
 
-  const sum = votes.reduce((acc, row) => acc + row.vote, 0);
-  return { avg: sum / votes.length, count: votes.length };
+  return { avg, count };
 }
 
 export function initGameVotes(): () => void {

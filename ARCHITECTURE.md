@@ -1,7 +1,7 @@
 ---
 module: architecture
 owner_area: repo-wide
-last_verified_against_commit: 90a8b68
+last_verified_against_commit: 864e93b
 depends_on: [ AGENTS.md, docs/INDEX.md ]
 ---
 
@@ -20,7 +20,7 @@ flowchart TD
     U[Visitor] -->|HTTP| V[Vercel SSR / Astro]
     V --> L[Layout.astro]
     V --> Pi[index.astro] -->|dbClient: getUser + select posts| SB[(Supabase)]
-    V --> Pg[games/index.astro] -->|dbClient: getUser + loadGamesLibrary + community averages + user votes: game_status + games + games_user_votes| SB
+    V --> Pg[games/index.astro] -->|dbClient: getUser + loadGamesLibrary + user votes: game_status + games (incl. vote_count/avg_vote) + games_user_votes| SB
     V --> Pgo[goty.astro - static]
     U -->|Login| AS[POST /api/auth/signin] -->|signInWithOAuth twitch| SB
     SB -->|redirect w/ code| CB[GET /auth/callback] -->|exchangeCodeForSession| SB
@@ -61,11 +61,12 @@ flowchart TD
 - **Placeholder-fallback client**: `lib/db-client.ts` falls back to a valid dummy URL/key so pages render while env vars
   provision. Intentional.
 - **`/games` reads live data**: `lib/games.ts` queries `game_status` + `games` (PostgREST embedding
-  `game_status!game_status_id`, bounded) + community averages and the signed-in user's votes from `games_user_votes`;
-  `games` schema still unconfirmed.
+  `game_status!game_status_id`, bounded). Community averages come from the DB-maintained `vote_count`/`avg_vote`
+  columns on `games`; the signed-in user's votes come from `games_user_votes`. `games` schema still unconfirmed.
 - **Community voting**: votes 1–10 stored in `games_user_votes`; the community average (1 decimal) is shown to everyone,
-  voting controls to signed-in users only. After a vote is submitted, the community average for that game is re-fetched
-  from the server so the card reflects the true value. Clearing a vote sets `vote = null` (row kept) rather than deleting.
+  voting controls to signed-in users only. The `on_vote_change` trigger keeps `games.vote_count`/`avg_vote` in sync;
+  after a vote is submitted, those columns are re-fetched so the card reflects the true value. Clearing a vote sets
+  `vote = null` (row kept) rather than deleting.
 - **Tailwind v4 token-only theming**: no config file; all theme lives in `src/styles/tokens.css` as `--knk-*` vars.
 
 ## Risks / tech debt (by blast radius)
