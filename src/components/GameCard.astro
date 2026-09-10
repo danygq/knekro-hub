@@ -50,6 +50,7 @@ const voteNumClass = (n: number): string => {
   class=`knk-game-card min-w-75 max-w-75 group border border-(--knk-line) bg-(--knk-surface) hover:border-(--knk-line-strong) transition-colors${loggedIn ? " cursor-pointer" : ""}`
   ]
   data-status-ids={statusIds}
+  data-name={name}
   data-game-id={gameId}
   data-avg={communityAvg != null ? String(communityAvg) : ""}
   data-avg-count={String(voteCount)}

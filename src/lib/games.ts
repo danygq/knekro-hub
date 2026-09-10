@@ -65,13 +65,19 @@ export function buildGameStatuses(
  * Fetch the status list + games grid in one go. Column-scoped, joined, and
  * bounded per docs/QUERY_OPTIMIZATION.md. Always resolves to arrays so the
  * page renders even while Supabase credentials are still provisioning.
+ *
+ * `total` is the total number of games in the library (unfiltered) — used for
+ * the "X de Y juegos" counter. The `games` array is the first page only; the
+ * rest is fetched client-side via /api/games/search (which also powers name
+ * search + future lazy loading).
  */
 export async function loadGamesLibrary(
   client: SupabaseClient,
-): Promise<{ statuses: GameStatus[]; games: GameListRow[] }> {
+): Promise<{ statuses: GameStatus[]; games: GameListRow[]; total: number }> {
   const [
     { data: statusesData, error: statusesError },
     { data: gamesData, error: gamesError },
+    { count: totalCount, error: countError },
   ] = await Promise.all([
     client
       .from("game_status")
@@ -84,7 +90,8 @@ export async function loadGamesLibrary(
         "id, name, cover_url, vote_count, avg_vote, status:game_status!game_status_id(id, name)",
       )
       .order("id", { ascending: true })
-      .limit(48),
+      .limit(24),
+    client.from("games").select("id", { count: "exact", head: true }),
   ]);
 
   if (statusesError) {
@@ -93,10 +100,14 @@ export async function loadGamesLibrary(
   if (gamesError) {
     console.error("Error fetching games:", gamesError);
   }
+  if (countError) {
+    console.error("Error counting games:", countError);
+  }
 
   return {
     statuses: (statusesData as GameStatus[] | null) ?? [],
     games: (gamesData as GameListRow[] | null) ?? [],
+    total: totalCount ?? 0,
   };
 }
 

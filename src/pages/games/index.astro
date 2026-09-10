@@ -24,7 +24,7 @@ const {
   data: { session },
 } = await dbClient.auth.getSession().catch(() => ({ data: { session: null } }));
 
-const { statuses, games } = await loadGamesLibrary(dbClient);
+const { statuses, games, total } = await loadGamesLibrary(dbClient);
 const gameStatuses = buildGameStatuses(statuses, games);
 
 // Community averages are read from the DB-maintained vote_count/avg_vote
@@ -212,12 +212,72 @@ const userVotes = user
           </p>
         ) : (
           <>
+            <div class="mb-6" role="search">
+              <label for="games-search" class="sr-only">
+                Buscar juegos por nombre
+              </label>
+              <div class="relative w-full max-w-md">
+                <svg
+                  class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 shrink-0 text-(--knk-text-faint)"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  aria-hidden="true"
+                >
+                  <circle
+                    cx="11"
+                    cy="11"
+                    r="7"
+                    stroke="currentColor"
+                    stroke-width="1.75"
+                  />
+                  <path
+                    d="m20 20-3.5-3.5"
+                    stroke="currentColor"
+                    stroke-width="1.75"
+                    stroke-linecap="round"
+                  />
+                </svg>
+                <input
+                  id="games-search"
+                  type="search"
+                  placeholder="Buscar por nombre…"
+                  autocomplete="off"
+                  spellcheck="false"
+                  class="knk-notch w-full pl-10 pr-10 py-2 text-sm bg-(--knk-surface) text-(--knk-text) border border-(--knk-line) placeholder:text-(--knk-text-faint) hover:border-(--knk-line-strong) focus:border-(--knk-primary) transition-colors"
+                />
+                <button
+                  id="games-search-clear"
+                  type="button"
+                  hidden
+                  aria-label="Limpiar búsqueda"
+                  class="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center justify-center w-6 h-6 text-(--knk-text-muted) hover:text-(--knk-primary) transition-colors"
+                >
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M18 6L6 18M6 6L18 18"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
             <p
               id="result-count"
               class="text-xs text-(--knk-text-faint) mb-4"
               aria-live="polite"
             >
-              Mostrando&nbsp;
+              <span id="result-label">Mostrando&nbsp;</span>
               <span
                 id="visible-count"
                 class="font-medium text-(--knk-text-muted) tabular-nums"
@@ -229,12 +289,12 @@ const userVotes = user
                 id="total-count"
                 class="font-medium text-(--knk-text-muted) tabular-nums"
               >
-                {games.length}
+                {total}
               </span>
               &nbsp;juegos
             </p>
 
-            <div class="flex flex-wrap gap-5">
+            <div id="games-grid" class="flex flex-wrap gap-5">
               {games.map((game) => {
                 const status = statusName(game.status);
                 const statusIds = statusIdString(game.status);
@@ -261,7 +321,7 @@ const userVotes = user
               hidden
               class="text-sm text-(--knk-text-muted) mt-4"
             >
-              No hay juegos que coincidan con los filtros seleccionados.
+              No hay juegos que coincidan con la búsqueda o los filtros.
             </p>
           </>
         )
@@ -275,9 +335,15 @@ const userVotes = user
   id="supabase-session"
   set:html={JSON.stringify(session)}
 />
+<script
+  type="application/json"
+  id="games-initial"
+  set:html={JSON.stringify({ games, total, loggedIn: !!user })}
+/>
 <script>
   import { supabaseClient } from "../../lib/db-client";
   import { initGamesFilter } from "../../lib/client/games-filter";
+  import { initGamesGrid } from "../../lib/client/games-grid";
   import { initGameVotes } from "../../lib/client/games-vote";
 
   // Sync the SSR auth session to the browser Supabase client so writes
@@ -287,12 +353,16 @@ const userVotes = user
   );
   if (session) await supabaseClient.auth.setSession(session);
 
-  // Init voting UI + filters.
+  // Init voting UI + grid (global DB name search, pagination, counter) +
+  // status filters. The filter asks the grid to re-count after toggling.
   const cleanupVotes = initGameVotes();
-  initGamesFilter();
+  const gamesGrid = initGamesGrid();
+  const gamesFilter = initGamesFilter(() => gamesGrid.recalc());
 
   // Cleanup on view transitions to avoid listener leaks.
   document.addEventListener("astro:before-swap", () => {
     cleanupVotes();
+    gamesGrid.destroy();
+    gamesFilter.destroy();
   });
 </script>

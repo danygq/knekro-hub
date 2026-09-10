@@ -46,14 +46,14 @@ Anti-pattern (N+1): fetching games, then a `game_status` query per row. Never.
 
 ## Indexes to create (match the access patterns above)
 
-| Table         | Index                                               | Serves                             |
-|---------------|-----------------------------------------------------|------------------------------------|
-| `posts`       | `(created_at desc)`                                 | home feed order+limit              |
-| `games`       | `(status_id)`, `(updated_at desc)`, `(slug) unique` | status filter, sort, detail lookup |
-| `games_user_votes` | `(user_id, game_id)` unique                  | per-user lookup/upsert (votes); community averages live on `games.vote_count`/`avg_vote`, maintained by the `on_vote_change` trigger |
-| `goty_items`  | `(year, rank)` composite, `(game_id)` FK            | year ranking, embed join           |
-| `stream_logs` | `(started_at desc)`, `(is_live)` partial            | timeline, live lookup              |
-| join table    | `(stream_log_id)`, `(category_id)`, unique pair     | M:N categories                     |
+| Table              | Index                                               | Serves                                                                                                                               |
+|--------------------|-----------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------|
+| `posts`            | `(created_at desc)`                                 | home feed order+limit                                                                                                                |
+| `games`            | `(status_id)`, `(updated_at desc)`, `(slug) unique` | status filter, sort, detail lookup                                                                                                   |
+| `games_user_votes` | `(user_id, game_id)` unique                         | per-user lookup/upsert (votes); community averages live on `games.vote_count`/`avg_vote`, maintained by the `on_vote_change` trigger |
+| `goty_items`       | `(year, rank)` composite, `(game_id)` FK            | year ranking, embed join                                                                                                             |
+| `stream_logs`      | `(started_at desc)`, `(is_live)` partial            | timeline, live lookup                                                                                                                |
+| join table         | `(stream_log_id)`, `(category_id)`, unique pair     | M:N categories                                                                                                                       |
 
 Verify a query hits an index: `EXPLAIN ANALYZE` in Supabase SQL editor → expect `Index Scan`, not `Seq Scan`, on
 filtered/sorted columns.
