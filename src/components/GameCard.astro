@@ -1,4 +1,5 @@
 ---
+import { formatAvg } from "../lib/client/games-vote-state.ts";
 interface Props {
   name: string;
   coverUrl: string | null;
@@ -22,17 +23,7 @@ const {
   userVote,
   loggedIn,
 } = Astro.props;
-const formatCommunityAverage = () => {
-  const dash: string = "−";
-  if (communityAvg == null) {
-    return dash;
-  }
-  if (Number.isInteger(communityAvg)) {
-    return String(communityAvg);
-  }
-  return communityAvg.toFixed(1);
-};
-const avgLabel = formatCommunityAverage();
+const avgLabel = communityAvg != null ? formatAvg(communityAvg) : "−";
 const hasVote = userVote != null;
 
 // Map a vote value (1-10) to a badge CSS color class. Returns "" for null.
@@ -56,7 +47,8 @@ const voteNumClass = (n: number): string => {
 ---
 
 <article
-  class=`knk-game-card group border border-(--knk-line) bg-(--knk-surface) hover:border-(--knk-line-strong) transition-colors${loggedIn ? " cursor-pointer" : ""}`
+  class=`knk-game-card max-w-75 group border border-(--knk-line) bg-(--knk-surface) hover:border-(--knk-line-strong) transition-colors${loggedIn ? " cursor-pointer" : ""}`
+  ]
   data-status-ids={statusIds}
   data-game-id={gameId}
   data-avg={communityAvg != null ? String(communityAvg) : ""}
@@ -112,7 +104,7 @@ const voteNumClass = (n: number): string => {
     >
       <span
         data-personal-badge
-        class=`knk-notch-sm px-2.5 py-1 text-sm font-medium border tabular-nums transition-colors ${voteClass(userVote)}`
+        class=`knk-notch-sm px-2.5 py-1 text-sm font-medium border tabular-nums text-shadow-[0_0_1px_var(--knk-line)] transition-colors ${voteClass(userVote)}`
         title="Tu voto"
         hidden={!hasVote}
       >
@@ -120,7 +112,7 @@ const voteNumClass = (n: number): string => {
       </span>
       <span
         data-avg-badge
-        class=`ml-auto knk-notch-sm px-2.5 py-1.5 font-medium border tabular-nums transition-colors ${voteClass(communityAvg) || "knk-vote-muted"}`
+        class=`ml-auto knk-notch-sm px-2.5 py-1.5 font-medium border tabular-nums text-shadow-[0_0_1px_var(--knk-line)] transition-colors ${voteClass(communityAvg) || "knk-vote-muted"}`
         title={voteCount > 0
           ? `Media de la comunidad (${voteCount} votos)`
           : "Sin votos todavía"}
@@ -129,7 +121,7 @@ const voteNumClass = (n: number): string => {
           <span data-avg-label class="text-sm">{avgLabel}/10</span>
           <span
             data-vote-count
-            class="text-[10px] font-normal opacity-70"
+            class="text-[10px] font-normal"
             hidden={voteCount === 0}
             >{voteCount} voto{voteCount > 1 && "s"}</span
           >
@@ -144,9 +136,9 @@ const voteNumClass = (n: number): string => {
               type="button"
               data-vote-toggle
               class="knk-vote-toggle knk-notch-sm w-full px-3 py-2 text-sm font-medium
-              bg-(--knk-bg)/85 text-(--knk-text-muted) border border-(--knk-line)
-              opacity-0 group-hover:opacity-100 transition-opacity
-              hover:text-(--knk-primary) hover:border-(--knk-line-strong)"
+                bg-(--knk-bg)/85 text-(--knk-text-muted) border border-(--knk-line)
+                opacity-0 group-hover:opacity-100 transition-opacity
+                hover:text-(--knk-primary) hover:border-(--knk-line-strong)"
             >
               Votar
             </button>
@@ -174,9 +166,10 @@ const voteNumClass = (n: number): string => {
       )
     }
   </div>
-  <div class="p-4">
+  <div class="p-4 max-h-fit overflow-hidden text-ellipsis">
     <h3
       class="font-(--font-display) text-base tracking-tight group-hover:text-(--knk-primary) transition-colors cursor-default"
+      title={name}
     >
       {name}
     </h3>

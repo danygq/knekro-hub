@@ -127,33 +127,33 @@
    of the structural utility classes on the badge (same rationale as
    .knk-filter-*.active above). */
 .knk-vote-red {
-    background: color-mix(in srgb, var(--knk-red-500) 15%, transparent) !important;
-    color: var(--knk-red-400) !important;
-    border-color: color-mix(in srgb, var(--knk-red-500) 30%, transparent) !important;
+    background: color-mix(in srgb, var(--knk-red-600) 15%, transparent) !important;
+    color: var(--knk-red-500) !important;
+    border-color: color-mix(in srgb, var(--knk-red-600) 30%, transparent) !important;
 }
 
 .knk-vote-orange {
-    background: color-mix(in srgb, var(--knk-orange-500) 15%, transparent) !important;
-    color: var(--knk-orange-400) !important;
-    border-color: color-mix(in srgb, var(--knk-orange-500) 30%, transparent) !important;
+    background: color-mix(in srgb, var(--knk-orange-600) 15%, transparent) !important;
+    color: var(--knk-orange-500) !important;
+    border-color: color-mix(in srgb, var(--knk-orange-600) 30%, transparent) !important;
 }
 
 .knk-vote-amber {
-    background: color-mix(in srgb, var(--knk-amber-500) 15%, transparent) !important;
-    color: var(--knk-amber-400) !important;
-    border-color: color-mix(in srgb, var(--knk-amber-500) 30%, transparent) !important;
+    background: color-mix(in srgb, var(--knk-amber-600) 15%, transparent) !important;
+    color: var(--knk-amber-500) !important;
+    border-color: color-mix(in srgb, var(--knk-amber-600) 30%, transparent) !important;
 }
 
 .knk-vote-green {
-    background: color-mix(in srgb, var(--knk-green-500) 15%, transparent) !important;
-    color: var(--knk-green-400) !important;
-    border-color: color-mix(in srgb, var(--knk-green-500) 30%, transparent) !important;
+    background: color-mix(in srgb, var(--knk-green-600) 15%, transparent) !important;
+    color: var(--knk-green-500) !important;
+    border-color: color-mix(in srgb, var(--knk-green-600) 30%, transparent) !important;
 }
 
 .knk-vote-blue {
-    background: color-mix(in srgb, var(--knk-blue-500) 15%, transparent) !important;
-    color: var(--knk-blue-400) !important;
-    border-color: color-mix(in srgb, var(--knk-blue-500) 30%, transparent) !important;
+    background: color-mix(in srgb, var(--knk-blue-600) 15%, transparent) !important;
+    color: var(--knk-blue-500) !important;
+    border-color: color-mix(in srgb, var(--knk-blue-600) 30%, transparent) !important;
 }
 
 /* Neutral state for the avg badge when there is no vote data yet. */
