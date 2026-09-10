@@ -26,7 +26,6 @@ flowchart TD
     SB -->|redirect w/ code| CB[GET /auth/callback] -->|exchangeCodeForSession| SB
     U -->|Logout| AO[POST /api/auth/signout] --> SB
     U -->|Vote| PV[browser Supabase client] -->|insert/update/clear games_user_votes| SB
-    SB -->|Postgres Change event| PV -->|realtime subscription| SB
     L --> TW[[Twitch embeds: player + chat]]
 ```
 
@@ -40,12 +39,12 @@ flowchart TD
 | `pages/goty.astro`             | GOTY awards (static placeholder)                                                                                        | Layout                                           | —                                                                    |
 | `pages/api/auth/*`             | `signin` (Twitch OAuth), `signout`                                                                                      | `lib/db-client`                                  | LoginButton/UserMenu forms                                           |
 | `pages/auth/callback.ts`       | OAuth PKCE code→session exchange                                                                                        | `lib/db-client`                                  | Supabase redirect                                                    |
-| `pages/api/games/vote.ts`      | ~~Insert/update/clear a game vote~~ (deprecated — writes now go through browser Supabase client)                        | `lib/db-client`                                  | —                                                                    |
-| `lib/db-client.ts`             | Per-request SSR database client + browser-side Supabase client (realtime + writes) with placeholder fallback            | `@supabase/ssr`, `@supabase/supabase-js`         | all pages, API routes, client scripts                                |
+| `pages/api/games/vote.ts`      | ~~Insert/update/clear a game vote~~ (deleted — writes now go through browser Supabase client)                          | `lib/db-client`                                  | —                                                                    |
+| `lib/db-client.ts`             | Per-request SSR database client + browser-side Supabase client (writes + reads) with placeholder fallback             | `@supabase/ssr`, `@supabase/supabase-js`         | all pages, client scripts                                            |
 | `lib/games.ts`                 | Server-side `/games` loader: statuses + games + community averages + user votes (column-scoped, embedded join, bounded) | `types`, `@supabase/supabase-js`                 | `pages/games/index.astro`                                            |
 | `lib/client/games-filter.ts`   | Browser controller for the `/games` filter drawer (include/exclude, live count)                                         | —                                                | `pages/games/index.astro` (`<script>`)                               |
-| `lib/client/games-vote.ts`     | Browser controller for the `/games` voting UI (picker, optimistic average, direct Supabase writes)                      | —                                                | `pages/games/index.astro` (`<script>`)                               |
-| `lib/client/games-realtime.ts` | Browser realtime subscription for `/games` vote changes (updates community average live)                                | —                                                | `pages/games/index.astro` (`<script>`)                               |
+| `lib/client/games-vote.ts`       | Browser controller for the `/games` voting UI (picker, submit vote via browser Supabase client, re-fetch community average) | `lib/db-client`, `lib/client/games-vote-state` | `pages/games/index.astro` (`<script>`)                               |
+| `lib/client/games-vote-state.ts` | Shared DOM helpers: `reflectVote` (personal badge), `setCommunityAverage` (write fetched avg to card)                       | —                                                | `lib/client/games-vote.ts`                                           |
 | `types/*`                      | Domain types, one file per area (`games.ts`, `categories.ts`, `streams.ts`, `goty.ts`) + barrel `index.ts`              | —                                                | `games` via `lib/games.ts` (rest aspirational)                       |
 | `components/*`                 | `LoginButton`, `UserMenu`, `TwitchLogo`, `GameCard`                                                                     | —                                                | Layout; `GameCard` by games grid                                     |
 | `styles/*`                     | `global.css` entry → `tokens.css` (design tokens), `base.css`, `utilities.css`; per-page `pages/games.css`              | Tailwind v4                                      | Layout (`global.css`); `pages/games/index.astro` (`pages/games.css`) |
@@ -58,14 +57,15 @@ flowchart TD
   See `docs/adr/0002-twitch-only-auth.md`.
 - **Single per-request client + browser client**: `lib/db-client.ts` creates one auth-aware client per request via
   `@supabase/ssr`, used for both auth and data queries. Carries the user JWT so RLS policies apply. The browser-side
-  `supabaseClient` singleton handles realtime subscriptions and direct vote writes (RLS-enforced).
+  `supabaseClient` singleton handles direct vote writes and community-average re-fetches (RLS-enforced).
 - **Placeholder-fallback client**: `lib/db-client.ts` falls back to a valid dummy URL/key so pages render while env vars
   provision. Intentional.
 - **`/games` reads live data**: `lib/games.ts` queries `game_status` + `games` (PostgREST embedding
   `game_status!game_status_id`, bounded) + community averages and the signed-in user's votes from `games_user_votes`;
   `games` schema still unconfirmed.
 - **Community voting**: votes 1–10 stored in `games_user_votes`; the community average (1 decimal) is shown to everyone,
-  voting controls to signed-in users only. Clearing a vote sets `vote = null` (row kept) rather than deleting.
+  voting controls to signed-in users only. After a vote is submitted, the community average for that game is re-fetched
+  from the server so the card reflects the true value. Clearing a vote sets `vote = null` (row kept) rather than deleting.
 - **Tailwind v4 token-only theming**: no config file; all theme lives in `src/styles/tokens.css` as `--knk-*` vars.
 
 ## Risks / tech debt (by blast radius)

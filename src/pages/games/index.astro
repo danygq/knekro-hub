@@ -197,21 +197,18 @@ const userVotes = user ? await loadUserVotes(dbClient, user.id, gameIds) : new M
   import { supabaseClient } from "../../lib/db-client";
   import { initGamesFilter } from "../../lib/client/games-filter";
   import { initGameVotes } from "../../lib/client/games-vote";
-  import { initGameRealtime } from "../../lib/client/games-realtime";
 
   // Sync the SSR auth session to the browser Supabase client so writes
   // (votes) carry the user's JWT and respect RLS policies.
   const session = JSON.parse(document.getElementById("supabase-session")?.textContent ?? "null");
   if (session) await supabaseClient.auth.setSession(session);
 
-  // Init voting UI + realtime subscription.
+  // Init voting UI + filters.
   const cleanupVotes = initGameVotes();
-  const cleanupRealtime = initGameRealtime();
   initGamesFilter();
 
-  // Cleanup on view transitions to avoid WebSocket / listener leaks.
+  // Cleanup on view transitions to avoid listener leaks.
   document.addEventListener("astro:before-swap", () => {
     cleanupVotes();
-    cleanupRealtime();
   });
 </script>

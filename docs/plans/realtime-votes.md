@@ -1,5 +1,7 @@
 # Real-time Vote Updates
 
+> **Superseded** — the realtime approach described here was implemented then rolled back in favor of a simpler flow: votes are written via the browser Supabase client, and after each vote the community average for that game is re-fetched from the server. See `ARCHITECTURE.md` for the current design. This file is kept for historical context only.
+
 Plan for adding realtime community-average updates to the `/games` voting UI.
 
 ## Goal
@@ -32,7 +34,6 @@ User B's browser ←── WebSocket ←── Realtime server
 
 ### New
 - `src/lib/client/games-vote-state.ts` — shared DOM update logic (extracted from games-vote.ts)
-- `src/lib/client/games-realtime.ts` — realtime subscription + card updates
 
 ### Modified
 - `src/lib/db-client.ts` — added `supabaseClient` export (browser-side client)
