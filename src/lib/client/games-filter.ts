@@ -1,6 +1,13 @@
-// Browser controller for the games library filter panel.
+// Browser controller for the games library filter panel (status include/exclude).
 // Import this ONLY from a page <script> — it references `window`/`document`
 // and must never be imported into an .astro frontmatter (that runs in SSR).
+//
+// Name search now lives in games-grid.ts (a global DB query). This controller
+// handles status filtering only: it toggles card visibility and asks the grid
+// to re-count / refresh the counter via the `onFilterChange` callback. When
+// the grid renders a new page (search / lazy load), it dispatches
+// `games:grid-updated`; the filter listens and re-applies its rules so status
+// filtering composes with search + pagination.
 
 /** Parse the space-separated `data-status-ids` attribute into a number list. */
 export function parseStatusIds(raw: string): number[] {
@@ -25,32 +32,37 @@ export function matchesFilter(
   return !(excluded.size > 0 && statusIds.some((id) => excluded.has(id)));
 }
 
+/** Handle returned by initGamesFilter(). */
+export interface GamesFilterController {
+  destroy: () => void;
+}
+
 /**
- * Wire up the /games filter drawer: toggle/open/close, include/exclude status
- * buttons, visible count / no-results messaging, and the filter badge.
- * Elements are resolved by id; the call is a no-op when the panel is missing.
+ * Wire up the /games filter drawer: toggle/open/close + include/exclude status
+ * buttons. Elements are resolved by id; the call is a no-op when the panel is
+ * missing. After toggling, visibility is applied to the current cards and the
+ * grid's counter is refreshed via `onFilterChange`.
  */
-export function initGamesFilter(): void {
+export function initGamesFilter(
+  onFilterChange: () => void,
+): GamesFilterController {
   const panel = document.getElementById("filter-panel");
   const backdrop = document.getElementById("filter-backdrop");
   const wrapper = document.getElementById("games-layout");
   const toggle = document.getElementById("toggle-filters");
   const closeBtn = document.getElementById("close-filters");
   const resetBtn = document.getElementById("reset-filters");
-  const visibleCount = document.getElementById("visible-count");
   const badge = document.getElementById("filter-count");
-  const noResults = document.getElementById("filter-no-results");
 
-  if (!panel || !wrapper) return;
+  if (!panel || !wrapper) {
+    return { destroy: () => {} };
+  }
 
   const isDesktop = () =>
     window.matchMedia
       ? window.matchMedia("(min-width: 1024px)").matches
       : window.innerWidth >= 1024;
 
-  const cards: HTMLElement[] = Array.from(
-    document.querySelectorAll(".knk-game-card"),
-  );
   const included = new Set<number>();
   const excluded = new Set<number>();
   const state = { open: isDesktop() };
@@ -64,7 +76,8 @@ export function initGamesFilter(): void {
     toggle?.setAttribute("aria-expanded", state.open ? "true" : "false");
   }
 
-  function refresh() {
+  /** Apply include/exclude visibility to all current cards + refresh counter. */
+  function applyFilter() {
     if (resetBtn) {
       const active = included.size === 0 && excluded.size === 0;
       resetBtn.classList.toggle("active", active);
@@ -79,21 +92,19 @@ export function initGamesFilter(): void {
       btn.setAttribute("aria-pressed", active ? "true" : "false");
     });
 
-    let visible = 0;
+    const cards = document.querySelectorAll<HTMLElement>(".knk-game-card");
     cards.forEach((card) => {
       const ids = parseStatusIds(card.dataset.statusIds || "");
-      const show = matchesFilter(ids, included, excluded);
-      card.hidden = !show;
-      if (show) visible += 1;
+      card.hidden = !matchesFilter(ids, included, excluded);
     });
 
-    if (visibleCount) visibleCount.textContent = String(visible);
-    if (noResults) noResults.hidden = visible > 0;
     if (badge) {
       const count = included.size + excluded.size;
       badge.hidden = count === 0;
       badge.textContent = String(count);
     }
+
+    onFilterChange();
   }
 
   document.querySelectorAll("[data-status-mode]").forEach((btn) => {
@@ -115,7 +126,7 @@ export function initGamesFilter(): void {
           included.delete(id);
         }
       }
-      refresh();
+      applyFilter();
     });
   });
 
@@ -130,25 +141,40 @@ export function initGamesFilter(): void {
   resetBtn?.addEventListener("click", () => {
     included.clear();
     excluded.clear();
-    refresh();
+    applyFilter();
   });
   backdrop?.addEventListener("click", () => {
     state.open = false;
     syncPanel();
   });
-  document.addEventListener("keydown", (e) => {
+  const onEscape = (e: KeyboardEvent) => {
     if (e.key === "Escape" && state.open && !isDesktop()) {
       state.open = false;
       syncPanel();
     }
-  });
+  };
+  document.addEventListener("keydown", onEscape);
 
-  let resizeTimer: NodeJS.Timeout;
-  window.addEventListener("resize", () => {
+  let resizeTimer: ReturnType<typeof setTimeout>;
+  const onResize = () => {
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(syncPanel, 100);
-  });
+  };
+  window.addEventListener("resize", onResize);
 
-  refresh();
+  // When the grid renders a new page (search / lazy load), re-apply status rules.
+  const onGridUpdated = () => {
+    applyFilter();
+  };
+  document.addEventListener("games:grid-updated", onGridUpdated);
+
   syncPanel();
+
+  return {
+    destroy() {
+      document.removeEventListener("keydown", onEscape);
+      window.removeEventListener("resize", onResize);
+      document.removeEventListener("games:grid-updated", onGridUpdated);
+    },
+  };
 }

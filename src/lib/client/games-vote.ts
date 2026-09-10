@@ -75,95 +75,109 @@ async function fetchCommunityAverage(
   return { avg, count };
 }
 
+/**
+ * Build the GameCardEls lookup for a card root. Returns null when the card has
+ * no voting UI (user not logged in).
+ */
+function getCardEls(root: HTMLElement): GameCardEls | null {
+  const toggle = root.querySelector<HTMLButtonElement>("[data-vote-toggle]");
+  const picker = root.querySelector<HTMLElement>("[data-vote-picker]");
+  if (!toggle || !picker) return null;
+  return {
+    root,
+    toggle,
+    picker,
+    avgBadge: root.querySelector<HTMLElement>("[data-avg-badge]"),
+    avgLabel: root.querySelector<HTMLElement>("[data-avg-label]"),
+    voteCount: root.querySelector<HTMLElement>("[data-vote-count]"),
+    personalBadge: root.querySelector<HTMLElement>("[data-personal-badge]"),
+  };
+}
+
 export function initGameVotes(): () => void {
-  const cards = document.querySelectorAll<HTMLElement>(".knk-game-card");
+  // Event delegation: one document-level handler resolves the card via
+  // closest(), so voting works for every card regardless of when it was added
+  // (SSR, search results, future lazy-loaded pages). This is essential because
+  // the grid controller replaces card elements on every render.
+  const handleClick = async (e: MouseEvent) => {
+    const target = e.target as HTMLElement;
 
-  cards.forEach((root) => {
-    const toggle = root.querySelector<HTMLButtonElement>("[data-vote-toggle]");
-    const picker = root.querySelector<HTMLElement>("[data-vote-picker]");
-    if (!toggle || !picker) return; // not logged in — no voting UI on this card
+    // 1. A vote number was clicked — submit (or clear) the vote.
+    const numBtn = target.closest<HTMLElement>("[data-vote-value]");
+    if (numBtn) {
+      const root = numBtn.closest<HTMLElement>(".knk-game-card");
+      if (!root) return;
+      const card = getCardEls(root);
+      if (!card) return;
+      e.stopPropagation();
 
-    const card: GameCardEls = {
-      root,
-      toggle,
-      picker,
-      avgBadge: root.querySelector<HTMLElement>("[data-avg-badge]"),
-      avgLabel: root.querySelector<HTMLElement>("[data-avg-label]"),
-      voteCount: root.querySelector<HTMLElement>("[data-vote-count]"),
-      personalBadge: root.querySelector<HTMLElement>("[data-personal-badge]"),
-    };
+      const value = voteValue(numBtn);
+      const currentVote = root.dataset.vote ? Number(root.dataset.vote) : null;
+      const nextVote = value === currentVote ? null : value;
+      const gameId = Number(root.dataset.gameId);
 
-    // clicking the card opens the picker (mobile-friendly)
-    root.addEventListener("click", (e) => {
-      const target = e.target as HTMLElement;
-      if (
-        target.closest("[data-vote-toggle]") ||
-        target.closest("[data-vote-picker]")
-      )
+      // instant personal feedback
+      reflectVote(card, nextVote);
+      card.picker.hidden = true;
+
+      const ok = await submitVote(gameId, nextVote);
+      if (!ok) {
+        reflectVote(card, currentVote); // revert on failure
+        console.error("Vote failed");
         return;
+      }
+
+      // fetch the real community average and update the card
+      const community = await fetchCommunityAverage(gameId);
+      setCommunityAverage(
+        card,
+        community ? community.avg : 0,
+        community ? community.count : 0,
+      );
+      return;
+    }
+
+    // 2. The "Votar" toggle was clicked — reveal / hide this card's picker.
+    const toggle = target.closest<HTMLButtonElement>("[data-vote-toggle]");
+    if (toggle) {
+      const root = toggle.closest<HTMLElement>(".knk-game-card");
+      if (!root) return;
+      const card = getCardEls(root);
+      if (!card) return;
       e.stopPropagation();
-      const willOpen = picker.hidden;
-      closeAllPickers(picker);
-      picker.hidden = !willOpen;
-    });
+      const willOpen = card.picker.hidden;
+      closeAllPickers(card.picker);
+      card.picker.hidden = !willOpen;
+      return;
+    }
 
-    // toggle reveals / hides this card's picker
-    toggle.addEventListener("click", (e) => {
+    // 3. The card body was clicked (mobile-friendly) — toggle the picker.
+    //    Ignore clicks landing on the picker itself (its numbers are handled above).
+    const root = target.closest<HTMLElement>(".knk-game-card");
+    if (root && !target.closest("[data-vote-picker]")) {
+      const card = getCardEls(root);
+      if (!card) return;
       e.stopPropagation();
-      const willOpen = picker.hidden;
-      closeAllPickers(picker);
-      picker.hidden = !willOpen;
-    });
+      const willOpen = card.picker.hidden;
+      closeAllPickers(card.picker);
+      card.picker.hidden = !willOpen;
+      return;
+    }
 
-    // a number is clicked — vote or clear
-    picker.querySelectorAll<HTMLElement>("[data-vote-value]").forEach((btn) => {
-      btn.addEventListener("click", async (e) => {
-        e.stopPropagation();
-        const value = voteValue(btn);
-        const currentVote = root.dataset.vote
-          ? Number(root.dataset.vote)
-          : null;
-        const clearing = value === currentVote;
-
-        const nextVote = clearing ? null : value;
-        const gameId = Number(root.dataset.gameId);
-
-        // instant personal feedback
-        reflectVote(card, nextVote);
-        picker.hidden = true;
-
-        const ok = await submitVote(gameId, nextVote);
-        if (!ok) {
-          // revert personal vote on failure
-          reflectVote(card, currentVote);
-          console.error("Vote failed");
-          return;
-        }
-
-        // fetch the real community average for this game and update the card
-        const community = await fetchCommunityAverage(gameId);
-        if (community) {
-          setCommunityAverage(card, community.avg, community.count);
-        } else {
-          setCommunityAverage(card, 0, 0);
-        }
-      });
-    });
-  });
-
-  // close pickers on outside click
-  const outsideClick = () => closeAllPickers();
-  document.addEventListener("click", outsideClick);
+    // 4. Click was outside any card — close all open pickers.
+    closeAllPickers();
+  };
 
   // close on Escape
   const keyHandler = (e: KeyboardEvent) => {
     if (e.key === "Escape") closeAllPickers();
   };
+  document.addEventListener("click", handleClick);
   document.addEventListener("keydown", keyHandler);
 
   // cleanup function for view transitions
   return () => {
-    document.removeEventListener("click", outsideClick);
+    document.removeEventListener("click", handleClick);
     document.removeEventListener("keydown", keyHandler);
   };
 }

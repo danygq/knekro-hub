@@ -1,6 +1,9 @@
 # Real-time Vote Updates
 
-> **Superseded** — the realtime approach described here was implemented then rolled back in favor of a simpler flow: votes are written via the browser Supabase client, and after each vote the community average for that game is re-fetched from the server. See `ARCHITECTURE.md` for the current design. This file is kept for historical context only.
+> **Superseded** — the realtime approach described here was implemented then rolled back in favor of a simpler flow:
+> votes are written via the browser Supabase client, and after each vote the community average for that game is
+> re-fetched
+> from the server. See `ARCHITECTURE.md` for the current design. This file is kept for historical context only.
 
 Plan for adding realtime community-average updates to the `/games` voting UI.
 
@@ -33,14 +36,17 @@ User B's browser ←── WebSocket ←── Realtime server
 ## Files Changed
 
 ### New
+
 - `src/lib/client/games-vote-state.ts` — shared DOM update logic (extracted from games-vote.ts)
 
 ### Modified
+
 - `src/lib/db-client.ts` — added `supabaseClient` export (browser-side client)
 - `src/lib/client/games-vote.ts` — uses Supabase client for writes; tracks "just voted" IDs
 - `src/pages/games/index.astro` — syncs SSR auth session; inits realtime; cleanup on navigation
 
 ### Deprecated
+
 - `src/pages/api/games/vote.ts` — no longer needed (writes go direct)
 
 ## Prerequisites (DB — must be done in Supabase Dashboard)
@@ -69,13 +75,13 @@ network activity (both show in DevTools).
 
 ## Edge Cases Handled
 
-| Concern | Handling |
-|---|---|
-| Own vote double-count | `justVotedGames` Set skips the realtime event for a game the user just voted on |
-| Connection drops | Realtime auto-reconnects; missed events replay on reconnect |
-| 200-connection limit | Graceful degradation — live updates pause until a slot frees up; voting still works |
-| Page navigation | Cleanup on `astro:before-swap` removes channel + listeners |
-| Rapid events | Each event processed independently; `data-avg`/`data-avg-count` stay consistent |
+| Concern               | Handling                                                                            |
+|-----------------------|-------------------------------------------------------------------------------------|
+| Own vote double-count | `justVotedGames` Set skips the realtime event for a game the user just voted on     |
+| Connection drops      | Realtime auto-reconnects; missed events replay on reconnect                         |
+| 200-connection limit  | Graceful degradation — live updates pause until a slot frees up; voting still works |
+| Page navigation       | Cleanup on `astro:before-swap` removes channel + listeners                          |
+| Rapid events          | Each event processed independently; `data-avg`/`data-avg-count` stay consistent     |
 
 ## Verification
 

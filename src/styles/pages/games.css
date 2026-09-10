@@ -205,3 +205,22 @@
     color: var(--knk-text-inverse) !important;
     border-color: var(--vote-c) !important;
 }
+
+/* Name search bar on /games.
+   The input gets its own focus ring because base.css only covers links +
+   buttons; it matches the site's outline styling. */
+#games-search {
+    font-family: var(--font-body), sans-serif;
+    caret-color: var(--knk-primary);
+}
+
+#games-search:focus-visible {
+    outline: 2px solid var(--knk-primary);
+    outline-offset: 2px;
+}
+
+/* Hide the native WebKit search clear button — /games ships its own. */
+#games-search::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+    appearance: none;
+}
