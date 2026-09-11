@@ -20,6 +20,12 @@ Astro SSR site (a "hub") for the Twitch streamer **Knekro**: a library of games 
 - **No new deps without reason.** Check `package.json` first; the stack is deliberately small.
 - **Don't hallucinate schema.** `posts` and `game_status` are confirmed; `games` is now queried by `/games` (see `docs/modules/data-layer.md`) but its schema is still unconfirmed. Anything else is inferred — verify against Supabase before relying on it. Mark unknowns "unclear — needs confirmation".
 
+## Issue workflow
+
+Follow the model-agnostic protocol in [`docs/AGENT_PROTOCOL.md`](docs/AGENT_PROTOCOL.md) when creating or executing
+issues: issue template structure, deterministic specs, mandatory execution steps (scope review → reuse audit → refactor
+assessment → verification).
+
 ## Conventions
 | Topic | Rule |
 |---|---|

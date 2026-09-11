@@ -26,6 +26,7 @@ Token-optimized docs for `knekro-hub`. Load only what you need — each file is 
 - [`QUERY_OPTIMIZATION.md`](QUERY_OPTIMIZATION.md) — Postgres/PostgREST select + join + index rules.
 - [`GOTY.md`](GOTY.md) — awards section design (extensible, not yet built).
 - [`GLOSSARY.md`](GLOSSARY.md) — domain terms.
+- [`AGENT_PROTOCOL.md`](AGENT_PROTOCOL.md) — issue creation & execution protocol (model-agnostic).
 
 ## Decisions & meta
 
