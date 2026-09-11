@@ -15,19 +15,15 @@ const displayName =
 ---
 
 <div class="flex items-center gap-3">
-  {
-    avatarUrl && (
-      <img
-        src={avatarUrl}
-        alt="Avatar"
-        class="w-8 h-8 rounded-full border border-(--knk-line-strong) object-cover"
-      />
-    )
-  }
+  {avatarUrl && (
+    <img
+      src={avatarUrl}
+      alt="Avatar"
+      class="w-8 h-8 rounded-full border border-(--knk-line-strong) object-cover"
+    />
+  )}
 
-  <span class="hidden sm:inline text-sm font-medium">
-    {displayName}
-  </span>
+  <span class="hidden sm:inline text-sm font-medium">{displayName}</span>
 
   <form action="/api/auth/signout" method="POST">
     <button

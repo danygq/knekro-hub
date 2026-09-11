@@ -22,19 +22,17 @@ const currentPath = Astro.url.pathname;
     <title>Knekro Hub</title>
   </head>
   <body class="min-h-screen bg-(--knk-bg) text-(--knk-text) antialiased">
-    <header
-      class="sticky top-0 z-50 bg-(--knk-bg)/90 backdrop-blur-md border-b border-(--knk-line)"
-    >
+    <header class="sticky top-0 z-50 bg-(--knk-bg)/90 backdrop-blur-md border-b border-(--knk-line)">
       <div class="mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-16">
           <div class="flex items-center gap-8">
             <a href="/" class="flex items-center gap-2.5 shrink-0 font-bold">
-              <span class="font-(--font-display) text-3xl tracking-tight"
-                >Knekro <span
-                  class="px-0.75 py-0.5 rounded-xs bg-(--knk-primary) text-(--knk-bg)"
-                  >hub</span
-                ></span
-              >
+              <span class="font-(--font-display) text-3xl tracking-tight">
+                Knekro{" "}
+                <span class="px-0.75 py-0.5 rounded-xs bg-(--knk-primary) text-(--knk-bg)">
+                  hub
+                </span>
+              </span>
             </a>
             <nav class="hidden sm:flex items-center gap-6" aria-label="Primary">
               <a
@@ -43,16 +41,20 @@ const currentPath = Astro.url.pathname;
                   currentPath.startsWith("/games")
                     ? "border-(--knk-primary) text-(--knk-text)"
                     : "border-transparent text-(--knk-text-muted) hover:text-(--knk-text) hover:border-(--knk-line-strong)"
-                }`}>Juegos</a
+                }`}
               >
+                Juegos
+              </a>
               <a
                 href="/goty"
                 class={`text-sm font-medium pb-0.75 border-b-2 transition-colors ${
                   currentPath.startsWith("/goty")
                     ? "border-(--knk-primary) text-(--knk-text)"
                     : "border-transparent text-(--knk-text-muted) hover:text-(--knk-text) hover:border-(--knk-line-strong)"
-                }`}>GOTY</a
+                }`}
               >
+                GOTY
+              </a>
             </nav>
           </div>
           <div class="flex items-center gap-3">
@@ -61,15 +63,17 @@ const currentPath = Astro.url.pathname;
               target="_blank"
               rel="noopener"
               class="knk-notch hidden md:inline-flex px-4 py-2 text-sm font-medium bg-(--knk-twitch) text-[white] hover:bg-(--knk-twitch-hover) transition-colors"
-              >Ver en Twitch</a
             >
+              Ver en Twitch
+            </a>
             <a
               href="https://discord.com/invite/knekro"
               target="_blank"
               rel="noopener"
               class="knk-notch hidden md:inline-flex px-4 py-2 text-sm font-medium bg-(--knk-discord) text-[white] hover:bg-(--knk-discord-hover) transition-colors"
-              >Discord</a
             >
+              Discord
+            </a>
             <div class="w-px h-6 bg-(--knk-line) hidden md:block"></div>
             {user ? <UserMenu user={user} /> : <LoginButton />}
           </div>
@@ -84,23 +88,21 @@ const currentPath = Astro.url.pathname;
 </main>
 
 <footer class="border-t border-(--knk-line) mt-8">
-  <div
-    class="mx-auto px-4 sm:px-6 lg:px-8 py-8 text-sm text-(--knk-text-muted)"
-  >
-    <div
-      class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
-    >
+  <div class="mx-auto px-4 sm:px-6 lg:px-8 py-8 text-sm text-(--knk-text-muted)">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
       <div class="flex items-center gap-2">
         <span>© {new Date().getFullYear()} Knekro Hub</span>
       </div>
       <div class="flex items-center gap-5">
-        <a href="/" class="hover:text-(--knk-text) transition-colors">Inicio</a>
-        <a href="/games" class="hover:text-(--knk-text) transition-colors"
-          >Juegos</a
-        >
-        <a href="/goty" class="hover:text-(--knk-text) transition-colors"
-          >GOTY</a
-        >
+        <a href="/" class="hover:text-(--knk-text) transition-colors">
+          Inicio
+        </a>
+        <a href="/games" class="hover:text-(--knk-text) transition-colors">
+          Juegos
+        </a>
+        <a href="/goty" class="hover:text-(--knk-text) transition-colors">
+          GOTY
+        </a>
       </div>
     </div>
   </div>

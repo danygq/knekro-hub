@@ -41,9 +41,7 @@ const userVotes = user
   <div class="mb-8 flex flex-wrap items-start justify-between gap-x-6 gap-y-4">
     <div class="min-w-0">
       <p class="knk-eyebrow mb-2">Biblioteca del canal</p>
-      <h1
-        class="font-(--font-display) text-3xl sm:text-4xl tracking-tight text-balance"
-      >
+      <h1 class="font-(--font-display) text-3xl sm:text-4xl tracking-tight text-balance">
         Juegos
       </h1>
       <p class="mt-2 text-sm text-(--knk-text-muted) max-w-lg leading-relaxed">
@@ -75,12 +73,14 @@ const userVotes = user
           height="18"
           rx="2"
           stroke="currentColor"
-          stroke-width="1.5"></rect>
+          stroke-width="1.5"
+        ></rect>
         <path
           d="M6.5 8.5h11M6.5 12h8M6.5 15.5h11"
           stroke="currentColor"
           stroke-width="1.75"
-          stroke-linecap="round"></path>
+          stroke-linecap="round"
+        ></path>
       </svg>
       <span>Filtros</span>
       <span
@@ -92,19 +92,21 @@ const userVotes = user
   </div>
 
   <div id="games-layout" class="games-layout">
-    <div id="filter-backdrop" class="knk-filter-backdrop" aria-hidden="true">
-    </div>
+    <div
+      id="filter-backdrop"
+      class="knk-filter-backdrop"
+      aria-hidden="true"
+    ></div>
 
     <aside
       id="filter-panel"
       class="knk-filter-panel"
       aria-label="Filtros por estado"
     >
-      <div
-        class="flex items-center justify-between px-4 py-3 border-b border-(--knk-line) bg-(--knk-surface-2)"
-      >
-        <span class="font-(--font-display) text-sm tracking-tight">Filtros</span
-        >
+      <div class="flex items-center justify-between px-4 py-3 border-b border-(--knk-line) bg-(--knk-surface-2)">
+        <span class="font-(--font-display) text-sm tracking-tight">
+          Filtros
+        </span>
         <button
           type="button"
           id="close-filters"
@@ -122,7 +124,8 @@ const userVotes = user
               d="M18 6L6 18M6 6L18 18"
               stroke="currentColor"
               stroke-width="2"
-              stroke-linecap="round"></path>
+              stroke-linecap="round"
+            ></path>
           </svg>
         </button>
       </div>
@@ -148,184 +151,179 @@ const userVotes = user
               cy="12"
               r="8"
               stroke="currentColor"
-              stroke-width="1.75"></circle>
+              stroke-width="1.75"
+            ></circle>
             <circle cx="12" cy="12" r="2.5" fill="currentColor"></circle>
           </svg>
           Todas
         </button>
 
         <div>
-          <h2
-            class="text-xs font-medium uppercase tracking-wide text-(--knk-text-faint) mb-3"
-          >
+          <h2 class="text-xs font-medium uppercase tracking-wide text-(--knk-text-faint) mb-3">
             Estado
           </h2>
           <ul class="divide-y divide-(--knk-line)">
-            {
-              gameStatuses.map((status) => (
-                <li class="flex items-center justify-between gap-3 py-2">
-                  <button
-                    type="button"
-                    title={`Excluir ${status.name} de la selección`}
-                    data-status-id={status.id}
-                    data-status-mode="minus"
-                    aria-label={`Excluir ${status.name} de la selección`}
-                    aria-pressed="false"
-                    class="knk-filter-minus knk-notch-sm w-7 h-7 inline-flex items-center justify-center shrink-0 text-lg leading-none
+            {gameStatuses.map((status) => (
+              <li class="flex items-center justify-between gap-3 py-2">
+                <button
+                  type="button"
+                  title={`Excluir ${status.name} de la selección`}
+                  data-status-id={status.id}
+                  data-status-mode="minus"
+                  aria-label={`Excluir ${status.name} de la selección`}
+                  aria-pressed="false"
+                  class="knk-filter-minus knk-notch-sm w-7 h-7 inline-flex items-center justify-center shrink-0 text-lg leading-none
                         bg-(--knk-surface) text-(--knk-text-muted) border border-(--knk-line)
                         hover:text-(--knk-danger) hover:border-(--knk-danger) transition-colors"
-                  >
-                    −
-                  </button>
-                  <span class="flex-1 min-w-0 text-sm font-medium text-(--knk-text-muted)">
-                    {status.name}
-                  </span>
-                  <span class="w-5 text-right text-xs text-(--knk-text-faint) tabular-nums">
-                    {status.count}
-                  </span>
-                  <button
-                    type="button"
-                    title={`Incluir ${status.name} en la selección`}
-                    data-status-id={status.id}
-                    data-status-mode="plus"
-                    aria-label={`Incluir ${status.name} en la selección`}
-                    aria-pressed="false"
-                    class="knk-filter-plus knk-notch-sm w-7 h-7 inline-flex items-center justify-center shrink-0 text-lg leading-none
+                >
+                  −
+                </button>
+                <span class="flex-1 min-w-0 text-sm font-medium text-(--knk-text-muted)">
+                  {status.name}
+                </span>
+                <span class="w-5 text-right text-xs text-(--knk-text-faint) tabular-nums">
+                  {status.count}
+                </span>
+                <button
+                  type="button"
+                  title={`Incluir ${status.name} en la selección`}
+                  data-status-id={status.id}
+                  data-status-mode="plus"
+                  aria-label={`Incluir ${status.name} en la selección`}
+                  aria-pressed="false"
+                  class="knk-filter-plus knk-notch-sm w-7 h-7 inline-flex items-center justify-center shrink-0 text-lg leading-none
                         bg-(--knk-surface) text-(--knk-text-muted) border border-(--knk-line)
                         hover:text-(--knk-primary) hover:border-(--knk-primary) transition-colors"
-                  >
-                    +
-                  </button>
-                </li>
-              ))
-            }
+                >
+                  +
+                </button>
+              </li>
+            ))}
           </ul>
         </div>
       </div>
     </aside>
 
     <section id="games-results" class="min-w-0">
-      {
-        games.length === 0 ? (
-          <p class="text-sm text-(--knk-text-muted)">
-            Todavía no hay juegos en la biblioteca.
-          </p>
-        ) : (
-          <>
-            <div class="mb-6" role="search">
-              <label for="games-search" class="sr-only">
-                Buscar juegos por nombre
-              </label>
-              <div class="relative w-full max-w-md">
+      {games.length === 0 ? (
+        <p class="text-sm text-(--knk-text-muted)">
+          Todavía no hay juegos en la biblioteca.
+        </p>
+      ) : (
+        <>
+          <div class="mb-6" role="search">
+            <label for="games-search" class="sr-only">
+              Buscar juegos por nombre
+            </label>
+            <div class="relative w-full max-w-md">
+              <svg
+                class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 shrink-0 text-(--knk-text-faint)"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                aria-hidden="true"
+              >
+                <circle
+                  cx="11"
+                  cy="11"
+                  r="7"
+                  stroke="currentColor"
+                  stroke-width="1.75"
+                />
+                <path
+                  d="m20 20-3.5-3.5"
+                  stroke="currentColor"
+                  stroke-width="1.75"
+                  stroke-linecap="round"
+                />
+              </svg>
+              <input
+                id="games-search"
+                type="search"
+                placeholder="Buscar por nombre…"
+                autocomplete="off"
+                spellcheck="false"
+                class="knk-notch w-full pl-10 pr-10 py-2 text-sm bg-(--knk-surface) text-(--knk-text) border border-(--knk-line) placeholder:text-(--knk-text-faint) hover:border-(--knk-line-strong) focus:border-(--knk-primary) transition-colors"
+              />
+              <button
+                id="games-search-clear"
+                type="button"
+                hidden
+                aria-label="Limpiar búsqueda"
+                class="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center justify-center w-6 h-6 text-(--knk-text-muted) hover:text-(--knk-primary) transition-colors"
+              >
                 <svg
-                  class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 shrink-0 text-(--knk-text-faint)"
-                  width="16"
-                  height="16"
+                  width="12"
+                  height="12"
                   viewBox="0 0 24 24"
                   fill="none"
                   aria-hidden="true"
                 >
-                  <circle
-                    cx="11"
-                    cy="11"
-                    r="7"
-                    stroke="currentColor"
-                    stroke-width="1.75"
-                  />
                   <path
-                    d="m20 20-3.5-3.5"
+                    d="M18 6L6 18M6 6L18 18"
                     stroke="currentColor"
-                    stroke-width="1.75"
+                    stroke-width="2"
                     stroke-linecap="round"
                   />
                 </svg>
-                <input
-                  id="games-search"
-                  type="search"
-                  placeholder="Buscar por nombre…"
-                  autocomplete="off"
-                  spellcheck="false"
-                  class="knk-notch w-full pl-10 pr-10 py-2 text-sm bg-(--knk-surface) text-(--knk-text) border border-(--knk-line) placeholder:text-(--knk-text-faint) hover:border-(--knk-line-strong) focus:border-(--knk-primary) transition-colors"
+              </button>
+            </div>
+          </div>
+
+          <p
+            id="result-count"
+            class="text-xs text-(--knk-text-faint) mb-4"
+            aria-live="polite"
+          >
+            <span id="result-label">Mostrando&nbsp;</span>
+            <span
+              id="visible-count"
+              class="font-medium text-(--knk-text-muted) tabular-nums"
+            >
+              {games.length}
+            </span>
+            &nbsp;de&nbsp;
+            <span
+              id="total-count"
+              class="font-medium text-(--knk-text-muted) tabular-nums"
+            >
+              {total}
+            </span>
+            &nbsp;juegos
+          </p>
+
+          <div id="games-grid" class="flex flex-wrap gap-5">
+            {games.map((game) => {
+              const status = statusName(game.status);
+              const statusIds = statusIdString(game.status);
+              const community = communityAverages.get(game.id);
+              const myVote = userVotes.get(game.id);
+              return (
+                <GameCard
+                  name={game.name}
+                  coverUrl={game.cover_url}
+                  status={status}
+                  statusIds={statusIds}
+                  gameId={game.id}
+                  communityAvg={community?.avg ?? null}
+                  voteCount={community?.count ?? 0}
+                  userVote={myVote?.vote ?? null}
+                  loggedIn={!!user}
                 />
-                <button
-                  id="games-search-clear"
-                  type="button"
-                  hidden
-                  aria-label="Limpiar búsqueda"
-                  class="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center justify-center w-6 h-6 text-(--knk-text-muted) hover:text-(--knk-primary) transition-colors"
-                >
-                  <svg
-                    width="12"
-                    height="12"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    aria-hidden="true"
-                  >
-                    <path
-                      d="M18 6L6 18M6 6L18 18"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                    />
-                  </svg>
-                </button>
-              </div>
-            </div>
+              );
+            })}
+          </div>
 
-            <p
-              id="result-count"
-              class="text-xs text-(--knk-text-faint) mb-4"
-              aria-live="polite"
-            >
-              <span id="result-label">Mostrando&nbsp;</span>
-              <span
-                id="visible-count"
-                class="font-medium text-(--knk-text-muted) tabular-nums"
-              >
-                {games.length}
-              </span>
-              &nbsp;de&nbsp;
-              <span
-                id="total-count"
-                class="font-medium text-(--knk-text-muted) tabular-nums"
-              >
-                {total}
-              </span>
-              &nbsp;juegos
-            </p>
-
-            <div id="games-grid" class="flex flex-wrap gap-5">
-              {games.map((game) => {
-                const status = statusName(game.status);
-                const statusIds = statusIdString(game.status);
-                const community = communityAverages.get(game.id);
-                const myVote = userVotes.get(game.id);
-                return (
-                  <GameCard
-                    name={game.name}
-                    coverUrl={game.cover_url}
-                    status={status}
-                    statusIds={statusIds}
-                    gameId={game.id}
-                    communityAvg={community?.avg ?? null}
-                    voteCount={community?.count ?? 0}
-                    userVote={myVote?.vote ?? null}
-                    loggedIn={!!user}
-                  />
-                );
-              })}
-            </div>
-
-            <p
-              id="filter-no-results"
-              hidden
-              class="text-sm text-(--knk-text-muted) mt-4"
-            >
-              No hay juegos que coincidan con la búsqueda o los filtros.
-            </p>
-          </>
-        )
-      }
+          <p
+            id="filter-no-results"
+            hidden
+            class="text-sm text-(--knk-text-muted) mt-4"
+          >
+            No hay juegos que coincidan con la búsqueda o los filtros.
+          </p>
+        </>
+      )}
     </section>
   </div>
 </Layout>
@@ -334,12 +332,12 @@ const userVotes = user
   type="application/json"
   id="supabase-session"
   set:html={JSON.stringify(session)}
-/>
+></script>
 <script
   type="application/json"
   id="games-initial"
   set:html={JSON.stringify({ games, total, loggedIn: !!user })}
-/>
+></script>
 <script>
   import { supabaseClient } from "../../lib/db-client";
   import { initGamesFilter } from "../../lib/client/games-filter";

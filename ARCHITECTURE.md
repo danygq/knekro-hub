@@ -17,37 +17,39 @@ queries must be column-scoped and index-aware, and the schema is meant to stay m
 
 ```mermaid
 flowchart TD
-    U[Visitor] -->|HTTP| V[Vercel SSR / Astro]
-    V --> L[Layout.astro]
-    V --> Pi[index.astro] -->|dbClient: getUser + select posts| SB[(Supabase)]
-    V --> Pg[games/index.astro] -->|dbClient: getUser + loadGamesLibrary + user votes: game_status + games (incl. vote_count/avg_vote) + games_user_votes| SB
-    V --> Pgo[goty.astro - static]
-    U -->|Login| AS[POST /api/auth/signin] -->|signInWithOAuth twitch| SB
-    SB -->|redirect w/ code| CB[GET /auth/callback] -->|exchangeCodeForSession| SB
-    U -->|Logout| AO[POST /api/auth/signout] --> SB
-    U -->|Vote| PV[browser Supabase client] -->|insert/update/clear games_user_votes| SB
-    L --> TW[[Twitch embeds: player + chat]]
+  U[Visitor] -->|HTTP| V["Vercel SSR / Astro"]
+  V --> L["Layout.astro"]
+  V --> Pi["index.astro"] -->|" dbClient: getUser + select posts "| SB[(Supabase)]
+  V --> Pg["games/index.astro"]
+  Pg -->|" dbClient: getUser + loadGamesLibrary + user votes: game_status + games (incl. vote_count/avg_vote) + games_user_votes "| SB
+  V --> Pgo["goty.astro - static"]
+  U -->|Login| AS["POST /api/auth/signin"] -->|" signInWithOAuth twitch "| SB
+  SB -->|" redirect w/ code "| CB["GET /auth/callback"] -->|exchangeCodeForSession| SB
+  U -->|Logout| AO["POST /api/auth/signout"] --> SB
+  U -->|Vote| PV["browser Supabase client"] -->|" insert/update/clear games_user_votes "| SB
+  L --> TW[[Twitch embeds: player + chat]]
+
 ```
 
 ## Modules
 
-| Module                         | Responsibility                                                                                                          | Depends on                                       | Depended on by                                                       |
-|--------------------------------|-------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------|----------------------------------------------------------------------|
-| `layouts/Layout.astro`         | Shell: head, nav, footer, auth UI switch                                                                                | `LoginButton`, `UserMenu`, `styles/`             | all pages                                                            |
-| `pages/index.astro`            | Home: Twitch player+chat embeds, posts feed                                                                             | `lib/db-client`, Layout                          | —                                                                    |
-| `pages/games/index.astro`      | Games library: DB-backed status filter panel + grid + community voting                                                  | `lib/db-client`, `lib/games`, `GameCard`, Layout | —                                                                    |
-| `pages/goty.astro`             | GOTY awards (static placeholder)                                                                                        | Layout                                           | —                                                                    |
-| `pages/api/auth/*`             | `signin` (Twitch OAuth), `signout`                                                                                      | `lib/db-client`                                  | LoginButton/UserMenu forms                                           |
-| `pages/auth/callback.ts`       | OAuth PKCE code→session exchange                                                                                        | `lib/db-client`                                  | Supabase redirect                                                    |
-| `pages/api/games/vote.ts`      | ~~Insert/update/clear a game vote~~ (deleted — writes now go through browser Supabase client)                          | `lib/db-client`                                  | —                                                                    |
-| `lib/db-client.ts`             | Per-request SSR database client + browser-side Supabase client (writes + reads) with placeholder fallback             | `@supabase/ssr`, `@supabase/supabase-js`         | all pages, client scripts                                            |
-| `lib/games.ts`                 | Server-side `/games` loader: statuses + games + community averages + user votes (column-scoped, embedded join, bounded) | `types`, `@supabase/supabase-js`                 | `pages/games/index.astro`                                            |
-| `lib/client/games-filter.ts`   | Browser controller for the `/games` filter drawer (include/exclude, live count)                                         | —                                                | `pages/games/index.astro` (`<script>`)                               |
-| `lib/client/games-vote.ts`       | Browser controller for the `/games` voting UI (picker, submit vote via browser Supabase client, re-fetch community average) | `lib/db-client`, `lib/client/games-vote-state` | `pages/games/index.astro` (`<script>`)                               |
+| Module                           | Responsibility                                                                                                              | Depends on                                       | Depended on by                                                       |
+|----------------------------------|-----------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------|----------------------------------------------------------------------|
+| `layouts/Layout.astro`           | Shell: head, nav, footer, auth UI switch                                                                                    | `LoginButton`, `UserMenu`, `styles/`             | all pages                                                            |
+| `pages/index.astro`              | Home: Twitch player+chat embeds, posts feed                                                                                 | `lib/db-client`, Layout                          | —                                                                    |
+| `pages/games/index.astro`        | Games library: DB-backed status filter panel + grid + community voting                                                      | `lib/db-client`, `lib/games`, `GameCard`, Layout | —                                                                    |
+| `pages/goty.astro`               | GOTY awards (static placeholder)                                                                                            | Layout                                           | —                                                                    |
+| `pages/api/auth/*`               | `signin` (Twitch OAuth), `signout`                                                                                          | `lib/db-client`                                  | LoginButton/UserMenu forms                                           |
+| `pages/auth/callback.ts`         | OAuth PKCE code→session exchange                                                                                            | `lib/db-client`                                  | Supabase redirect                                                    |
+| `pages/api/games/vote.ts`        | ~~Insert/update/clear a game vote~~ (deleted — writes now go through browser Supabase client)                               | `lib/db-client`                                  | —                                                                    |
+| `lib/db-client.ts`               | Per-request SSR database client + browser-side Supabase client (writes + reads) with placeholder fallback                   | `@supabase/ssr`, `@supabase/supabase-js`         | all pages, client scripts                                            |
+| `lib/games.ts`                   | Server-side `/games` loader: statuses + games + community averages + user votes (column-scoped, embedded join, bounded)     | `types`, `@supabase/supabase-js`                 | `pages/games/index.astro`                                            |
+| `lib/client/games-filter.ts`     | Browser controller for the `/games` filter drawer (include/exclude, live count)                                             | —                                                | `pages/games/index.astro` (`<script>`)                               |
+| `lib/client/games-vote.ts`       | Browser controller for the `/games` voting UI (picker, submit vote via browser Supabase client, re-fetch community average) | `lib/db-client`, `lib/client/games-vote-state`   | `pages/games/index.astro` (`<script>`)                               |
 | `lib/client/games-vote-state.ts` | Shared DOM helpers: `reflectVote` (personal badge), `setCommunityAverage` (write fetched avg to card)                       | —                                                | `lib/client/games-vote.ts`                                           |
-| `types/*`                      | Domain types, one file per area (`games.ts`, `categories.ts`, `streams.ts`, `goty.ts`) + barrel `index.ts`              | —                                                | `games` via `lib/games.ts` (rest aspirational)                       |
-| `components/*`                 | `LoginButton`, `UserMenu`, `TwitchLogo`, `GameCard`                                                                     | —                                                | Layout; `GameCard` by games grid                                     |
-| `styles/*`                     | `global.css` entry → `tokens.css` (design tokens), `base.css`, `utilities.css`; per-page `pages/games.css`              | Tailwind v4                                      | Layout (`global.css`); `pages/games/index.astro` (`pages/games.css`) |
+| `types/*`                        | Domain types, one file per area (`games.ts`, `categories.ts`, `streams.ts`, `goty.ts`) + barrel `index.ts`                  | —                                                | `games` via `lib/games.ts` (rest aspirational)                       |
+| `components/*`                   | `LoginButton`, `UserMenu`, `TwitchLogo`, `GameCard`                                                                         | —                                                | Layout; `GameCard` by games grid                                     |
+| `styles/*`                       | `global.css` entry → `tokens.css` (design tokens), `base.css`, `utilities.css`; per-page `pages/games.css`                  | Tailwind v4                                      | Layout (`global.css`); `pages/games/index.astro` (`pages/games.css`) |
 
 ## Key decisions (inferred)
 

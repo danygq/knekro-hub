@@ -1,8 +1,8 @@
 ---
 module: agent-protocol
 owner_area: repo-wide
-last_verified_against_commit: a050281
-depends_on: [agent-onboarding, architecture]
+last_verified_against_commit: 3b1304b
+depends_on: [ agent-onboarding, architecture ]
 ---
 
 # Agent Protocol: Issue Creation & Execution
@@ -59,12 +59,13 @@ Bulleted, testable conditions (NO checkboxes) defining complete implementation:
 
 ---
 
-## Part 2: Issue Execution & Refactoring
+## Part 2: Issue Execution & Proportional Approach
 
-When executing an assigned issue, systematically review the prompt, analyze the codebase, and maximize code reuse before
-writing solution code.
+When executing an assigned issue, approach it with a level of rigor proportional to its complexity. For simple tasks
+(e.g., UI tweaks, documentation, small fixes), you can proceed directly to implementation. For complex changes (e.g.,
+new features, architectural refactors, DB schema changes), follow the recommended steps below.
 
-### Mandatory Execution Steps
+### Recommended Steps for Complex Changes
 
 #### Step 1: Deep Issue & Scope Review
 
