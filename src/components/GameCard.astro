@@ -47,7 +47,7 @@ const voteNumClass = (n: number): string => {
 ---
 
 <article
-  class=`knk-game-card min-w-75 max-w-75 group border border-(--knk-line) bg-(--knk-surface) hover:border-(--knk-line-strong) transition-colors${loggedIn ? " cursor-pointer" : ""}`
+  class=`knk-game-card min-w-75 max-w-75 h-fit group border border-(--knk-line) bg-(--knk-surface) hover:border-(--knk-line-strong) transition-colors${loggedIn ? " cursor-pointer" : ""}`
   ]
   data-status-ids={statusIds}
   data-name={name}
@@ -164,7 +164,7 @@ const voteNumClass = (n: number): string => {
   </div>
   <div class="p-4 max-h-fit overflow-hidden text-ellipsis">
     <h3
-      class="font-(--font-display) text-base tracking-tight group-hover:text-(--knk-primary) transition-colors cursor-default"
+      class="font-(--font-display) text-base overflow-hidden text-ellipsis tracking-tight group-hover:text-(--knk-primary) transition-colors cursor-default"
       title={name}
     >
       {name}

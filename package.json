@@ -8,6 +8,7 @@
     "preview": "astro preview"
   },
   "dependencies": {
+    "@astrojs/alpinejs": "^1.0.0",
     "@astrojs/vercel": "11.0.10",
     "@lucide/astro": "^1.44.0",
     "@supabase/ssr": "0.12.7",
