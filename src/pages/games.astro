@@ -1,5 +1,4 @@
 ---
-import GameCard from "../components/games/GameCard.astro";
 import GamesLayout from "../components/games/GamesLayout.astro";
 import Layout from "../layouts/Layout.astro";
 import { createDbClient } from "../lib/db-client.ts";
@@ -9,6 +8,7 @@ import {
   loadTotalGamesCount,
 } from "../lib/games.ts";
 import "../styles/pages/games.css";
+import type { User } from "@supabase/auth-js";
 
 const dbClient = createDbClient(Astro.request, Astro.cookies);
 const {
@@ -37,7 +37,7 @@ const totalGames = await loadTotalGamesCount(dbClient);
     gameStatuses={gameStatuses}
     games={games}
     totalGames={totalGames}
-    user={user}
+    user={user as User}
   />
 </Layout>
 
@@ -47,55 +47,62 @@ const totalGames = await loadTotalGamesCount(dbClient);
 
   document.addEventListener("alpine:init", () => {
     const isDesktopViewport = window.innerWidth >= 1024;
-    Alpine.store("games", {
+    const gamesStore: GamesStore = {
       layout: {
         isDesktop: isDesktopViewport,
         gamesFilterMenuOpen: isDesktopViewport,
       },
+    };
+    Alpine.store("games", gamesStore);
+    Alpine.store("search", {
+      query: "",
     });
-    Alpine.store("filter", {
-      included: {},
-      excluded: {},
+    const filterStore: FilterStore = {
+      included: new Set(),
+      excluded: new Set(),
       toggle(id, mode) {
         const key = String(id);
-        if (mode === "plus") {
-          if (this.included[key]) {
-            delete this.included[key];
-          } else {
-            this.included[key] = true;
-            delete this.excluded[key];
-          }
+        const isPlus = mode === "plus";
+        const target = isPlus ? this.included : this.excluded;
+        const opposite = isPlus ? this.excluded : this.included;
+        if (target.has(key)) {
+          target.delete(key);
         } else {
-          if (this.excluded[key]) {
-            delete this.excluded[key];
-          } else {
-            this.excluded[key] = true;
-            delete this.included[key];
-          }
+          target.add(key);
+          opposite.delete(key);
         }
+        this.included = new Set(this.included);
+        this.excluded = new Set(this.excluded);
       },
+
       reset() {
-        this.included = {};
-        this.excluded = {};
+        this.included = new Set();
+        this.excluded = new Set();
       },
-      matches(ids) {
-        const inc = Object.keys(this.included);
-        const exc = Object.keys(this.excluded);
-        const idStrs = (ids || []).map(String);
-        if (inc.length > 0 && !idStrs.some((i) => inc.includes(i)))
+
+      matches(ids = []) {
+        if (
+          this.included.size > 0 &&
+          !ids.some((id) => this.included.has(String(id)))
+        ) {
           return false;
-        if (exc.length > 0 && idStrs.some((i) => exc.includes(i))) return false;
-        return true;
+        }
+        return !(
+          this.excluded.size > 0 &&
+          ids.some((id) => this.excluded.has(String(id)))
+        );
       },
       get count() {
-        return (
-          Object.keys(this.included).length + Object.keys(this.excluded).length
-        );
+        return this.included.size + this.excluded.size;
       },
       isActive(id, mode) {
         const key = String(id);
-        return mode === "plus" ? !!this.included[key] : !!this.excluded[key];
+        return mode === "plus"
+          ? this.included.has(key)
+          : this.excluded.has(key);
       },
-    });
+    };
+
+    Alpine.store("filter", filterStore);
   });
 </script>
