@@ -44,23 +44,21 @@ const totalGames = await loadTotalGamesCount(dbClient);
 <script>
   import "htmx.org";
   import Alpine from "alpinejs";
+  (window as any).Alpine = Alpine;
 
   document.addEventListener("alpine:init", () => {
     const isDesktopViewport = window.innerWidth >= 1024;
-    const gamesStore: GamesStore = {
+
+    Alpine.store("games", {
       layout: {
         isDesktop: isDesktopViewport,
         gamesFilterMenuOpen: isDesktopViewport,
       },
-    };
-    Alpine.store("games", gamesStore);
-    Alpine.store("search", {
-      query: "",
     });
-    const filterStore: FilterStore = {
-      included: new Set(),
-      excluded: new Set(),
-      toggle(id, mode) {
+    const statusFilterStore: StatusFilterStore = {
+      included: new Set<string>(),
+      excluded: new Set<string>(),
+      toggle(id: number | string, mode: "plus" | "minus") {
         const key = String(id);
         const isPlus = mode === "plus";
         const target = isPlus ? this.included : this.excluded;
@@ -71,38 +69,34 @@ const totalGames = await loadTotalGamesCount(dbClient);
           target.add(key);
           opposite.delete(key);
         }
+        // Re-assign sets so Alpine triggers reactivity
         this.included = new Set(this.included);
         this.excluded = new Set(this.excluded);
+        // Notify HTMX to perform a new search request
+        window.document.body.dispatchEvent(new CustomEvent("filter-changed"));
       },
-
       reset() {
         this.included = new Set();
         this.excluded = new Set();
-      },
-
-      matches(ids = []) {
-        if (
-          this.included.size > 0 &&
-          !ids.some((id) => this.included.has(String(id)))
-        ) {
-          return false;
-        }
-        return !(
-          this.excluded.size > 0 &&
-          ids.some((id) => this.excluded.has(String(id)))
-        );
+        window.document.body.dispatchEvent(new CustomEvent("filter-changed"));
       },
       get count() {
         return this.included.size + this.excluded.size;
       },
-      isActive(id, mode) {
+      isActive(id: number | string, mode: "plus" | "minus") {
         const key = String(id);
         return mode === "plus"
           ? this.included.has(key)
           : this.excluded.has(key);
       },
     };
-
-    Alpine.store("filter", filterStore);
+    const filtersStore: FiltersStore = {
+      status: statusFilterStore,
+    };
+    const search: SearchStore = {
+      query: "",
+      filters: filtersStore,
+    };
+    Alpine.store("search", search);
   });
 </script>

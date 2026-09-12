@@ -9,14 +9,18 @@ interface GamesLayoutStore {
 
 interface SearchStore {
   query: string;
+  filters: FiltersStore;
 }
 
-interface FilterStore {
+interface FiltersStore {
+  status: StatusFilterStore;
+}
+
+interface StatusFilterStore {
   included: Set<string>;
   excluded: Set<string>;
   toggle(id: string | number, mode: "plus" | "minus" | string): void;
   reset(): void;
-  matches(ids?: (string | number)[]): boolean;
   readonly count: number;
   isActive(id: string | number, mode: "plus" | "minus" | string): boolean;
 }

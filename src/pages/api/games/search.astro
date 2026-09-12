@@ -3,23 +3,20 @@ import { createDbClient } from "../../../lib/db-client";
 import GameCard from "../../../components/games/GameCard.astro";
 import type { GameDetails } from "../../../types";
 
-// Server-side, paginated name search for the games library. Returns rendered
-// <GameCard> HTML for the grid plus out-of-band (OOB) swaps for the results
-// counter and the no-results message, so a single HTMX request updates everything.
-//
-// Reads stay server-side (see docs/modules/data-layer.md): this route uses the
-// per-request SSR client so every call carries the user's JWT and respects RLS.
-// Query is case-insensitive via Postgres `ilike`. Accent-insensitive matching
-// ("pokemon" -> "Pokémon") needs the `unaccent` extension + a functional index
-// on games(name) — flagged as a follow-up; this is case-insensitive only.
-
 const dbClient = createDbClient(Astro.request, Astro.cookies);
 
 const {
   data: { user },
 } = await dbClient.auth.getUser().catch(() => ({ data: { user: null } }));
 
+// Extract search query and status filters
 const q = (Astro.url.searchParams.get("q") ?? "").trim();
+const incParam = Astro.url.searchParams.get("inc") ?? "";
+const excParam = Astro.url.searchParams.get("exc") ?? "";
+
+const includedIds = incParam ? incParam.split(",").filter(Boolean) : [];
+const excludedIds = excParam ? excParam.split(",").filter(Boolean) : [];
+
 const offset = Math.max(0, Number(Astro.url.searchParams.get("offset") ?? "0"));
 const limit = Math.min(
   48,
@@ -31,21 +28,41 @@ const gameFields =
   "id, name, cover_url, vote_count, avg_vote, status:game_status!game_status_id(id, name), game_status_id" +
   userVoteSelect;
 
-// Total matching count drives the "X de Y juegos" counter.
-const countQuery = dbClient
+// Helper to apply search & filter parameters to queries
+function applyFilters(builder: any) {
+  let queryBuilder = builder;
+  if (q !== "") {
+    queryBuilder = queryBuilder.ilike("name", `%${q}%`);
+  }
+  if (includedIds.length > 0) {
+    queryBuilder = queryBuilder.in("game_status_id", includedIds);
+  }
+  if (excludedIds.length > 0) {
+    queryBuilder = queryBuilder.not(
+      "game_status_id",
+      "in",
+      `(${excludedIds.join(",")})`,
+    );
+  }
+  return queryBuilder;
+}
+
+// 1. Total matching count query
+let countQuery = dbClient
   .from("games")
   .select("id", { count: "exact", head: true });
-const { count: matchingCount } =
-  q !== "" ? await countQuery.ilike("name", `%${q}%`) : await countQuery;
+countQuery = applyFilters(countQuery);
+const { count: matchingCount } = await countQuery;
 
-// The matching page of results.
+// 2. Paginated result set query
 let query = dbClient
   .from("games")
   .select(gameFields)
   .order("id", { ascending: true })
   .range(offset, offset + limit - 1);
+
 if (user?.id) query = query.eq("games_user_votes.user_id", user.id);
-if (q !== "") query = query.ilike("name", `%${q}%`);
+query = applyFilters(query);
 
 const { data, error } = await query;
 if (error) {
@@ -55,7 +72,9 @@ if (error) {
 const rows = (data as GameDetails[] | null) ?? [];
 const visibleCount = rows.length;
 const total = matchingCount ?? 0;
-const noResults = q !== "" && total === 0;
+const hasActiveFilters =
+  q !== "" || includedIds.length > 0 || excludedIds.length > 0;
+const noResults = hasActiveFilters && total === 0;
 ---
 
 <span id="visible-count" hx-swap-oob="innerHTML">

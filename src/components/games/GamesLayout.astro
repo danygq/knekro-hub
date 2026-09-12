@@ -72,8 +72,8 @@ const { gameStatuses, games, totalGames, user } = Astro.props;
               <span>Filtros</span>
               <span
                 id="filter-count"
-                x-text="$store.filter.count"
-                :hidden="!$store.filter?.count"
+                x-text="$store.search.filters.status.count"
+                :hidden="!$store.search.filters.status?.count"
                 class="min-w-4.5 h-4.5 px-1 inline-flex items-center justify-center rounded-full bg-(--knk-primary) text-[--knk-blue-50] text-xs font-semibold tabular-nums"
               ></span>
             </button>

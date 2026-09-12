@@ -49,16 +49,15 @@ const { gameStatuses } = Astro.props;
   </div>
 
   <div class="p-4 space-y-6">
+    <!-- Reset Filters -->
     <div>
       <button
         type="button"
         id="reset-filters"
-        :aria-pressed="$store.filter.count === 0 ? 'true' : 'false'"
-        @click="$store.filter.reset()"
-        class="knk-filter-reset knk-notch-sm inline-flex items-center justify-center gap-2 w-full px-3 py-2 text-sm font-medium
-          bg-(--knk-surface) text-(--knk-text-muted) border border-(--knk-line)
-          hover:text-(--knk-text) hover:border-(--knk-line-strong) transition-colors"
-        :class="{ 'active': $store.filter.count === 0 }"
+        :aria-pressed="$store.search.filters.status.count === 0 ? 'true' : 'false'"
+        @click="$store.search.filters.status.reset()"
+        class="knk-filter-reset knk-notch-sm inline-flex items-center justify-center gap-2 w-full px-3 py-2 text-sm font-medium bg-(--knk-surface) text-(--knk-text-muted) border border-(--knk-line) hover:text-(--knk-text) hover:border-(--knk-line-strong) transition-colors"
+        :class="{ 'active': $store.search.filters.status.count === 0 }"
       >
         <svg
           width="14"
@@ -80,6 +79,7 @@ const { gameStatuses } = Astro.props;
       </button>
     </div>
 
+    <!-- Status Filters -->
     <div>
       <h2 class="text-xs font-medium uppercase tracking-wide text-(--knk-text-faint) mb-3">
         Estado
@@ -87,35 +87,38 @@ const { gameStatuses } = Astro.props;
       <ul class="divide-y divide-(--knk-line)">
         {gameStatuses.map((status) => (
           <li class="flex items-center justify-between gap-3 py-2">
+            <!-- Exclude (-) -->
             <button
               type="button"
               title={`Excluir ${status.name} de la selección`}
-              :aria-pressed={`$store.filter.isActive(${status.id}, 'minus') ? 'true' : 'false'`}
+              :aria-pressed={`$store.search.filters.status.isActive('${status.id}', 'minus') ? 'true' : 'false'`}
               aria-label={`Excluir ${status.name} de la selección`}
-              @click={`$store.filter.toggle(${status.id}, 'minus')`}
-              class="knk-filter-minus knk-notch-sm w-7 h-7 inline-flex items-center justify-center shrink-0 text-lg leading-none
-                    bg-(--knk-surface) text-(--knk-text-muted) border border-(--knk-line)
-                    hover:text-(--knk-danger) hover:border-(--knk-danger) transition-colors"
-              :class={`{ 'active': $store.filter.isActive(${status.id}, 'minus') }`}
+              @click={`$store.search.filters.status.toggle('${status.id}', 'minus')`}
+              class="knk-filter-minus knk-notch-sm w-7 h-7 inline-flex items-center justify-center shrink-0 text-lg leading-none bg-(--knk-surface) text-(--knk-text-muted) border border-(--knk-line) hover:text-(--knk-danger) hover:border-(--knk-danger) transition-colors"
+              :class={`{ 'active': $store.search.filters.status.isActive('${status.id}', 'minus') }`}
             >
               −
             </button>
+
+            <!-- Name -->
             <span class="flex-1 min-w-0 text-sm font-medium text-(--knk-text-muted)">
               {status.name}
             </span>
+
+            <!-- Counter -->
             <span class="w-5 text-right text-xs text-(--knk-text-faint) tabular-nums">
               {status.games_with_this_status}
             </span>
+
+            <!-- Include (+) -->
             <button
               type="button"
               title={`Incluir ${status.name} en la selección`}
-              :aria-pressed={`$store.filter.isActive(${status.id}, 'plus') ? 'true' : 'false'`}
+              :aria-pressed={`$store.search.filters.status.isActive('${status.id}', 'plus') ? 'true' : 'false'`}
               aria-label={`Incluir ${status.name} en la selección`}
-              @click={`$store.filter.toggle(${status.id}, 'plus')`}
-              class="knk-filter-plus knk-notch-sm w-7 h-7 inline-flex items-center justify-center shrink-0 text-lg leading-none
-                    bg-(--knk-surface) text-(--knk-text-muted) border border-(--knk-line)
-                    hover:text-(--knk-primary) hover:border-(--knk-primary) transition-colors"
-              :class={`{ 'active': $store.filter.isActive(${status.id}, 'plus') }`}
+              @click={`$store.search.filters.status.toggle('${status.id}', 'plus')`}
+              class="knk-filter-plus knk-notch-sm w-7 h-7 inline-flex items-center justify-center shrink-0 text-lg leading-none bg-(--knk-surface) text-(--knk-text-muted) border border-(--knk-line) hover:text-(--knk-primary) hover:border-(--knk-primary) transition-colors"
+              :class={`{ 'active': $store.search.filters.status.isActive('${status.id}', 'plus') }`}
             >
               +
             </button>

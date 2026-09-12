@@ -1,6 +1,3 @@
----
----
-
 <div class="flex-1" role="search" x-data>
   <label for="games-search" class="sr-only">
     Buscar juegos por nombre
@@ -8,7 +5,7 @@
   <div class="relative w-full max-w-md">
     <!-- Default Search Icon (fades out while loading) -->
     <svg
-      class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 shrink-0 text-(--knk-text-faint) transition-opacity duration-150 [.htmx-request_&]:opacity-0"
+      class="z-1 pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 shrink-0 text-(--knk-text-faint) transition-opacity duration-150 in-[.htmx-request]:opacity-0"
       width="16"
       height="16"
       viewBox="0 0 24 24"
@@ -26,7 +23,7 @@
 
     <!-- HTMX Loading Spinner (fades in while loading) -->
     <svg
-      class="z-1 pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 shrink-0 w-4 h-4 text-(--knk-primary) opacity-0 transition-opacity duration-150 [.htmx-request_&]:opacity-100 animate-spin"
+      class="z-1 pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 shrink-0 w-4 h-4 text-(--knk-primary) not-in-[.htmx-request]:opacity-0 transition-opacity duration-150 animate-spin"
       viewBox="0 0 24 24"
       fill="none"
       aria-hidden="true"
@@ -57,12 +54,12 @@
       spellcheck="false"
       x-model="$store.search.query"
       hx-get="/api/games/search"
-      hx-trigger="input changed delay:300ms, search"
-      hx-target="#games-grid"
+      hx-trigger="input changed delay:300ms, search, refreshSearch from:body, filter-changed from:body"
+      hx-vals="js:{ q: Alpine.store('search').query, inc: Array.from(Alpine.store('search').filters.status.included).join(','), exc: Array.from(Alpine.store('search').filters.status.excluded).join(',') }"      hx-target="#games-grid"
       hx-swap="innerHTML"
       hx-sync="this:replace"
       hx-indicator="closest .relative"
-      class="knk-notch w-full pl-10 pr-10 py-2 text-sm bg-(--knk-surface) text-(--knk-text) border border-(--knk-line) hover:border-(--knk-line-strong) transition-colors [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none"
+      class="knk-notch w-full pl-10 pr-10 py-2 text-sm bg-(--knk-surface) text-(--knk-text) border border-(--knk-line) hover:border-(--knk-line-strong) transition-colors [&::-webkit-search-decoration]:appearance-none"
     />
 
     <!-- Clear Button -->
