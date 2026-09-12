@@ -1,5 +1,5 @@
 // Game-library domain types.
-// `GameListRow` is the slim projection actually loaded by `loadGamesLibrary()`
+// `GameListRow` is the slim projection actually loaded by `loadGames()`
 // in `lib/games.ts`; `Game` is the full entity, aspirational until the `games`
 // table is confirmed against Supabase.
 

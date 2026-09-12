@@ -6,4 +6,3 @@ export * from "./games";
 export * from "./categories";
 export * from "./streams";
 export * from "./goty";
-export type { GameCardEls } from "./games-vote.ts";

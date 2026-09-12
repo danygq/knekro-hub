@@ -1,0 +1,77 @@
+---
+import { createDbClient } from "../../../lib/db-client";
+import GameCard from "../../../components/GameCard.astro";
+import type { GameListRow } from "../../../types";
+
+// Server-side, paginated name search for the games library. Returns rendered
+// <GameCard> HTML for the grid plus out-of-band (OOB) swaps for the results
+// counter and the no-results message, so a single HTMX request updates everything.
+//
+// Reads stay server-side (see docs/modules/data-layer.md): this route uses the
+// per-request SSR client so every call carries the user's JWT and respects RLS.
+// Query is case-insensitive via Postgres `ilike`. Accent-insensitive matching
+// ("pokemon" -> "Pokémon") needs the `unaccent` extension + a functional index
+// on games(name) — flagged as a follow-up; this is case-insensitive only.
+
+const dbClient = createDbClient(Astro.request, Astro.cookies);
+
+const {
+  data: { user },
+} = await dbClient.auth.getUser().catch(() => ({ data: { user: null } }));
+
+const q = (Astro.url.searchParams.get("q") ?? "").trim();
+const offset = Math.max(0, Number(Astro.url.searchParams.get("offset") ?? "0"));
+const limit = Math.min(
+  48,
+  Math.max(1, Number(Astro.url.searchParams.get("limit") ?? "24")),
+);
+
+const userVoteSelect = user?.id ? ", user_vote:games_user_votes(vote)" : "";
+const gameFields =
+  "id, name, cover_url, vote_count, avg_vote, status:game_status!game_status_id(id, name), game_status_id" +
+  userVoteSelect;
+
+// Total matching count drives the "X de Y juegos" counter.
+const countQuery = dbClient
+  .from("games")
+  .select("id", { count: "exact", head: true });
+const { count: matchingCount } =
+  q !== "" ? await countQuery.ilike("name", `%${q}%`) : await countQuery;
+
+// The matching page of results.
+let query = dbClient
+  .from("games")
+  .select(gameFields)
+  .order("id", { ascending: true })
+  .range(offset, offset + limit - 1);
+if (user?.id) query = query.eq("games_user_votes.user_id", user.id);
+if (q !== "") query = query.ilike("name", `%${q}%`);
+
+const { data, error } = await query;
+if (error) {
+  console.error("Error searching games:", error);
+}
+
+const rows = (data as GameListRow[] | null) ?? [];
+const visibleCount = rows.length;
+const total = matchingCount ?? 0;
+const noResults = q !== "" && total === 0;
+---
+
+<span id="visible-count" hx-swap-oob="innerHTML">
+  {visibleCount}
+</span>
+<span id="total-count" hx-swap-oob="innerHTML">
+  {total}
+</span>
+<p
+  id="filter-no-results"
+  hx-swap-oob="true"
+  hidden={!noResults}
+  class="text-sm text-(--knk-text-muted) mt-4"
+>
+  No hay juegos que coincidan con la búsqueda o los filtros.
+</p>
+{rows.map((game) => (
+  <GameCard game={game} loggedIn={!!user} />
+))}

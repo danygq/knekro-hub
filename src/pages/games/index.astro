@@ -14,15 +14,9 @@ const {
   data: { user },
 } = await dbClient.auth.getUser().catch(() => ({ data: { user: null } }));
 
-// Session for the browser Supabase client (direct writes + reads).
-// Rendered into a non-executable JSON script block so the client script can
-// sync the auth session and attach the JWT to Supabase requests.
-const {
-  data: { session },
-} = await dbClient.auth.getSession().catch(() => ({ data: { session: null } }));
 const gameStatuses = await loadGameStatuses(dbClient);
 const games = await loadGames(dbClient, user?.id);
-const totalGames = loadTotalGamesCount(dbClient);
+const totalGames = await loadTotalGamesCount(dbClient);
 ---
 
 <Layout user={user}>
@@ -40,8 +34,8 @@ const totalGames = loadTotalGamesCount(dbClient);
     <button
       type="button"
       id="toggle-filters"
-      aria-expanded="true"
-      aria-controls="filter-panel"
+      :aria-expanded="panelOpen"
+      @click="panelOpen = !panelOpen"
       class="knk-notch inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium shrink-0
         bg-(--knk-surface) text-(--knk-text) border border-(--knk-line)
         hover:text-(--knk-primary) hover:border-(--knk-line-strong) transition-colors"
@@ -73,22 +67,31 @@ const totalGames = loadTotalGamesCount(dbClient);
       <span>Filtros</span>
       <span
         id="filter-count"
-        hidden
+        x-text="$store.filter.count"
+        :hidden="$store.filter.count === 0"
         class="min-w-4.5 h-4.5 px-1 inline-flex items-center justify-center rounded-full bg-(--knk-primary) text-[--knk-blue-50] text-xs font-semibold tabular-nums"
       ></span>
     </button>
   </div>
 
-  <div id="games-layout" class="games-layout">
+  <div
+    id="games-layout"
+    class="games-layout"
+    :class="{ 'filters-off': !panelOpen }"
+    x-data="{ panelOpen: false, isDesktop: false, init() { const mq = window.matchMedia('(min-width: 1024px)'); const sync = () => { this.isDesktop = mq.matches; this.panelOpen = mq.matches; }; mq.addEventListener('change', sync); sync(); } }"
+  >
     <div
       id="filter-backdrop"
       class="knk-filter-backdrop"
+      :class="{ 'open': panelOpen && !isDesktop }"
+      @click="panelOpen = false"
       aria-hidden="true"
     ></div>
 
     <aside
       id="filter-panel"
       class="knk-filter-panel"
+      :class="{ 'open': panelOpen && !isDesktop, 'closed': !panelOpen && isDesktop }"
       aria-label="Filtros por estado"
     >
       <div class="flex items-center justify-between px-4 py-3 border-b border-(--knk-line) bg-(--knk-surface-2)">
@@ -98,6 +101,7 @@ const totalGames = loadTotalGamesCount(dbClient);
         <button
           type="button"
           id="close-filters"
+          @click="panelOpen = false"
           class="inline-flex items-center justify-center w-7 h-7 text-(--knk-text-muted) hover:text-(--knk-text) transition-colors"
           aria-label="Cerrar panel de filtros"
         >
@@ -122,10 +126,12 @@ const totalGames = loadTotalGamesCount(dbClient);
         <button
           type="button"
           id="reset-filters"
-          aria-pressed="true"
+          :aria-pressed="$store.filter.count === 0 ? 'true' : 'false'"
+          @click="$store.filter.reset()"
           class="knk-filter-reset knk-notch-sm inline-flex items-center justify-center gap-2 w-full px-3 py-2 text-sm font-medium
             bg-(--knk-surface) text-(--knk-text-muted) border border-(--knk-line)
             hover:text-(--knk-text) hover:border-(--knk-line-strong) transition-colors"
+          :class="{ 'active': $store.filter.count === 0 }"
         >
           <svg
             width="14"
@@ -156,13 +162,13 @@ const totalGames = loadTotalGamesCount(dbClient);
                 <button
                   type="button"
                   title={`Excluir ${status.name} de la selección`}
-                  data-status-id={status.id}
-                  data-status-mode="minus"
+                  :aria-pressed="$store.filter.isActive(${status.id}, 'minus') ? 'true' : 'false'"
                   aria-label={`Excluir ${status.name} de la selección`}
-                  aria-pressed="false"
+                  @click="$store.filter.toggle(${status.id}, 'minus')"
                   class="knk-filter-minus knk-notch-sm w-7 h-7 inline-flex items-center justify-center shrink-0 text-lg leading-none
                         bg-(--knk-surface) text-(--knk-text-muted) border border-(--knk-line)
                         hover:text-(--knk-danger) hover:border-(--knk-danger) transition-colors"
+                  :class="{ 'active': $store.filter.isActive(${status.id}, 'minus') }"
                 >
                   −
                 </button>
@@ -175,13 +181,13 @@ const totalGames = loadTotalGamesCount(dbClient);
                 <button
                   type="button"
                   title={`Incluir ${status.name} en la selección`}
-                  data-status-id={status.id}
-                  data-status-mode="plus"
+                  :aria-pressed="$store.filter.isActive(${status.id}, 'plus') ? 'true' : 'false'"
                   aria-label={`Incluir ${status.name} en la selección`}
-                  aria-pressed="false"
+                  @click="$store.filter.toggle(${status.id}, 'plus')"
                   class="knk-filter-plus knk-notch-sm w-7 h-7 inline-flex items-center justify-center shrink-0 text-lg leading-none
                         bg-(--knk-surface) text-(--knk-text-muted) border border-(--knk-line)
                         hover:text-(--knk-primary) hover:border-(--knk-primary) transition-colors"
+                  :class="{ 'active': $store.filter.isActive(${status.id}, 'plus') }"
                 >
                   +
                 </button>
@@ -203,7 +209,7 @@ const totalGames = loadTotalGamesCount(dbClient);
             <label for="games-search" class="sr-only">
               Buscar juegos por nombre
             </label>
-            <div class="relative w-full max-w-md">
+            <div class="relative w-full max-w-md" x-data="{ hasQuery: false }">
               <svg
                 class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 shrink-0 text-(--knk-text-faint)"
                 width="16"
@@ -228,16 +234,24 @@ const totalGames = loadTotalGamesCount(dbClient);
               </svg>
               <input
                 id="games-search"
+                name="q"
                 type="search"
                 placeholder="Buscar por nombre…"
                 autocomplete="off"
                 spellcheck="false"
+                @input="hasQuery = !!$el.value"
+                hx-get="/api/games/search"
+                hx-include="this"
+                hx-trigger="input changed delay:300ms, search"
+                hx-target="#games-grid"
+                hx-swap="innerHTML"
                 class="knk-notch w-full pl-10 pr-10 py-2 text-sm bg-(--knk-surface) text-(--knk-text) border border-(--knk-line) placeholder:text-(--knk-text-faint) hover:border-(--knk-line-strong) focus:border-(--knk-primary) transition-colors"
               />
               <button
                 id="games-search-clear"
                 type="button"
-                hidden
+                :hidden="!hasQuery"
+                @click="const i = document.getElementById('games-search'); i.value = ''; hasQuery = false; i.dispatchEvent(new Event('input', { bubbles: true }))"
                 aria-label="Limpiar búsqueda"
                 class="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center justify-center w-6 h-6 text-(--knk-text-muted) hover:text-(--knk-primary) transition-colors"
               >
@@ -300,39 +314,53 @@ const totalGames = loadTotalGamesCount(dbClient);
   </div>
 </Layout>
 
-<script
-  type="application/json"
-  id="supabase-session"
-  set:html={JSON.stringify(session)}
-></script>
-<script
-  type="application/json"
-  id="games-initial"
-  set:html={JSON.stringify({ games, totalGames, loggedIn: !!user })}
-></script>
 <script>
-  import { supabaseClient } from "../../lib/db-client";
-  import { initGamesFilter } from "../../lib/client/games-filter";
-  import { initGamesGrid } from "../../lib/client/games-grid";
-  import { initGameVotes } from "../../lib/client/games-vote";
+  import "htmx.org";
 
-  // Sync the SSR auth session to the browser Supabase client so writes
-  // (votes) carry the user's JWT and respect RLS policies.
-  const session = JSON.parse(
-    document.getElementById("supabase-session")?.textContent ?? "null",
-  );
-  if (session) await supabaseClient.auth.setSession(session);
-
-  // Init voting UI + grid (global DB name search, pagination, counter) +
-  // status filters. The filter asks the grid to re-count after toggling.
-  const cleanupVotes = initGameVotes();
-  const gamesGrid = initGamesGrid();
-  const gamesFilter = initGamesFilter(() => gamesGrid.recalc());
-
-  // Cleanup on view transitions to avoid listener leaks.
-  document.addEventListener("astro:before-swap", () => {
-    cleanupVotes();
-    gamesGrid.destroy();
-    gamesFilter.destroy();
+  document.addEventListener("alpine:init", () => {
+    Alpine.store("filter", {
+      included: {},
+      excluded: {},
+      toggle(id, mode) {
+        const key = String(id);
+        if (mode === "plus") {
+          if (this.included[key]) {
+            delete this.included[key];
+          } else {
+            this.included[key] = true;
+            delete this.excluded[key];
+          }
+        } else {
+          if (this.excluded[key]) {
+            delete this.excluded[key];
+          } else {
+            this.excluded[key] = true;
+            delete this.included[key];
+          }
+        }
+      },
+      reset() {
+        this.included = {};
+        this.excluded = {};
+      },
+      matches(ids) {
+        const inc = Object.keys(this.included);
+        const exc = Object.keys(this.excluded);
+        const idStrs = (ids || []).map(String);
+        if (inc.length > 0 && !idStrs.some((i) => inc.includes(i)))
+          return false;
+        if (exc.length > 0 && idStrs.some((i) => exc.includes(i))) return false;
+        return true;
+      },
+      get count() {
+        return (
+          Object.keys(this.included).length + Object.keys(this.excluded).length
+        );
+      },
+      isActive(id, mode) {
+        const key = String(id);
+        return mode === "plus" ? !!this.included[key] : !!this.excluded[key];
+      },
+    });
   });
 </script>
