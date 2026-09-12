@@ -1,7 +1,7 @@
 ---
 module: query-optimization
 owner_area: backend
-last_verified_against_commit: f74e9ed
+last_verified_against_commit: fc4b86e
 depends_on: [data-layer]
 ---
 
@@ -27,15 +27,15 @@ Hard requirement for this repo: every read is column-scoped, join-aware, and ind
 // games list with status name, one round-trip, scoped columns (confirmed schema)
 const { data } = await supabase
   .from("games")
-    .select("id, name, cover_url, avg_vote, vote_count, status:game_status!game_status_id(id, name)")
-    .order("id", {ascending: true})
+  .select("id, name, cover_url, avg_vote, vote_count, status:game_status!game_status_id(id, name)")
+  .order("id", {ascending: true})
   .range(0, 23);
 ```
 
 ```ts
 // filter by embedded FK (games in a status) — inner join semantics
 supabase.from("games")
-    .select("id, name, status:game_status!inner(name)")
+  .select("id, name, status:game_status!inner(name)")
   .eq("status.name", "En progreso");
 ```
 
@@ -57,13 +57,13 @@ Anti-pattern (N+1): fetching games, then a `game_status` query per row. Never.
 
 ### Suggested (inferred from access patterns — validate with `EXPLAIN ANALYZE`)
 
-| Table         | Index                                           | Serves                                                    |
-|---------------|-------------------------------------------------|-----------------------------------------------------------|
-| `posts`       | `(created_at desc)`                             | home feed order+limit                                     |
-| `games`       | `(game_status_id)`                              | status filter (FK column is not auto-indexed in Postgres) |
-| `goty_items`  | `(year, rank)` composite, `(game_id)` FK        | year ranking, embed join                                  |
-| `stream_logs` | `(started_at desc)`, `(is_live)` partial        | timeline, live lookup                                     |
-| join table    | `(stream_log_id)`, `(category_id)`, unique pair | M:N categories                                            |
+| Table         | Index                                           | Serves                                                                               |
+|---------------|-------------------------------------------------|--------------------------------------------------------------------------------------|
+| `posts`       | `(created_at desc)`                             | home feed order+limit                                                                |
+| `games`       | `(game_status_id)`                              | status filter (FK column is not auto-indexed in Postgres; needed by search & filter) |
+| `goty_items`  | `(year, rank)` composite, `(game_id)` FK        | year ranking, embed join                                                             |
+| `stream_logs` | `(started_at desc)`, `(is_live)` partial        | timeline, live lookup                                                                |
+| join table    | `(stream_log_id)`, `(category_id)`, unique pair | M:N categories                                                                       |
 
 Verify a query hits an index: `EXPLAIN ANALYZE` in Supabase SQL editor → expect `Index Scan`, not `Seq Scan`, on
 filtered/sorted columns.

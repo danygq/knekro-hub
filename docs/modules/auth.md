@@ -1,7 +1,7 @@
 ---
 module: auth
 owner_area: backend
-last_verified_against_commit: 56bdfc6
+last_verified_against_commit: fc4b86e
 depends_on: [data-layer]
 ---
 
@@ -31,18 +31,16 @@ Errors: missing/invalid `code` → redirect `/auth/auth-code-error`.
 
 ## Session read
 
-`Layout.astro` builds a per-request `createServerClient` and calls `getUser()` (wrapped in `.catch` → `{user:null}` so
-provisioning/network failures never break render). `user` toggles `UserMenu` vs `LoginButton`.
+Page frontmatter (`pages/index.astro`, `pages/games.astro`) creates a per-request SSR client via
+`createDbClient(Astro.request, Astro.cookies)`
+and calls `getUser()` (wrapped in `.catch` → `{user:null}` so provisioning/network failures never break render).
+The `user` object is then passed to `Layout.astro`, which toggles `UserMenu` vs `LoginButton`.
 
 ## Cookie client contract
 
-Every server client passes `cookies.getAll` (from request `Cookie` header via `parseCookieHeader`) + `cookies.setAll`
+The helper `createDbClient(request, cookies)` in `src/lib/db-client.ts` centralizes client instantiation.
+It handles `cookies.getAll` (from request `Cookie` header via `parseCookieHeader`) and `cookies.setAll`
 (writes to Astro `cookies`). Uses `PUBLIC_SUPABASE_URL` + `PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
-
-## Debt
-
-This exact `createServerClient` block is duplicated in `Layout.astro`, `callback.ts`, `signin.ts`, `signout.ts`. Extract
-a `createSupabaseServerClient({ request, cookies })` helper in `src/lib/`; keep per-request instantiation.
 
 ## Do not
 

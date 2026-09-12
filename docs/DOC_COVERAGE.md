@@ -1,13 +1,13 @@
 ---
 module: doc-coverage
 owner_area: repo-wide
-last_verified_against_commit: f74e9ed
+last_verified_against_commit: fc4b86e
 depends_on: []
 ---
 
 # Doc coverage
 
-Cross-checked against source at commit `3b1304b`.
+Cross-checked against source at commit `fc4b86e`.
 
 | Area                          | Documented? | Doc file                     | Confidence                            |
 |-------------------------------|-------------|------------------------------|---------------------------------------|
@@ -26,6 +26,10 @@ Cross-checked against source at commit `3b1304b`.
 
 - Tables `posts`, `game_status`, `games`, `games_user_votes`: **verified** — full DDL confirmed and documented in
   `docs/modules/data-layer.md` → "Database schema (confirmed)".
+- Component suite under `src/components/games/` (`GamesLayout`, `GamesFilterMenu`, `GameSearch`, `GameCard`,
+  `GameCover`, badges, and vote overlay components) and Alpine stores (`store.ts`): **verified** against implementation.
+- API endpoints: `POST /api/games/vote.astro` and `GET /api/games/search.astro` (HTMX responses with OOB swaps):
+  **verified** against implementation.
 - Column lists for `posts`: verified from `.select()` args only; other columns may exist (unclear).
 - Tables `goty_items`, `stream_logs`, `categories`, `award_categories`: **inferred** from `src/types/` +
   product intent. Not confirmed against the Supabase schema — confirm before building on them.
