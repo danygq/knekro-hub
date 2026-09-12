@@ -1,6 +1,6 @@
 ---
 import Layout from "../../layouts/Layout.astro";
-import GameCard from "../../components/GameCard.astro";
+import GameCard from "../../components/games/GameCard.astro";
 import { createDbClient } from "../../lib/db-client";
 import {
   loadGameStatuses,
@@ -245,7 +245,7 @@ const totalGames = await loadTotalGamesCount(dbClient);
                 hx-trigger="input changed delay:300ms, search"
                 hx-target="#games-grid"
                 hx-swap="innerHTML"
-                class="knk-notch w-full pl-10 pr-10 py-2 text-sm bg-(--knk-surface) text-(--knk-text) border border-(--knk-line) placeholder:text-(--knk-text-faint) hover:border-(--knk-line-strong) focus:border-(--knk-primary) transition-colors"
+                class="knk-notch w-full pl-10 pr-10 py-2 text-sm bg-(--knk-surface) text-(--knk-text) border border-(--knk-line) hover:border-(--knk-line-strong) transition-colors"
               />
               <button
                 id="games-search-clear"
@@ -316,6 +316,7 @@ const totalGames = await loadTotalGamesCount(dbClient);
 
 <script>
   import "htmx.org";
+  import Alpine from "alpinejs";
 
   document.addEventListener("alpine:init", () => {
     Alpine.store("filter", {

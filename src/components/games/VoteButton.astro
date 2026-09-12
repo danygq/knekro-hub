@@ -1,0 +1,21 @@
+---
+interface Props {
+  gameId: number;
+  vote: number;
+  isActive: boolean;
+}
+
+const { gameId, vote, isActive } = Astro.props;
+const numCls = `knk-vote-num knk-vote-num-${vote} knk-notch-sm w-11 h-11 text-base font-medium border transition-colors${isActive ? " active" : ""}`;
+---
+
+<button
+  type="button"
+  class={numCls}
+  hx-post="/api/games/vote"
+  hx-vals={`{"game_id": ${gameId}, "vote": ${vote}}`}
+  hx-target="closest .knk-game-card"
+  hx-swap="outerHTML"
+>
+  {vote}
+</button>

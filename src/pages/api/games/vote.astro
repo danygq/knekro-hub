@@ -1,7 +1,7 @@
 ---
 import { createDbClient } from "../../../lib/db-client";
 import { loadGameById } from "../../../lib/games";
-import GameCard from "../../../components/GameCard.astro";
+import GameCard from "../../../components/games/GameCard.astro";
 
 // DB-first vote endpoint: upserts the user's vote (or clears it on a re-click),
 // then re-queries the game by id and returns a server-rendered <GameCard>.
@@ -67,4 +67,4 @@ if (!game) {
 }
 ---
 
-<GameCard game={game} loggedIn={true} />
+<GameCard game={game} loggedIn={!!user} />

@@ -1,0 +1,13 @@
+---
+interface Props {
+  status?: { name?: string | null } | null;
+}
+
+const { status } = Astro.props;
+---
+
+{status?.name && (
+  <span class="absolute top-3 right-3 z-10 knk-notch-sm px-2.5 py-1 text-sm font-medium bg-(--knk-bg)/80 text-(--knk-text-muted) border border-(--knk-line)">
+    {status.name}
+  </span>
+)}
