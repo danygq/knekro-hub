@@ -1,7 +1,7 @@
 ---
 import { createDbClient } from "../../../lib/db-client";
 import GameCard from "../../../components/games/GameCard.astro";
-import type { GameListRow } from "../../../types";
+import type { GameDetails } from "../../../types";
 
 // Server-side, paginated name search for the games library. Returns rendered
 // <GameCard> HTML for the grid plus out-of-band (OOB) swaps for the results
@@ -52,7 +52,7 @@ if (error) {
   console.error("Error searching games:", error);
 }
 
-const rows = (data as GameListRow[] | null) ?? [];
+const rows = (data as GameDetails[] | null) ?? [];
 const visibleCount = rows.length;
 const total = matchingCount ?? 0;
 const noResults = q !== "" && total === 0;

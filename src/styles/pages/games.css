@@ -63,6 +63,15 @@
         grid-template-columns: 1fr;
     }
 
+    .games-content {
+        grid-column: 2;
+        min-width: 0;
+    }
+
+    .games-layout.filters-off .games-content {
+        grid-column: 1;
+    }
+
     .knk-filter-panel,
     .knk-filter-panel:not(.open) {
         position: static;

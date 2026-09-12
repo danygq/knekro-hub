@@ -11,15 +11,15 @@ const { gameStatuses } = Astro.props;
 <div
   id="filter-backdrop"
   class="knk-filter-backdrop"
-  :class="{ 'open': panelOpen && !isDesktop }"
-  @click="panelOpen = false"
+  :class="{ 'open': $store.games.layout.gamesFilterMenuOpen && !$store.games.layout.isDesktop }"
+  @click="$store.games.layout.gamesFilterMenuOpen = false"
   aria-hidden="true"
 ></div>
 
 <aside
   id="filter-panel"
   class="knk-filter-panel"
-  :class="{ 'open': panelOpen && !isDesktop, 'closed': !panelOpen && isDesktop }"
+  :class="{ 'open': $store.games.layout.gamesFilterMenuOpen && !$store.games.layout.isDesktop, 'closed': !$store.games.layout.gamesFilterMenuOpen && $store.games.layout.isDesktop }"
   aria-label="Filtros por estado"
 >
   <div class="flex items-center justify-between px-4 py-3 border-b border-(--knk-line) bg-(--knk-surface-2)">
@@ -27,7 +27,7 @@ const { gameStatuses } = Astro.props;
     <button
       type="button"
       id="close-filters"
-      @click="panelOpen = false"
+      @click="$store.games.layout.gamesFilterMenuOpen = false"
       class="inline-flex items-center justify-center w-7 h-7 text-(--knk-text-muted) hover:text-(--knk-text) transition-colors"
       aria-label="Cerrar panel de filtros"
     >
@@ -90,13 +90,13 @@ const { gameStatuses } = Astro.props;
             <button
               type="button"
               title={`Excluir ${status.name} de la selección`}
-              :aria-pressed="$store.filter.isActive(${status.id}, 'minus') ? 'true' : 'false'"
+              :aria-pressed={`$store.filter.isActive(${status.id}, 'minus') ? 'true' : 'false'`}
               aria-label={`Excluir ${status.name} de la selección`}
-              @click="$store.filter.toggle(${status.id}, 'minus')"
+              @click={`$store.filter.toggle(${status.id}, 'minus')`}
               class="knk-filter-minus knk-notch-sm w-7 h-7 inline-flex items-center justify-center shrink-0 text-lg leading-none
                     bg-(--knk-surface) text-(--knk-text-muted) border border-(--knk-line)
                     hover:text-(--knk-danger) hover:border-(--knk-danger) transition-colors"
-              :class="{ 'active': $store.filter.isActive(${status.id}, 'minus') }"
+              :class={`{ 'active': $store.filter.isActive(${status.id}, 'minus') }`}
             >
               −
             </button>
@@ -109,13 +109,13 @@ const { gameStatuses } = Astro.props;
             <button
               type="button"
               title={`Incluir ${status.name} en la selección`}
-              :aria-pressed="$store.filter.isActive(${status.id}, 'plus') ? 'true' : 'false'"
+              :aria-pressed={`$store.filter.isActive(${status.id}, 'plus') ? 'true' : 'false'`}
               aria-label={`Incluir ${status.name} en la selección`}
-              @click="$store.filter.toggle(${status.id}, 'plus')"
+              @click={`$store.filter.toggle(${status.id}, 'plus')`}
               class="knk-filter-plus knk-notch-sm w-7 h-7 inline-flex items-center justify-center shrink-0 text-lg leading-none
                     bg-(--knk-surface) text-(--knk-text-muted) border border-(--knk-line)
                     hover:text-(--knk-primary) hover:border-(--knk-primary) transition-colors"
-              :class="{ 'active': $store.filter.isActive(${status.id}, 'plus') }"
+              :class={`{ 'active': $store.filter.isActive(${status.id}, 'plus') }`}
             >
               +
             </button>

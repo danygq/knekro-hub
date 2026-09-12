@@ -3,7 +3,7 @@
 // `window`/`document` so it never touches the browser.
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { GameListRow, GameStatus } from "../types";
+import type { GameDetails, GameStatus } from "../types";
 import type { Order } from "../types/db.ts";
 
 /** Format an average: whole numbers as integers, otherwise max 1 decimal. */
@@ -46,7 +46,7 @@ export async function loadGames(
   userId?: string,
   order: Order = { field: "id", options: { ascending: true } },
   limit = 24,
-): Promise<GameListRow[]> {
+): Promise<GameDetails[]> {
   let query = client
     .from("games")
     .select(gamesSelectFields(userId))
@@ -60,7 +60,7 @@ export async function loadGames(
     console.error("Error fetching games:", error);
     return [];
   }
-  return data as unknown as GameListRow[];
+  return data as unknown as GameDetails[];
 }
 
 /** Fetch a single game by id with the same projection as {@link loadGames}. */
@@ -68,7 +68,7 @@ export async function loadGameById(
   client: SupabaseClient,
   gameId: number,
   userId?: string,
-): Promise<GameListRow | null> {
+): Promise<GameDetails | null> {
   let query = client
     .from("games")
     .select(gamesSelectFields(userId))
@@ -81,7 +81,7 @@ export async function loadGameById(
     console.error("Error fetching game by id:", error);
     return null;
   }
-  return (data as GameListRow | null) ?? null;
+  return (data as GameDetails | null) ?? null;
 }
 
 export async function loadTotalGamesCount(

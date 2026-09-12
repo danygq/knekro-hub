@@ -16,7 +16,7 @@ export interface GameStatus {
  * `status` join. `vote_count`/`avg_vote` are maintained by the
  * `on_vote_change` trigger on `games_user_votes`.
  */
-export interface GameListRow {
+export interface GameDetails {
   id: number;
   name: string;
   cover_url: string | null;
