@@ -3,7 +3,7 @@ import VoteButton from "./VoteButton.astro";
 
 interface Props {
   gameId: number;
-  userVote: number | undefined;
+  userVote?: number;
 }
 
 const { gameId, userVote } = Astro.props;
@@ -12,6 +12,7 @@ const { gameId, userVote } = Astro.props;
 <div class="absolute inset-x-0 top-1/2 -translate-y-1/2 z-20 p-3">
   <button
     type="button"
+    @click.stop="open = true"
     class="knk-vote-toggle knk-notch-sm w-full px-3 py-2 text-sm font-medium
         bg-(--knk-bg)/85 text-(--knk-text-muted) border border-(--knk-line)
         opacity-0 group-hover:opacity-100 transition-opacity
@@ -20,14 +21,28 @@ const { gameId, userVote } = Astro.props;
     Votar
   </button>
 </div>
+
 <div
   x-show="open"
-  x-transition
-  class="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 bg-(--knk-bg)/85 backdrop-blur-sm"
+  x-cloak
+  x-transition.opacity.duration.150ms
+  style="display: none;"
+  @click.outside="open = false"
+  class="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 bg-(--knk-bg)/90 backdrop-blur-sm p-4"
 >
+  <button
+    type="button"
+    @click.stop="open = false"
+    class="absolute top-2 right-2 text-(--knk-text-muted) hover:text-(--knk-primary) text-lg font-bold px-2 py-1"
+    aria-label="Cerrar"
+  >
+    ✕
+  </button>
+
   <span class="text-sm font-medium text-(--knk-text-muted)">
     ¿Cuál es tu puntuación?
   </span>
+
   <div class="grid grid-cols-5 gap-2" id="vote-grid">
     {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
       <VoteButton gameId={gameId} vote={n} isActive={n === userVote} />

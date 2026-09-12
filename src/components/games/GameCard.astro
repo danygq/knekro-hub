@@ -1,7 +1,12 @@
 ---
 import Image from "astro/components/Image.astro";
+import VoteOverlay from "./VoteOverlay.astro";
 import { formatAvg } from "../../lib/games.ts";
 import type { GameDetails } from "../../types";
+import GameStatusBadge from "./GameStatusBadge.astro";
+import GameUserVoteBadge from "./GameUserVoteBadge.astro";
+import GameCommunityVotesBadge from "./GameCommunityVotesBadge.astro";
+
 interface Props {
   game: GameDetails;
   loggedIn: boolean;
@@ -18,18 +23,16 @@ const {
 } = game;
 const avgLabel = game.avg_vote ? formatAvg(game.avg_vote) : "−";
 const userVote = game.user_vote?.[0]?.vote;
-const hasVote = userVote != null;
 ---
 
 <article
-  class=`knk-game-card min-w-75 max-w-75 h-auto group border border-(--knk-line) bg-(--knk-surface) hover:border-(--knk-line-strong) transition-colors${loggedIn ? " cursor-pointer" : ""}`
+  class="knk-game-card min-w-75 max-w-75 h-auto group border border-(--knk-line) bg-(--knk-surface) hover:border-(--knk-line-strong) transition-colors"
   x-data="{ open: false }"
-  x-show={`$store.filter.matches([${status.id}])}`}
-  @click.outside="open = false"
+  @keydown.escape.window="open = false"
 >
   <div
-    class="relative aspect-2/3 bg-(--knk-surface-2) knk-grid-bg overflow-hidden"
-    @click="open = !open"
+    class=`relative aspect-2/3 bg-(--knk-surface-2) knk-grid-bg overflow-hidden${loggedIn ? " cursor-pointer" : ""}`
+    @click.stop={loggedIn ? "open = !open" : undefined}
   >
     {coverUrl ? (
       <Image
@@ -63,77 +66,21 @@ const hasVote = userVote != null;
         </svg>
       </div>
     )}
-    {status?.name && (
-      <span class="absolute top-3 right-3 z-10 knk-notch-sm px-2.5 py-1 text-sm font-medium bg-(--knk-bg)/80 text-(--knk-text-muted) border border-(--knk-line)">
-        {status.name}
-      </span>
-    )}
-    <div class="absolute bottom-3 left-3 right-3 z-10 flex items-end justify-between gap-2">
-      <span
-        class=`knk-notch-sm px-2.5 py-1 text-sm font-medium border tabular-nums text-shadow-[0_0_1px_var(--knk-line)] transition-colors knk-vote-${userVote}`
-        title="Tu voto"
-        hidden={!hasVote}
-      >
-        Tu puntuación: {userVote}
-      </span>
-      <span
-        class=`ml-auto knk-notch-sm px-2.5 py-1.5 font-medium border tabular-nums text-shadow-[0_0_1px_var(--knk-line)] transition-colors ${communityAvg ? "knk-vote-" + Math.trunc(communityAvg!) : "knk-vote-muted"}`
-        title={
-          (voteCount ?? 0 > 0)
-            ? `Media de la comunidad (${voteCount} votos)`
-            : "Sin votos todavía"
-        }
-      >
-        <span class="flex flex-col items-center leading-tight">
-          <span class="text-sm">{avgLabel}/10</span>
-          <span class="text-[10px] font-normal" hidden={voteCount === 0}>
-            {voteCount} voto{(voteCount ?? 0) > 1 && "s"}
-          </span>
-        </span>
-      </span>
+
+    <GameStatusBadge status={status} />
+
+    <div class="absolute bottom-3 left-3 right-3 z-10 flex items-end justify-between gap-2 pointer-events-none">
+      {!!userVote && <GameUserVoteBadge userVote={userVote} />}
+      <GameCommunityVotesBadge
+        communityAvg={communityAvg}
+        avgLabel={avgLabel}
+        voteCount={voteCount}
+      />
     </div>
-    {loggedIn && (
-      <>
-        <div class="absolute inset-x-0 top-1/2 -translate-y-1/2 z-20 p-3">
-          <button
-            type="button"
-            class="knk-vote-toggle knk-notch-sm w-full px-3 py-2 text-sm font-medium
-                bg-(--knk-bg)/85 text-(--knk-text-muted) border border-(--knk-line)
-                opacity-0 group-hover:opacity-100 transition-opacity
-                hover:text-(--knk-primary) hover:border-(--knk-line-strong)"
-          >
-            Votar
-          </button>
-        </div>
-        <div
-          x-show="open"
-          x-transition
-          class="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 bg-(--knk-bg)/85 backdrop-blur-sm"
-        >
-          <span class="text-sm font-medium text-(--knk-text-muted)">
-            ¿Cuál es tu puntuación?
-          </span>
-          <div class="grid grid-cols-5 gap-2" id="vote-grid">
-            {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => {
-              const numCls = `knk-vote-num knk-vote-num-${n} knk-notch-sm w-11 h-11 text-base font-medium border transition-colors ${n === userVote ? "active" : ""}`;
-              return (
-                <button
-                  type="button"
-                  class={numCls}
-                  hx-post="/api/games/vote"
-                  hx-vals={`{"game_id": ${gameId}, "vote": ${n}}`}
-                  hx-target="closest .knk-game-card"
-                  hx-swap="outerHTML"
-                >
-                  {n}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </>
-    )}
+
+    {loggedIn && <VoteOverlay gameId={gameId} userVote={userVote} />}
   </div>
+
   <div class="p-4 max-h-fit overflow-hidden text-ellipsis">
     <h3
       class="font-(--font-display) text-base overflow-hidden text-ellipsis tracking-tight group-hover:text-(--knk-primary) transition-colors cursor-default"

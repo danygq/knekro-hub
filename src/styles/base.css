@@ -11,6 +11,10 @@ body {
     color: #181000;
 }
 
+[x-cloak] {
+    display: none !important;
+}
+
 a:focus-visible,
 button:focus-visible {
     outline: 2px solid var(--knk-primary);
