@@ -1,13 +1,13 @@
 ---
-import Layout from "../../layouts/Layout.astro";
-import GameCard from "../../components/games/GameCard.astro";
-import { createDbClient } from "../../lib/db-client";
+import GameCard from "../components/games/GameCard.astro";
+import Layout from "../layouts/Layout.astro";
+import { createDbClient } from "../lib/db-client.ts";
 import {
   loadGameStatuses,
   loadGames,
   loadTotalGamesCount,
-} from "../../lib/games";
-import "../../styles/pages/games.css";
+} from "../lib/games.ts";
+import "../styles/pages/games.css";
 
 const dbClient = createDbClient(Astro.request, Astro.cookies);
 const {

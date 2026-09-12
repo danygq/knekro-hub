@@ -1,5 +1,5 @@
 /* /games filter panel + off-canvas drawer.
-   Imported from pages/games/index.astro frontmatter so it only ships with that page. */
+   Imported from pages/games/games.astro frontmatter so it only ships with that page. */
 
 /* Responsive two-column layout: stacked below lg, sidebar + grid from lg up */
 .games-layout {

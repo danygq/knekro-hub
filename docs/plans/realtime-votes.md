@@ -43,7 +43,7 @@ User B's browser ←── WebSocket ←── Realtime server
 
 - `src/lib/db-client.ts` — added `supabaseClient` export (browser-side client)
 - `src/lib/client/games-vote.ts` — uses Supabase client for writes; tracks "just voted" IDs
-- `src/pages/games/index.astro` — syncs SSR auth session; inits realtime; cleanup on navigation
+- `src/pages/games.astro` — syncs SSR auth session; inits realtime; cleanup on navigation
 
 ### Deprecated
 

@@ -142,7 +142,6 @@ Supabase/Vercel docs but are **not referenced anywhere in `src/`** — unclear, 
 
 | Table              | Columns                                                                 | Where                                                                                            |
 |--------------------|-------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
-| `posts`            | `id, title, excerpt, created_at`                                        | `index.astro` (order `created_at` desc, limit 10)                                                |
 | `game_status`      | `id, name, created_at, games_with_this_status`                          | `lib/games.ts` → `games/index.astro` (order `id`)                                                |
 | `games`            | `id, created_at, name, game_status_id, cover_url, avg_vote, vote_count` | `lib/games.ts` (`loadGames`, `loadGameById`) · `api/games/search.astro` · `api/games/vote.astro` |
 | `games_user_votes` | `id, created_at, user_id, game_id, vote`                                | `lib/games.ts` (user votes) · `api/games/vote.astro` (upsert)                                    |
