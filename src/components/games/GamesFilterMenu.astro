@@ -1,0 +1,127 @@
+---
+import type { GameStatus } from "../../types";
+
+interface Props {
+  gameStatuses: GameStatus[];
+}
+
+const { gameStatuses } = Astro.props;
+---
+
+<div
+  id="filter-backdrop"
+  class="knk-filter-backdrop"
+  :class="{ 'open': panelOpen && !isDesktop }"
+  @click="panelOpen = false"
+  aria-hidden="true"
+></div>
+
+<aside
+  id="filter-panel"
+  class="knk-filter-panel"
+  :class="{ 'open': panelOpen && !isDesktop, 'closed': !panelOpen && isDesktop }"
+  aria-label="Filtros por estado"
+>
+  <div class="flex items-center justify-between px-4 py-3 border-b border-(--knk-line) bg-(--knk-surface-2)">
+    <span class="font-(--font-display) text-sm tracking-tight">Filtros</span>
+    <button
+      type="button"
+      id="close-filters"
+      @click="panelOpen = false"
+      class="inline-flex items-center justify-center w-7 h-7 text-(--knk-text-muted) hover:text-(--knk-text) transition-colors"
+      aria-label="Cerrar panel de filtros"
+    >
+      <svg
+        width="12"
+        height="12"
+        viewBox="0 0 24 24"
+        fill="none"
+        aria-hidden="true"
+      >
+        <path
+          d="M18 6L6 18M6 6L18 18"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        />
+      </svg>
+    </button>
+  </div>
+
+  <div class="p-4 space-y-6">
+    <div>
+      <button
+        type="button"
+        id="reset-filters"
+        :aria-pressed="$store.filter.count === 0 ? 'true' : 'false'"
+        @click="$store.filter.reset()"
+        class="knk-filter-reset knk-notch-sm inline-flex items-center justify-center gap-2 w-full px-3 py-2 text-sm font-medium
+          bg-(--knk-surface) text-(--knk-text-muted) border border-(--knk-line)
+          hover:text-(--knk-text) hover:border-(--knk-line-strong) transition-colors"
+        :class="{ 'active': $store.filter.count === 0 }"
+      >
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          aria-hidden="true"
+        >
+          <circle
+            cx="12"
+            cy="12"
+            r="8"
+            stroke="currentColor"
+            stroke-width="1.75"
+          ></circle>
+          <circle cx="12" cy="12" r="2.5" fill="currentColor"></circle>
+        </svg>
+        Todas
+      </button>
+    </div>
+
+    <div>
+      <h2 class="text-xs font-medium uppercase tracking-wide text-(--knk-text-faint) mb-3">
+        Estado
+      </h2>
+      <ul class="divide-y divide-(--knk-line)">
+        {gameStatuses.map((status) => (
+          <li class="flex items-center justify-between gap-3 py-2">
+            <button
+              type="button"
+              title={`Excluir ${status.name} de la selección`}
+              :aria-pressed="$store.filter.isActive(${status.id}, 'minus') ? 'true' : 'false'"
+              aria-label={`Excluir ${status.name} de la selección`}
+              @click="$store.filter.toggle(${status.id}, 'minus')"
+              class="knk-filter-minus knk-notch-sm w-7 h-7 inline-flex items-center justify-center shrink-0 text-lg leading-none
+                    bg-(--knk-surface) text-(--knk-text-muted) border border-(--knk-line)
+                    hover:text-(--knk-danger) hover:border-(--knk-danger) transition-colors"
+              :class="{ 'active': $store.filter.isActive(${status.id}, 'minus') }"
+            >
+              −
+            </button>
+            <span class="flex-1 min-w-0 text-sm font-medium text-(--knk-text-muted)">
+              {status.name}
+            </span>
+            <span class="w-5 text-right text-xs text-(--knk-text-faint) tabular-nums">
+              {status.games_with_this_status}
+            </span>
+            <button
+              type="button"
+              title={`Incluir ${status.name} en la selección`}
+              :aria-pressed="$store.filter.isActive(${status.id}, 'plus') ? 'true' : 'false'"
+              aria-label={`Incluir ${status.name} en la selección`}
+              @click="$store.filter.toggle(${status.id}, 'plus')"
+              class="knk-filter-plus knk-notch-sm w-7 h-7 inline-flex items-center justify-center shrink-0 text-lg leading-none
+                    bg-(--knk-surface) text-(--knk-text-muted) border border-(--knk-line)
+                    hover:text-(--knk-primary) hover:border-(--knk-primary) transition-colors"
+              :class="{ 'active': $store.filter.isActive(${status.id}, 'plus') }"
+            >
+              +
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </div>
+</aside>
