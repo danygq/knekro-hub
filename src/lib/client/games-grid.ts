@@ -14,129 +14,7 @@
 // The status filter (games-filter.ts) composes on top: it toggles card
 // visibility and calls `recalc()` to refresh the counter.
 
-import type { GameListRow, GameStatusRefOrList } from "../../types";
-
-/** Format an average: whole numbers as integers, otherwise max 1 decimal. */
-function formatAvg(avg: number): string {
-  return Number.isInteger(avg) ? String(avg) : avg.toFixed(1);
-}
-
-/** Map a vote value (1-10) to a badge CSS color class. */
-function voteClass(vote: number): string {
-  if (vote < 3) return "knk-vote-red";
-  if (vote < 5) return "knk-vote-orange";
-  if (vote < 7) return "knk-vote-amber";
-  if (vote < 9) return "knk-vote-green";
-  return "knk-vote-blue";
-}
-
-/** Map a number button (1-10) to its picker color class. */
-function voteNumClass(n: number): string {
-  if (n < 3) return "knk-vote-num-red";
-  if (n < 5) return "knk-vote-num-orange";
-  if (n < 7) return "knk-vote-num-amber";
-  if (n < 9) return "knk-vote-num-green";
-  return "knk-vote-num-blue";
-}
-
-/** First status name from the embedded join (badge text). */
-function statusName(status: GameStatusRefOrList | undefined): string {
-  if (!status) return "";
-  const refs = Array.isArray(status) ? status : [status];
-  return refs[0]?.name ?? "";
-}
-
-/** Space-separated status ids for the `data-status-ids` attribute. */
-function statusIdString(status: GameStatusRefOrList | undefined): string {
-  if (!status) return "";
-  const refs = Array.isArray(status) ? status : [status];
-  return refs.map((ref) => String(ref.id)).join(" ");
-}
-
-interface GameCardProps {
-  name: string;
-  coverUrl: string | null;
-  status: string;
-  statusIds: string;
-  gameId: number;
-  communityAvg: number | null;
-  voteCount: number;
-  userVote: number | null;
-  loggedIn: boolean;
-}
-
-/** Build the markup for one card. Mirrors GameCard.astro — keep in sync. */
-function renderCard(p: GameCardProps): string {
-  const avgLabel = p.communityAvg != null ? formatAvg(p.communityAvg) : "−";
-  const hasVote = p.userVote != null;
-  const voteCls = p.userVote != null ? voteClass(p.userVote) : "";
-  const avgCls =
-    p.communityAvg != null ? voteClass(p.communityAvg) : "knk-vote-muted";
-  const avgTitle =
-    p.voteCount > 0
-      ? `Media de la comunidad (${p.voteCount} votos)`
-      : "Sin votos todavía";
-  const voteCountHidden = p.voteCount === 0 ? " hidden" : "";
-  const voteCountText = `${p.voteCount} voto${p.voteCount > 1 ? "s" : ""}`;
-
-  const cover = p.coverUrl
-    ? `<img src="${p.coverUrl}" alt="${p.name} cover" width="360" height="540" loading="lazy" decoding="async" class="absolute inset-0 h-full w-full object-cover" />`
-    : `<div class="absolute inset-0 flex items-center justify-center">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" class="text-(--knk-text-faint)">
-          <path d="M7 7h10a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-1l-1.5-2h-5L8 17H7a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.5" />
-          <path d="M9.5 11.5v2M8.5 12.5h2M16 11h.01M14.5 12.5h.01" stroke="currentColor" stroke-width="1.5" />
-        </svg>
-      </div>`;
-
-  const statusBadge = p.status
-    ? `<span class="absolute top-3 right-3 z-10 knk-notch-sm px-2.5 py-1 text-sm font-medium bg-(--knk-bg)/80 text-(--knk-text-muted) border border-(--knk-line)">${p.status}</span>`
-    : "";
-
-  const personalBadge = `<span data-personal-badge class="knk-notch-sm px-2.5 py-1 text-sm font-medium border tabular-nums text-shadow-[0_0_1px_var(--knk-line)] transition-colors ${voteCls}" title="Tu voto" ${hasVote ? "" : "hidden"}>Tu puntuación: ${p.userVote}</span>`;
-
-  const avgBadge = `<span data-avg-badge class="ml-auto knk-notch-sm px-2.5 py-1.5 font-medium border tabular-nums text-shadow-[0_0_1px_var(--knk-line)] transition-colors ${avgCls}" title="${avgTitle}">
-      <span class="flex flex-col items-center leading-tight">
-        <span data-avg-label class="text-sm">${avgLabel}/10</span>
-        <span data-vote-count class="text-[10px] font-normal"${voteCountHidden}>${voteCountText}</span>
-      </span>
-    </span>`;
-
-  const voteUI = p.loggedIn
-    ? `<div class="absolute inset-x-0 top-1/2 -translate-y-1/2 z-20 p-3">
-        <button type="button" data-vote-toggle class="knk-vote-toggle knk-notch-sm w-full px-3 py-2 text-sm font-medium bg-(--knk-bg)/85 text-(--knk-text-muted) border border-(--knk-line) opacity-0 group-hover:opacity-100 transition-opacity hover:text-(--knk-primary) hover:border-(--knk-line-strong)">
-          Votar
-        </button>
-      </div>
-      <div data-vote-picker hidden class="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 bg-(--knk-bg)/85 backdrop-blur-sm">
-        <span class="text-sm font-medium text-(--knk-text-muted)">¿Cuál es tu puntuación?</span>
-        <div class="grid grid-cols-5 gap-2">
-          ${Array.from({ length: 10 }, (_, i) => i + 1)
-            .map((n) => {
-              const numCls = `${voteNumClass(n)} knk-vote-num knk-notch-sm w-11 h-11 text-base font-medium border transition-colors${n === p.userVote ? " active" : ""}`;
-              return `<button type="button" data-vote-value="${n}" class="${numCls}">${n}</button>`;
-            })
-            .join("")}
-        </div>
-      </div>`
-    : "";
-
-  const cursorCls = p.loggedIn ? " cursor-pointer" : "";
-
-  return `<article class="knk-game-card min-w-75 max-w-75 group border border-(--knk-line) bg-(--knk-surface) hover:border-(--knk-line-strong) transition-colors${cursorCls}" data-status-ids="${p.statusIds}" data-name="${p.name}" data-game-id="${p.gameId}" data-avg="${p.communityAvg != null ? String(p.communityAvg) : ""}" data-avg-count="${String(p.voteCount)}" data-vote="${hasVote ? String(p.userVote) : ""}">
-    <div class="relative aspect-2/3 bg-(--knk-surface-2) knk-grid-bg overflow-hidden">
-      ${cover}
-      ${statusBadge}
-      <div class="absolute bottom-3 left-3 right-3 z-10 flex items-end justify-between gap-2">
-        ${personalBadge}
-        ${avgBadge}
-      </div>
-      ${voteUI}
-    </div>
-    <div class="p-4 max-h-fit overflow-hidden text-ellipsis">
-      <h3 class="font-(--font-display) text-base tracking-tight group-hover:text-(--knk-primary) transition-colors cursor-default" title="${p.name}">${p.name}</h3>
-    </div>
-  </article>`;
-}
+import type { GameListRow } from "../../types";
 
 export interface GamesGridController {
   setQuery: (term: string) => void;
@@ -144,12 +22,6 @@ export interface GamesGridController {
   loadMore: () => void;
   recalc: () => void;
   destroy: () => void;
-}
-
-interface InitialData {
-  games: GameListRow[];
-  total: number;
-  loggedIn: boolean;
 }
 
 const DEBOUNCE_MS = 300;
@@ -328,20 +200,6 @@ export function initGamesGrid(): GamesGridController {
     runSearch("");
   }
 
-  /** Public: fetch the next page and append (future infinite-scroll hook). */
-  function loadMore(): void {
-    if (loading) return;
-    const next = offset + PAGE_SIZE;
-    if (next >= matchingCount) return; // nothing left
-    offset = next;
-    void fetchPage({
-      offset: next,
-      limit: PAGE_SIZE,
-      q: query,
-      mode: "append",
-    });
-  }
-
   /** Public: status filter toggled — re-count visible + refresh counter. */
   function recalc(): void {
     updateCounter(countVisible());
@@ -389,7 +247,6 @@ export function initGamesGrid(): GamesGridController {
   return {
     setQuery,
     clearSearch,
-    loadMore,
     recalc,
     destroy() {
       if (searchTimer) clearTimeout(searchTimer);

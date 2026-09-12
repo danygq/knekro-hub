@@ -3,12 +3,9 @@ import Layout from "../../layouts/Layout.astro";
 import GameCard from "../../components/GameCard.astro";
 import { createDbClient } from "../../lib/db-client";
 import {
-  loadGamesLibrary,
-  buildGameStatuses,
-  statusName,
-  statusIdString,
-  buildCommunityAverages,
-  loadUserVotes,
+  loadGameStatuses,
+  loadGames,
+  loadTotalGamesCount,
 } from "../../lib/games";
 import "../../styles/pages/games.css";
 
@@ -23,18 +20,9 @@ const {
 const {
   data: { session },
 } = await dbClient.auth.getSession().catch(() => ({ data: { session: null } }));
-
-const { statuses, games, total } = await loadGamesLibrary(dbClient);
-const gameStatuses = buildGameStatuses(statuses, games);
-
-// Community averages are read from the DB-maintained vote_count/avg_vote
-// columns on `games` (kept in sync by the on_vote_change trigger). The
-// signed-in user's own votes come from games_user_votes via dbClient.
-const gameIds = games.map((g) => g.id);
-const communityAverages = buildCommunityAverages(games);
-const userVotes = user
-  ? await loadUserVotes(dbClient, user.id, gameIds)
-  : new Map();
+const gameStatuses = await loadGameStatuses(dbClient);
+const games = await loadGames(dbClient, user?.id);
+const totalGames = loadTotalGamesCount(dbClient);
 ---
 
 <Layout user={user}>
@@ -182,7 +170,7 @@ const userVotes = user
                   {status.name}
                 </span>
                 <span class="w-5 text-right text-xs text-(--knk-text-faint) tabular-nums">
-                  {status.count}
+                  {status.games_with_this_status}
                 </span>
                 <button
                   type="button"
@@ -288,30 +276,14 @@ const userVotes = user
               id="total-count"
               class="font-medium text-(--knk-text-muted) tabular-nums"
             >
-              {total}
+              {totalGames}
             </span>
             &nbsp;juegos
           </p>
 
           <div id="games-grid" class="flex flex-wrap gap-5">
             {games.map((game) => {
-              const status = statusName(game.status);
-              const statusIds = statusIdString(game.status);
-              const community = communityAverages.get(game.id);
-              const myVote = userVotes.get(game.id);
-              return (
-                <GameCard
-                  name={game.name}
-                  coverUrl={game.cover_url}
-                  status={status}
-                  statusIds={statusIds}
-                  gameId={game.id}
-                  communityAvg={community?.avg ?? null}
-                  voteCount={community?.count ?? 0}
-                  userVote={myVote?.vote ?? null}
-                  loggedIn={!!user}
-                />
-              );
+              return <GameCard game={game} loggedIn={!!user} />;
             })}
           </div>
 
@@ -336,7 +308,7 @@ const userVotes = user
 <script
   type="application/json"
   id="games-initial"
-  set:html={JSON.stringify({ games, total, loggedIn: !!user })}
+  set:html={JSON.stringify({ games, totalGames, loggedIn: !!user })}
 ></script>
 <script>
   import { supabaseClient } from "../../lib/db-client";

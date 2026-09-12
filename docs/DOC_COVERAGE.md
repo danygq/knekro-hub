@@ -1,7 +1,7 @@
 ---
 module: doc-coverage
 owner_area: repo-wide
-last_verified_against_commit: 3b1304b
+last_verified_against_commit: f74e9ed
 depends_on: []
 ---
 
@@ -24,17 +24,17 @@ Cross-checked against source at commit `3b1304b`.
 
 ## Verified vs code
 
-- Tables `posts`, `game_status`: **verified** — appear in live queries.
-- Column lists for `posts`/`game_status`: verified from `.select()` args only; other columns may exist (unclear).
-- `games`: **queried by `/games`** (`lib/games.ts`) but schema unconfirmed against Supabase — live but at risk.
+- Tables `posts`, `game_status`, `games`, `games_user_votes`: **verified** — full DDL confirmed and documented in
+  `docs/modules/data-layer.md` → "Database schema (confirmed)".
+- Column lists for `posts`: verified from `.select()` args only; other columns may exist (unclear).
 - Tables `goty_items`, `stream_logs`, `categories`, `award_categories`: **inferred** from `src/types/` +
   product intent. Not confirmed against the Supabase schema — confirm before building on them.
-- Suggested indexes: **inferred** from documented access patterns; validate with `EXPLAIN ANALYZE`.
+- Indexes: `games_user_votes_game_id_idx` is confirmed from DDL; other suggested indexes are **inferred**
+  from documented access patterns — validate with `EXPLAIN ANALYZE`.
 
 ## Could not verify (needs confirmation)
 
-- Actual Supabase schema (column types, FKs, RLS policies) — not read; agent was instructed not to touch the DB
-  connection.
+- RLS policies — not included in the DDL; verify before assuming access patterns.
 - Whether `/posts/[id]` route is planned (linked but absent).
 - GOTY voting model (community vs editorial) and tier-list persistence.
 

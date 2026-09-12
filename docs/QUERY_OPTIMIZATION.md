@@ -1,7 +1,7 @@
 ---
 module: query-optimization
 owner_area: backend
-last_verified_against_commit: 30ebd45
+last_verified_against_commit: f74e9ed
 depends_on: [data-layer]
 ---
 
@@ -24,18 +24,18 @@ Hard requirement for this repo: every read is column-scoped, join-aware, and ind
 ## Embedding (joins) — do this
 
 ```ts
-// games list with status name + goty rank, one round-trip, scoped columns
+// games list with status name, one round-trip, scoped columns (confirmed schema)
 const { data } = await supabase
   .from("games")
-  .select("id, title, slug, cover_url, status:game_status(name), goty_items(year, rank, tier)")
-  .order("updated_at", { ascending: false })
+    .select("id, name, cover_url, avg_vote, vote_count, status:game_status!game_status_id(id, name)")
+    .order("id", {ascending: true})
   .range(0, 23);
 ```
 
 ```ts
 // filter by embedded FK (games in a status) — inner join semantics
 supabase.from("games")
-  .select("id, title, status:game_status!inner(name)")
+    .select("id, name, status:game_status!inner(name)")
   .eq("status.name", "En progreso");
 ```
 
@@ -44,16 +44,26 @@ When PostgREST needs a nudge (multiple FK paths, or to be explicit), name the FK
 
 Anti-pattern (N+1): fetching games, then a `game_status` query per row. Never.
 
-## Indexes to create (match the access patterns above)
+## Indexes (confirmed + suggested)
 
-| Table              | Index                                               | Serves                                                                                                                               |
-|--------------------|-----------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------|
-| `posts`            | `(created_at desc)`                                 | home feed order+limit                                                                                                                |
-| `games`            | `(status_id)`, `(updated_at desc)`, `(slug) unique` | status filter, sort, detail lookup                                                                                                   |
-| `games_user_votes` | `(user_id, game_id)` unique                         | per-user lookup/upsert (votes); community averages live on `games.vote_count`/`avg_vote`, maintained by the `on_vote_change` trigger |
-| `goty_items`       | `(year, rank)` composite, `(game_id)` FK            | year ranking, embed join                                                                                                             |
-| `stream_logs`      | `(started_at desc)`, `(is_live)` partial            | timeline, live lookup                                                                                                                |
-| join table         | `(stream_log_id)`, `(category_id)`, unique pair     | M:N categories                                                                                                                       |
+### Confirmed (from DDL)
+
+| Table              | Index                                                               | Serves                                      |
+|--------------------|---------------------------------------------------------------------|---------------------------------------------|
+| `game_status`      | `game_status_name_key` (unique on name)                             | uniqueness on status name                   |
+| `games`            | `games_pkey` (PK on id)                                             | primary lookup                              |
+| `games_user_votes` | `games_user_votes_user_id_game_id_key` (unique on user_id, game_id) | per-user lookup/upsert (votes)              |
+| `games_user_votes` | `games_user_votes_game_id_idx` (btree on game_id)                   | trigger aggregation lookup on votes by game |
+
+### Suggested (inferred from access patterns — validate with `EXPLAIN ANALYZE`)
+
+| Table         | Index                                           | Serves                                                    |
+|---------------|-------------------------------------------------|-----------------------------------------------------------|
+| `posts`       | `(created_at desc)`                             | home feed order+limit                                     |
+| `games`       | `(game_status_id)`                              | status filter (FK column is not auto-indexed in Postgres) |
+| `goty_items`  | `(year, rank)` composite, `(game_id)` FK        | year ranking, embed join                                  |
+| `stream_logs` | `(started_at desc)`, `(is_live)` partial        | timeline, live lookup                                     |
+| join table    | `(stream_log_id)`, `(category_id)`, unique pair | M:N categories                                            |
 
 Verify a query hits an index: `EXPLAIN ANALYZE` in Supabase SQL editor → expect `Index Scan`, not `Seq Scan`, on
 filtered/sorted columns.

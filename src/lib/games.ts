@@ -3,162 +3,60 @@
 // `window`/`document` so it never touches the browser.
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type {
-  CommunityAverage,
-  GameListRow,
-  GameStatus,
-  GameStatusRefOrList,
-  GameStatusWithCount,
-  UserVote,
-} from "../types";
+import type { GameListRow, GameStatus } from "../types";
+import type { Order } from "../types/db.ts";
 
-/** Normalize an embedded-status value into an array of refs. */
-export function statusRefs(
-  status: GameStatusRefOrList | undefined,
-): GameStatus[] {
-  if (!status) return [];
-  return Array.isArray(status) ? status : [status];
-}
-
-/** First status name, used for the badge on a card. */
-export function statusName(status: GameStatusRefOrList | undefined): string {
-  return statusRefs(status)[0]?.name ?? "";
-}
-
-/** Space-separated status ids, matching the `data-status-ids` card attribute. */
-export function statusIdString(
-  status: GameStatusRefOrList | undefined,
-): string {
-  return statusRefs(status)
-    .map((ref) => String(ref.id))
-    .join(" ");
-}
-
-/** Count games per status id, deduping per game (a game can hold several statuses). */
-export function buildStatusCounts(games: GameListRow[]): Map<number, number> {
-  const counts = new Map<number, number>();
-  for (const game of games) {
-    const seen = new Set<number>();
-    for (const ref of statusRefs(game.status)) {
-      if (seen.has(ref.id)) continue;
-      seen.add(ref.id);
-      counts.set(ref.id, (counts.get(ref.id) ?? 0) + 1);
-    }
-  }
-  return counts;
-}
-
-/** Merge status rows with per-status game counts for the filter panel. */
-export function buildGameStatuses(
-  statuses: GameStatus[],
-  games: GameListRow[],
-): GameStatusWithCount[] {
-  const counts = buildStatusCounts(games);
-  return statuses.map((status) => ({
-    id: status.id,
-    name: status.name,
-    count: counts.get(status.id) ?? 0,
-  }));
-}
-
-/**
- * Fetch the status list + games grid in one go. Column-scoped, joined, and
- * bounded per docs/QUERY_OPTIMIZATION.md. Always resolves to arrays so the
- * page renders even while Supabase credentials are still provisioning.
- *
- * `total` is the total number of games in the library (unfiltered) — used for
- * the "X de Y juegos" counter. The `games` array is the first page only; the
- * rest is fetched client-side via /api/games/search (which also powers name
- * search + future lazy loading).
- */
-export async function loadGamesLibrary(
+export async function loadGameStatuses(
   client: SupabaseClient,
-): Promise<{ statuses: GameStatus[]; games: GameListRow[]; total: number }> {
-  const [
-    { data: statusesData, error: statusesError },
-    { data: gamesData, error: gamesError },
-    { count: totalCount, error: countError },
-  ] = await Promise.all([
-    client
-      .from("game_status")
-      .select("id, name")
-      .order("id", { ascending: true })
-      .limit(24),
-    client
-      .from("games")
-      .select(
-        "id, name, cover_url, vote_count, avg_vote, status:game_status!game_status_id(id, name)",
-      )
-      .order("id", { ascending: true })
-      .limit(24),
-    client.from("games").select("id", { count: "exact", head: true }),
-  ]);
-
-  if (statusesError) {
-    console.error("Error fetching statuses:", statusesError);
-  }
-  if (gamesError) {
-    console.error("Error fetching games:", gamesError);
-  }
-  if (countError) {
-    console.error("Error counting games:", countError);
-  }
-
-  return {
-    statuses: (statusesData as GameStatus[] | null) ?? [],
-    games: (gamesData as GameListRow[] | null) ?? [],
-    total: totalCount ?? 0,
-  };
-}
-
-/**
- * Community average per game, read from the DB-maintained `vote_count` and
- * `avg_vote` columns on `games` (kept in sync by the `on_vote_change`
- * trigger). Returns a map of game_id -> { avg, count } — only games with at
- * least one vote appear.
- */
-export function buildCommunityAverages(
-  games: GameListRow[],
-): Map<number, CommunityAverage> {
-  const result = new Map<number, CommunityAverage>();
-  for (const game of games) {
-    if (
-      game.vote_count != null &&
-      game.vote_count > 0 &&
-      game.avg_vote != null
-    ) {
-      result.set(game.id, { avg: game.avg_vote, count: game.vote_count });
-    }
-  }
-  return result;
-}
-
-/**
- * The signed-in user's own votes for the passed game ids. Column-scoped and
- * bounded. Returns a map of game_id -> UserVote; a null `vote` means the user
- * cleared their vote (row may still exist) and is treated as "not voted".
- */
-export async function loadUserVotes(
-  client: SupabaseClient,
-  userId: string,
-  gameIds: number[],
-): Promise<Map<number, UserVote>> {
-  const result = new Map<number, UserVote>();
-  if (gameIds.length === 0) return result;
-
+  order: Order = { field: "name", options: { ascending: true } },
+): Promise<GameStatus[]> {
   const { data, error } = await client
-    .from("games_user_votes")
-    .select("id, game_id, vote")
-    .eq("user_id", userId)
-    .in("game_id", gameIds);
-
+    .from("game_status")
+    .select("id, name, games_with_this_status")
+    .order(order.field, order.options);
   if (error) {
-    console.error("Error fetching user votes:", error);
-    return result;
+    console.error("Error fetching game statuses:", error);
+    return [];
   }
+  return data as GameStatus[];
+}
 
-  for (const row of (data as UserVote[] | null) ?? []) {
-    result.set(row.game_id, row);
+export async function loadGames(
+  client: SupabaseClient,
+  userId?: string,
+  order: Order = { field: "id", options: { ascending: true } },
+  limit = 2,
+): Promise<GameListRow[]> {
+  let selectFields =
+    "id, name, cover_url, vote_count, avg_vote, status:game_status!game_status_id(id, name),game_status_id";
+  if (userId) {
+    selectFields += ", user_vote:games_user_votes(vote)";
   }
-  return result;
+  let query = client
+    .from("games")
+    .select(selectFields)
+    .order(order.field, order.options)
+    .limit(limit);
+  if (userId) {
+    query = query.eq("games_user_votes.user_id", userId);
+  }
+  const { data, error } = await query;
+  if (error) {
+    console.error("Error fetching games:", error);
+    return [];
+  }
+  return data as unknown as GameListRow[];
+}
+
+export async function loadTotalGamesCount(
+  client: SupabaseClient,
+): Promise<number> {
+  const { count, error } = await client
+    .from("games")
+    .select("id", { count: "exact", head: true });
+  if (error) {
+    console.error("Error counting games:", error);
+    return 0;
+  }
+  return count as number;
 }

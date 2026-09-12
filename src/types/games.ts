@@ -7,11 +7,8 @@
 export interface GameStatus {
   id: number;
   name: string;
+  games_with_this_status: number;
 }
-
-// The `status` column arrives as either a single embedded row, an array of
-// embedded rows (a one-to-many join on game_status), or null.
-export type GameStatusRefOrList = GameStatus | GameStatus[] | null;
 
 /**
  * One row of the games grid: exactly the columns `/games` selects from
@@ -25,7 +22,21 @@ export interface GameListRow {
   cover_url: string | null;
   vote_count: number | null;
   avg_vote: number | null;
-  status: GameStatusRefOrList;
+  status: GameStatus;
+  game_status_id: number | null;
+  user_vote?: UserVoteEmbed[] | null;
+}
+
+export interface UserVoteEmbed {
+  vote: number;
+}
+
+export interface GamesUserVoteRow {
+  id: number;
+  created_at: string;
+  user_id: string | null;
+  game_id: number | null;
+  vote: number | null;
 }
 
 /** A `GameStatus` augmented with how many games carry it (filter badge). */
