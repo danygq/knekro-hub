@@ -1,7 +1,7 @@
 ---
 module: auth
 owner_area: backend
-last_verified_against_commit: fa6e923
+last_verified_against_commit: c4a3967
 depends_on: [data-layer]
 ---
 
