@@ -1,13 +1,19 @@
 ---
-import { createDbClient } from "../../../lib/db-client";
+import {
+  createSupabaseServerClient,
+  isSessionExpiredError,
+} from "../../../lib/createSupabaseServerClient";
 import GameCard from "../../../components/games/GameCard.astro";
 import type { GameDetails } from "../../../types";
 
-const dbClient = createDbClient(Astro.request, Astro.cookies);
+const dbClient = createSupabaseServerClient(Astro.request, Astro.cookies);
 
-const {
-  data: { user },
-} = await dbClient.auth.getUser().catch(() => ({ data: { user: null } }));
+const { data: userData, error: userError } = await dbClient.auth.getUser();
+let user = userData?.user ?? null;
+if (userError && isSessionExpiredError(userError)) {
+  await dbClient.auth.signOut({ scope: "local" });
+  user = null;
+}
 
 // Extract search query and status filters
 const q = (Astro.url.searchParams.get("q") ?? "").trim();

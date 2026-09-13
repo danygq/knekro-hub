@@ -4,13 +4,34 @@ import "../styles/global.css";
 import type { User } from "@supabase/supabase-js";
 import LoginButton from "../components/LoginButton.astro";
 import UserMenu from "../components/UserMenu.astro";
+import {
+  createSupabaseServerClient,
+  isSessionExpiredError,
+} from "../lib/createSupabaseServerClient";
 
 interface Props {
   user?: User | null;
 }
 
-const { user } = Astro.props;
+let { user } = Astro.props;
 const currentPath = Astro.url.pathname;
+
+if (user === undefined && currentPath !== "/auth/session-expired") {
+  const supabase = createSupabaseServerClient(Astro.request, Astro.cookies);
+  const { data, error } = await supabase.auth.getUser();
+
+  if (error) {
+    if (isSessionExpiredError(error)) {
+      await supabase.auth.signOut({ scope: "local" });
+      return Astro.redirect(
+        `/auth/session-expired?next=${encodeURIComponent(currentPath)}`,
+      );
+    }
+    user = null;
+  } else {
+    user = data.user;
+  }
+}
 ---
 
 <!doctype html>
@@ -49,7 +70,7 @@ const currentPath = Astro.url.pathname;
                 aria-hidden="true"
               >
                 <line x1="4" y1="6" x2="20" y2="6"></line>
-                <line x1="4" y1="12" x2="20" y2="12"></line>
+                <line x1="12" y1="12" x2="20" y2="12"></line>
                 <line x1="4" y1="18" x2="20" y2="18"></line>
               </svg>
               <svg
