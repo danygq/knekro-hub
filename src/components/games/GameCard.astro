@@ -34,7 +34,8 @@ const userVote = game.user_vote?.[0]?.vote;
     class=`relative aspect-2/3 bg-(--knk-surface-2) knk-grid-bg overflow-hidden${loggedIn ? " cursor-pointer" : ""}`
     @click.stop={loggedIn ? "open = !open" : undefined}
   >
-    {coverUrl ? (\n      <Image
+    {coverUrl ? (
+      <Image
         src={coverUrl}
         alt={name + " cover"}
         priority

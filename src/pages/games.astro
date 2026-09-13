@@ -97,7 +97,7 @@ const totalGames = await loadTotalGamesCount(dbClient);
       limit: 24,
       filters: filtersStore,
       resetOffset() {
-        this.offset = 0,
+        this.offset = 0;
       },
     };
     Alpine.store("search", search);
