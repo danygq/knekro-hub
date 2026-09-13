@@ -1,0 +1,70 @@
+---
+import { createDbClient } from "../../../lib/db-client";
+import { loadGameById } from "../../../lib/games";
+import GameCard from "../../../components/games/GameCard.astro";
+
+// DB-first vote endpoint: upserts the user's vote (or clears it on a re-click),
+// then re-queries the game by id and returns a server-rendered <GameCard>.
+// HTMX swaps this response into the card via outerHTML.
+const dbClient = createDbClient(Astro.request, Astro.cookies);
+
+if (Astro.request.method !== "POST") {
+  return new Response(null, { status: 405, headers: { Allow: "POST" } });
+}
+
+const {
+  data: { user },
+} = await dbClient.auth.getUser().catch(() => ({ data: { user: null } }));
+if (!user) {
+  return new Response("Unauthorized", { status: 401 });
+}
+
+const form = await Astro.request.formData();
+const gameId = Number(form.get("game_id"));
+const submittedVote = form.get("vote");
+const vote =
+  submittedVote === null || submittedVote === "null"
+    ? null
+    : Number(submittedVote);
+
+if (!gameId) {
+  return new Response("Missing game_id", { status: 400 });
+}
+
+// Toggle: re-clicking the user's current vote clears it (sets null).
+let nextVote = vote;
+if (vote !== null) {
+  const { data: existing, error } = await dbClient
+    .from("games_user_votes")
+    .select("vote")
+    .eq("user_id", user.id)
+    .eq("game_id", gameId)
+    .maybeSingle();
+  if (error) {
+    console.error("Error al obtener el voto:", error.message);
+    return new Response("Vote failed", { status: 500 });
+  }
+  if (existing?.vote === vote) {
+    nextVote = null;
+  }
+}
+
+const { error } = await dbClient
+  .from("games_user_votes")
+  .upsert(
+    { user_id: user.id, game_id: gameId, vote: nextVote },
+    { onConflict: "user_id,game_id" },
+  );
+
+if (error) {
+  console.error("Error upserting vote:", error);
+  return new Response("Vote failed", { status: 500 });
+}
+
+const game = await loadGameById(dbClient, gameId, user.id);
+if (!game) {
+  return new Response("Game not found", { status: 404 });
+}
+---
+
+<GameCard game={game} loggedIn={!!user} />

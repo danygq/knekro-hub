@@ -3,6 +3,8 @@ import vercel from "@astrojs/vercel";
 
 import tailwindcss from "@tailwindcss/vite";
 
+import alpinejs from "@astrojs/alpinejs";
+
 export default defineConfig({
   output: "server",
   adapter: vercel(),
@@ -11,4 +13,6 @@ export default defineConfig({
   vite: {
     plugins: [tailwindcss()],
   },
+
+  integrations: [alpinejs()],
 });

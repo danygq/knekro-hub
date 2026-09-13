@@ -1,0 +1,123 @@
+---
+import GamesFilterMenu from "./GamesFilterMenu.astro";
+import type { GameDetails, GameStatus } from "../../types";
+import GameCard from "./GameCard.astro";
+import { type User } from "@supabase/auth-js";
+import GameSearch from "./GameSearch.astro";
+
+interface Props {
+  gameStatuses: GameStatus[];
+  games: GameDetails[];
+  totalGames: number;
+  user: User | null;
+}
+
+const { gameStatuses, games, totalGames, user } = Astro.props;
+---
+
+<div
+  id="games-layout"
+  class="games-layout"
+  :class="{ 'filters-off': !$store.games.layout.gamesFilterMenuOpen }"
+  x-data
+  x-init="
+    window.addEventListener('resize', () => { $store.games.layout.isDesktop = window.innerWidth >= 1024 });
+  "
+>
+  <GamesFilterMenu gameStatuses={gameStatuses} />
+
+  <div class="games-content min-w-0">
+    {games.length === 0 ? (
+      <p class="text-sm text-(--knk-text-muted)">
+        Todavía no hay juegos en la biblioteca.
+      </p>
+    ) : (
+      <>
+        <div class="mb-6 flex justify-between gap-3">
+          <GameSearch />
+          <div class="flex-0">
+            <button
+              type="button"
+              id="toggle-filters"
+              :aria-expanded="$store.games.layout.gamesFilterMenuOpen"
+              @click="$store.games.layout.gamesFilterMenuOpen = !$store.games.layout.gamesFilterMenuOpen"
+              class="knk-notch inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium shrink-0
+        bg-(--knk-surface) text-(--knk-text) border border-(--knk-line)
+        hover:text-(--knk-primary) hover:border-(--knk-line-strong) transition-colors"
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                aria-hidden="true"
+                class="text-(--knk-text-muted)"
+              >
+                <rect
+                  x="4"
+                  y="3"
+                  width="16"
+                  height="18"
+                  rx="2"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                ></rect>
+                <path
+                  d="M6.5 8.5h11M6.5 12h8M6.5 15.5h11"
+                  stroke="currentColor"
+                  stroke-width="1.75"
+                  stroke-linecap="round"
+                ></path>
+              </svg>
+              <span>Filtros</span>
+              <span
+                id="filter-count"
+                x-text="$store.search.filters.status.count"
+                :hidden="!$store.search.filters.status?.count"
+                class="min-w-4.5 h-4.5 px-1 inline-flex items-center justify-center rounded-full bg-(--knk-primary) text-[--knk-blue-50] text-xs font-semibold tabular-nums"
+              ></span>
+            </button>
+          </div>
+        </div>
+
+        <>
+          <p
+            id="result-count"
+            class="text-xs text-(--knk-text-faint) mb-4"
+            aria-live="polite"
+          >
+            <span id="result-label">Mostrando&nbsp;</span>
+            <span
+              id="visible-count"
+              class="font-medium text-(--knk-text-muted) tabular-nums"
+            >
+              {games.length}
+            </span>
+            &nbsp;de&nbsp;
+            <span
+              id="total-count"
+              class="font-medium text-(--knk-text-muted) tabular-nums"
+            >
+              {totalGames}
+            </span>
+            &nbsp;juegos
+          </p>
+
+          <div id="games-grid" class="flex flex-wrap gap-5">
+            {games.map((game) => {
+              return <GameCard game={game} loggedIn={!!user} />;
+            })}
+          </div>
+
+          <p
+            id="filter-no-results"
+            hidden
+            class="text-sm text-(--knk-text-muted) mt-4"
+          >
+            No hay juegos que coincidan con la búsqueda o los filtros.
+          </p>
+        </>
+      </>
+    )}
+  </div>
+</div>

@@ -1,0 +1,14 @@
+---
+interface Props {
+  userVote: number | null | undefined;
+}
+
+const { userVote } = Astro.props;
+---
+
+<span
+  class=`knk-notch-sm px-2.5 py-1 text-sm font-medium border tabular-nums text-shadow-[0_0_1px_var(--knk-line)] transition-colors knk-vote-${userVote}`
+  title="Tu voto"
+>
+  Tu puntuación: {userVote}
+</span>

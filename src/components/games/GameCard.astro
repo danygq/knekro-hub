@@ -1,0 +1,92 @@
+---
+import Image from "astro/components/Image.astro";
+import VoteOverlay from "./VoteOverlay.astro";
+import { formatAvg } from "../../lib/games.ts";
+import type { GameDetails } from "../../types";
+import GameStatusBadge from "./GameStatusBadge.astro";
+import GameUserVoteBadge from "./GameUserVoteBadge.astro";
+import GameCommunityVotesBadge from "./GameCommunityVotesBadge.astro";
+
+interface Props {
+  game: GameDetails;
+  loggedIn: boolean;
+}
+
+const { game, loggedIn } = Astro.props;
+const {
+  name,
+  cover_url: coverUrl,
+  status,
+  id: gameId,
+  avg_vote: communityAvg,
+  vote_count: voteCount,
+} = game;
+const avgLabel = game.avg_vote ? formatAvg(game.avg_vote) : "−";
+const userVote = game.user_vote?.[0]?.vote;
+---
+
+<article
+  class="knk-game-card min-w-75 max-w-75 h-auto group border border-(--knk-line) bg-(--knk-surface) hover:border-(--knk-line-strong) transition-colors"
+  x-data="{ open: false }"
+  @keydown.escape.window="open = false"
+>
+  <div
+    class=`relative aspect-2/3 bg-(--knk-surface-2) knk-grid-bg overflow-hidden${loggedIn ? " cursor-pointer" : ""}`
+    @click.stop={loggedIn ? "open = !open" : undefined}
+  >
+    {coverUrl ? (
+      <Image
+        src={coverUrl}
+        alt={name + " cover"}
+        priority
+        width="360"
+        height="540"
+        decoding="async"
+        class="absolute inset-0 h-full w-full object-cover"
+      />
+    ) : (
+      <div class="absolute inset-0 flex items-center justify-center">
+        <svg
+          width="32"
+          height="32"
+          viewBox="0 0 24 24"
+          fill="none"
+          class="text-(--knk-text-faint)"
+        >
+          <path
+            d="M7 7h10a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-1l-1.5-2h-5L8 17H7a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Z"
+            stroke="currentColor"
+            stroke-width="1.5"
+          />
+          <path
+            d="M9.5 11.5v2M8.5 12.5h2M16 11h.01M14.5 12.5h.01"
+            stroke="currentColor"
+            stroke-width="1.5"
+          />
+        </svg>
+      </div>
+    )}
+
+    <GameStatusBadge status={status} />
+
+    <div class="absolute bottom-3 left-3 right-3 z-10 flex items-end justify-between gap-2 pointer-events-none">
+      {!!userVote && <GameUserVoteBadge userVote={userVote} />}
+      <GameCommunityVotesBadge
+        communityAvg={communityAvg}
+        avgLabel={avgLabel}
+        voteCount={voteCount}
+      />
+    </div>
+
+    {loggedIn && <VoteOverlay gameId={gameId} userVote={userVote} />}
+  </div>
+
+  <div class="p-4 max-h-fit overflow-hidden text-ellipsis">
+    <h3
+      class="font-(--font-display) text-base overflow-hidden text-ellipsis tracking-tight group-hover:text-(--knk-primary) transition-colors cursor-default"
+      title={name}
+    >
+      {name}
+    </h3>
+  </div>
+</article>

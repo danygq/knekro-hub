@@ -1,9 +1,9 @@
 # Real-time Vote Updates
 
 > **Superseded** — the realtime approach described here was implemented then rolled back in favor of a simpler flow:
-> votes are written via the browser Supabase client, and after each vote the community average for that game is
-> re-fetched
-> from the server. See `ARCHITECTURE.md` for the current design. This file is kept for historical context only.
+> votes are submitted via `POST /api/games/vote.astro` (HTMX outerHTML swap), which upserts `games_user_votes`,
+> re-SELECTs the game with trigger-updated averages, and returns a server-rendered `GameCard`.
+> See `ARCHITECTURE.md` for the current design. This file is kept for historical context only.
 
 Plan for adding realtime community-average updates to the `/games` voting UI.
 
@@ -43,7 +43,7 @@ User B's browser ←── WebSocket ←── Realtime server
 
 - `src/lib/db-client.ts` — added `supabaseClient` export (browser-side client)
 - `src/lib/client/games-vote.ts` — uses Supabase client for writes; tracks "just voted" IDs
-- `src/pages/games/index.astro` — syncs SSR auth session; inits realtime; cleanup on navigation
+- `src/pages/games.astro` — syncs SSR auth session; inits realtime; cleanup on navigation
 
 ### Deprecated
 

@@ -1,0 +1,102 @@
+---
+import GamesLayout from "../components/games/GamesLayout.astro";
+import Layout from "../layouts/Layout.astro";
+import { createDbClient } from "../lib/db-client.ts";
+import {
+  loadGameStatuses,
+  loadGames,
+  loadTotalGamesCount,
+} from "../lib/games.ts";
+import "../styles/pages/games.css";
+import type { User } from "@supabase/auth-js";
+
+const dbClient = createDbClient(Astro.request, Astro.cookies);
+const {
+  data: { user },
+} = await dbClient.auth.getUser().catch(() => ({ data: { user: null } }));
+
+const gameStatuses = await loadGameStatuses(dbClient);
+const games = await loadGames(dbClient, user?.id);
+const totalGames = await loadTotalGamesCount(dbClient);
+---
+
+<Layout user={user}>
+  <div class="mb-8 flex flex-wrap items-start justify-between gap-x-6 gap-y-4">
+    <div class="min-w-0">
+      <p class="knk-eyebrow mb-2">Biblioteca del canal</p>
+      <h1 class="font-(--font-display) text-3xl sm:text-4xl tracking-tight text-balance">
+        Juegos
+      </h1>
+      <p class="mt-2 text-sm text-(--knk-text-muted) max-w-lg leading-relaxed">
+        Todo lo que se ha jugado, ojeado, o volado alto.
+      </p>
+    </div>
+  </div>
+
+  <GamesLayout
+    gameStatuses={gameStatuses}
+    games={games}
+    totalGames={totalGames}
+    user={user as User}
+  />
+</Layout>
+
+<script>
+  import "htmx.org";
+  import Alpine from "alpinejs";
+  (window as any).Alpine = Alpine;
+
+  document.addEventListener("alpine:init", () => {
+    const isDesktopViewport = window.innerWidth >= 1024;
+
+    Alpine.store("games", {
+      layout: {
+        isDesktop: isDesktopViewport,
+        gamesFilterMenuOpen: isDesktopViewport,
+      },
+    });
+    const statusFilterStore: StatusFilterStore = {
+      included: new Set<string>(),
+      excluded: new Set<string>(),
+      toggle(id: number | string, mode: "plus" | "minus") {
+        const key = String(id);
+        const isPlus = mode === "plus";
+        const target = isPlus ? this.included : this.excluded;
+        const opposite = isPlus ? this.excluded : this.included;
+        if (target.has(key)) {
+          target.delete(key);
+        } else {
+          target.add(key);
+          opposite.delete(key);
+        }
+        // Re-assign sets so Alpine triggers reactivity
+        this.included = new Set(this.included);
+        this.excluded = new Set(this.excluded);
+        // Notify HTMX to perform a new search request
+        window.document.body.dispatchEvent(new CustomEvent("filter-changed"));
+      },
+      reset() {
+        this.included = new Set();
+        this.excluded = new Set();
+        window.document.body.dispatchEvent(new CustomEvent("filter-changed"));
+      },
+      get count() {
+        return this.included.size + this.excluded.size;
+      },
+      isActive(id: number | string, mode: "plus" | "minus") {
+        const key = String(id);
+        return mode === "plus"
+          ? this.included.has(key)
+          : this.excluded.has(key);
+      },
+    };
+    const filtersStore: FiltersStore = {
+      status: statusFilterStore,
+    };
+    const search: SearchStore = {
+      query: "",
+      filters: filtersStore,
+    };
+    Alpine.store("search", search);
+  });
+</script>
