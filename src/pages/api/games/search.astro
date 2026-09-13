@@ -1,20 +1,10 @@
 ---
-import {
-  createSupabaseServerClient,
-  isSessionExpiredError,
-} from "../../../lib/createSupabaseServerClient";
 import GameCard from "../../../components/games/GameCard.astro";
 import InfiniteScrollSentinel from "../../../components/games/InfiniteScrollSentinel.astro";
 import type { GameDetails } from "../../../types";
 
-const dbClient = createSupabaseServerClient(Astro.request, Astro.cookies);
-
-const { data: userData, error: userError } = await dbClient.auth.getUser();
-let user = userData?.user ?? null;
-if (userError && isSessionExpiredError(userError)) {
-  await dbClient.auth.signOut({ scope: "local" });
-  user = null;
-}
+const dbClient = Astro.locals.supabase;
+const user = Astro.locals.user;
 
 // Extract search query and status filters
 const q = (Astro.url.searchParams.get("q") ?? "").trim();

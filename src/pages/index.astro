@@ -1,6 +1,5 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import { createSupabaseServerClient } from "../lib/createSupabaseServerClient";
 
 // If OAuth falls back to Site URL root with an auth code, forward to callback handler
 const code = Astro.url.searchParams.get("code");
@@ -12,7 +11,7 @@ if (code) {
   return Astro.redirect(callbackUrl.toString());
 }
 
-const dbClient = createSupabaseServerClient(Astro.request, Astro.cookies);
+const dbClient = Astro.locals.supabase;
 
 const { data: posts } = await dbClient
   .from("posts")
@@ -93,7 +92,7 @@ const latestPosts = posts ?? [];
             {latestPosts.length} recientes
           </span>
         </div>
-        <ul class="border-t border-(--knk-line) divide-y divide-(--knk-line)">
+        <ul class="border-t border-(--knk-line) divide-y">
           {latestPosts.length === 0 ? (
             <li class="py-8 text-sm text-(--knk-text-muted)">
               No hay publicaciones todavía.

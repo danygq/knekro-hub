@@ -25,9 +25,14 @@ export function createSupabaseServerClient(
           return parseCookieHeader(request.headers.get("Cookie") ?? "");
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            cookieStore.set(name, value, options),
-          );
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options),
+            );
+          } catch {
+            // The `setAll` method was called after response headers were already sent.
+            // Catching this prevents Astro from crashing with ResponseSentError.
+          }
         },
       },
     },
