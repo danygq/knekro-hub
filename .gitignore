@@ -14,3 +14,4 @@ package-lock.json
 *.log
 /.clinerules
 /.cursor
+/.agents
