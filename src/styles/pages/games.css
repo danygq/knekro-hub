@@ -18,8 +18,23 @@
     background: var(--knk-surface);
     border-right: 1px solid var(--knk-line);
     overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--knk-line-strong) transparent;
     transition: transform 250ms ease,
     visibility 250ms ease;
+}
+
+.knk-filter-panel::-webkit-scrollbar {
+    width: 6px;
+}
+
+.knk-filter-panel::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.knk-filter-panel::-webkit-scrollbar-thumb {
+    background-color: var(--knk-line-strong);
+    border-radius: 3px;
 }
 
 .knk-filter-panel:not(.open) {
@@ -74,10 +89,13 @@
 
     .knk-filter-panel,
     .knk-filter-panel:not(.open) {
-        position: static;
+        position: sticky;
+        top: calc(4rem + 1.5rem);
+        max-height: calc(100vh - 7rem);
+        overflow-y: auto;
         width: auto;
-        z-index: auto;
-        background: transparent;
+        z-index: 20;
+        background: var(--knk-surface);
         border: 1px solid var(--knk-line);
         transform: none;
         visibility: visible;
@@ -137,37 +155,77 @@
    .knk-vote-*.active above). */
 .knk-vote-1,
 .knk-vote-2 {
-    background: color-mix(in srgb, var(--knk-red-600) 15%, transparent) !important;
+    background: color-mix(
+            in srgb,
+            var(--knk-red-600) 15%,
+            transparent
+    ) !important;
     color: var(--knk-red-500) !important;
-    border-color: color-mix(in srgb, var(--knk-red-600) 30%, transparent) !important;
+    border-color: color-mix(
+            in srgb,
+            var(--knk-red-600) 30%,
+            transparent
+    ) !important;
 }
 
 .knk-vote-3,
 .knk-vote-4 {
-    background: color-mix(in srgb, var(--knk-orange-600) 15%, transparent) !important;
+    background: color-mix(
+            in srgb,
+            var(--knk-orange-600) 15%,
+            transparent
+    ) !important;
     color: var(--knk-orange-500) !important;
-    border-color: color-mix(in srgb, var(--knk-orange-600) 30%, transparent) !important;
+    border-color: color-mix(
+            in srgb,
+            var(--knk-orange-600) 30%,
+            transparent
+    ) !important;
 }
 
 .knk-vote-5,
 .knk-vote-6 {
-    background: color-mix(in srgb, var(--knk-amber-600) 15%, transparent) !important;
+    background: color-mix(
+            in srgb,
+            var(--knk-amber-600) 15%,
+            transparent
+    ) !important;
     color: var(--knk-amber-500) !important;
-    border-color: color-mix(in srgb, var(--knk-amber-600) 30%, transparent) !important;
+    border-color: color-mix(
+            in srgb,
+            var(--knk-amber-600) 30%,
+            transparent
+    ) !important;
 }
 
 .knk-vote-7,
 .knk-vote-8 {
-    background: color-mix(in srgb, var(--knk-green-600) 15%, transparent) !important;
+    background: color-mix(
+            in srgb,
+            var(--knk-green-600) 15%,
+            transparent
+    ) !important;
     color: var(--knk-green-500) !important;
-    border-color: color-mix(in srgb, var(--knk-green-600) 30%, transparent) !important;
+    border-color: color-mix(
+            in srgb,
+            var(--knk-green-600) 30%,
+            transparent
+    ) !important;
 }
 
 .knk-vote-9,
 .knk-vote-10 {
-    background: color-mix(in srgb, var(--knk-blue-600) 15%, transparent) !important;
+    background: color-mix(
+            in srgb,
+            var(--knk-blue-600) 15%,
+            transparent
+    ) !important;
     color: var(--knk-blue-500) !important;
-    border-color: color-mix(in srgb, var(--knk-blue-600) 30%, transparent) !important;
+    border-color: color-mix(
+            in srgb,
+            var(--knk-blue-600) 30%,
+            transparent
+    ) !important;
 }
 
 /* Neutral state for the avg badge when there is no vote data yet. */

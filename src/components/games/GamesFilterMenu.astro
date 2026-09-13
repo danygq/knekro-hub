@@ -22,7 +22,7 @@ const { gameStatuses } = Astro.props;
   :class="{ 'open': $store.games.layout.gamesFilterMenuOpen && !$store.games.layout.isDesktop, 'closed': !$store.games.layout.gamesFilterMenuOpen && $store.games.layout.isDesktop }"
   aria-label="Filtros por estado"
 >
-  <div class="flex items-center justify-between px-4 py-3 border-b border-(--knk-line) bg-(--knk-surface-2)">
+  <div class="sticky top-0 z-10 flex items-center justify-between px-4 py-3 border-b border-(--knk-line) bg-(--knk-surface-2)">
     <span class="font-(--font-display) text-sm tracking-tight">Filtros</span>
     <button
       type="button"
@@ -106,7 +106,7 @@ const { gameStatuses } = Astro.props;
             </span>
 
             <!-- Counter -->
-            <span class="w-5 text-right text-xs text-(--knk-text-faint) tabular-nums">
+            <span class="shrink-0 min-w-5 text-right text-xs text-(--knk-text-faint) tabular-nums">
               {status.games_with_this_status}
             </span>
 
