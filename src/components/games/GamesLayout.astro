@@ -4,6 +4,7 @@ import type { GameDetails, GameStatus } from "../../types";
 import GameCard from "./GameCard.astro";
 import { type User } from "@supabase/auth-js";
 import GameSearch from "./GameSearch.astro";
+import InfiniteScrollSentinel from "./InfiniteScrollSentinel.astro";
 
 interface Props {
   gameStatuses: GameStatus[];
@@ -107,6 +108,9 @@ const { gameStatuses, games, totalGames, user } = Astro.props;
             {games.map((game) => {
               return <GameCard game={game} loggedIn={!!user} />;
             })}
+            {totalGames > games.length && (
+              <InfiniteScrollSentinel offset={games.length} limit={24} />
+            )}
           </div>
 
           <p

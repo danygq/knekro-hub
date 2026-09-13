@@ -4,6 +4,7 @@ import {
   isSessionExpiredError,
 } from "../../../lib/createSupabaseServerClient";
 import GameCard from "../../../components/games/GameCard.astro";
+import InfiniteScrollSentinel from "../../../components/games/InfiniteScrollSentinel.astro";
 import type { GameDetails } from "../../../types";
 
 const dbClient = createSupabaseServerClient(Astro.request, Astro.cookies);
@@ -76,11 +77,13 @@ if (error) {
 }
 
 const rows = (data as GameDetails[] | null) ?? [];
-const visibleCount = rows.length;
 const total = matchingCount ?? 0;
+const visibleCount = Math.min(total, offset + rows.length);
 const hasActiveFilters =
   q !== "" || includedIds.length > 0 || excludedIds.length > 0;
 const noResults = hasActiveFilters && total === 0;
+const hasMore = offset + limit < total;
+const nextOffset = offset + limit;
 ---
 
 <span id="visible-count" hx-swap-oob="innerHTML">
@@ -100,3 +103,9 @@ const noResults = hasActiveFilters && total === 0;
 {rows.map((game) => (
   <GameCard game={game} loggedIn={!!user} />
 ))}
+{hasMore && <InfiniteScrollSentinel offset={nextOffset} limit={limit} />}
+{!hasMore && total > 0 && offset > 0 && (
+  <div class="w-full text-center py-6 text-xs text-(--knk-text-faint)">
+    Has llegado al final de la biblioteca
+  </div>
+)}

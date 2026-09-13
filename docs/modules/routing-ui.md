@@ -12,7 +12,7 @@ File-based routing (Astro). All pages wrap `layouts/Layout.astro`.
 ## Routes
 
 | Path                    | File                               | Renders                                                                                  | Data                                                                                                   |
-|-------------------------|------------------------------------|------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------|
+| ----------------------- | ---------------------------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
 | `/`                     | `pages/index.astro`                | Twitch player + chat embeds, YouTube slot, posts feed                                    | `posts` (server)                                                                                       |
 | `/games`                | `pages/games.astro`                | Status filter drawer (`GamesFilterMenu`) + name search (`GameSearch`) + games grid       | `game_status` + `games` via `lib/games.ts` (server); search & status filtering via `/api/games/search` |
 | `/goty`                 | `pages/goty.astro`                 | Awards intro + "coming soon" tier list                                                   | none (static)                                                                                          |
@@ -29,23 +29,25 @@ Referenced but **not present**: `/posts/[id]` (linked from home feed). Add when 
 
 ### `Layout.astro`
 
-Sticky header (logo, nav `Juegos`/`GOTY`, mobile dropdown menu with hamburger toggle, Twitch/Discord CTAs), active-nav via `Astro.url.pathname`,
+Sticky header (logo, nav `Juegos`/`GOTY`, mobile dropdown menu with hamburger toggle, Twitch/Discord CTAs), active-nav
+via `Astro.url.pathname`,
 session via SSR client `getUser()`, renders `UserMenu` or `LoginButton`. Fonts: Space Grotesk (display) + Inter (body),
 self-hosted from `public/fonts/` (see `src/styles/fonts.css`).
-Responsive mobile menu is powered by Alpine.js (`x-data="{ mobileMenuOpen: false }"`). `<main>` and `<footer>` reside within `<body>`.
+Responsive mobile menu is powered by Alpine.js (`x-data="{ mobileMenuOpen: false }"`). `<main>` and `<footer>` reside
+within `<body>`.
 
 ### `pages/games.astro`
 
 Main games library route. Performs initial SSR fetches:
 
 - `loadGameStatuses(dbClient)`: list of statuses with game counts.
-- `loadGames(dbClient, user?.id)`: initial set of games with community stats and user vote.
+- `loadGames(dbClient, user?.id)`: initial set of 24 games with community stats and user vote.
 - `loadTotalGamesCount(dbClient)`: total game count for counter headers.
 
 Initializes Alpine stores on `alpine:init`:
 
 - `games.layout`: `{ isDesktop, gamesFilterMenuOpen }`.
-- `search`: `{ query, filters: { status: statusFilterStore } }`.
+- `search`: `{ query, offset: 0, limit: 24, filters: { status: statusFilterStore }, resetOffset() }`.
 
 Renders `GamesLayout.astro` with fetched data.
 
@@ -54,61 +56,68 @@ Renders `GamesLayout.astro` with fetched data.
 ### Shell (`src/components/`)
 
 | Component           | Role                                                               |
-|---------------------|--------------------------------------------------------------------|
+| ------------------- | ------------------------------------------------------------------ |
 | `LoginButton.astro` | Form `POST /api/auth/signin`, Twitch-branded                       |
 | `UserMenu.astro`    | Avatar + display name (`user_metadata`) + `POST /api/auth/signout` |
 | `TwitchLogo.astro`  | Inline SVG mark                                                    |
 
 ### Games Library (`src/components/games/`)
 
-| Component                       | Role                                                                                                                                                                                             |
-|---------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `GamesLayout.astro`             | Main layout container. Manages drawer toggle button (with active filter count badge) and responsive classes (`filters-off`). Contains filter menu, search, and grid.                                                             |
-| `GamesFilterMenu.astro`         | Off-canvas/sidebar filter panel. Provides 3-state status filtering (include `+`, exclude `-`, neutral) per status plus "Todas" reset. Binds to `$store.search.filters.status` and dispatches `filter-changed` event.             |
-| `GameSearch.astro`              | Search input field with 300ms debounce, loading spinner (`.htmx-request`), and clear button. Triggers HTMX `GET /api/games/search` on input and `filter-changed` from body, serializing Alpine store values (`q`, `inc`, `exc`). |
-| `GameCard.astro`                | 2:3 card displaying cover, status, community votes, and personal vote. Owns Alpine local state (`x-data="{ open: false }"`) for toggling `VoteOverlay`.                                                                          |
-| `GameCover.astro`               | Cover image handler with fallback placeholder SVG when `cover_url` is missing.                                                                                                                                                   |
-| `GameStatusBadge.astro`         | Status badge pinned to top-left of the card cover.                                                                                                                                                                               |
-| `GameCommunityVotesBadge.astro` | Displays community vote average (formatted via `formatAvg`) and total vote count on the card.                                                                                                                                    |
-| `GameUserVoteBadge.astro`       | Highlights the current logged-in user's vote on the card.                                                                                                                                                                        |
-| `VoteOverlay.astro`             | Interactive popover overlay with 1–10 rating buttons for authenticated users.                                                                                                                                                    |
-| `VoteButton.astro`              | HTMX vote button posting to `/api/games/vote`. Replaces card with updated server response via `outerHTML`.                                                                                                                       |
+| Component                       | Role                                                                                                                                                                                                                                                       |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GamesLayout.astro`             | Main layout container. Manages drawer toggle button (with active filter count badge) and responsive classes (`filters-off`). Contains filter menu, search, and grid.                                                                                       |
+| `GamesFilterMenu.astro`         | Off-canvas/sidebar filter panel. Provides 3-state status filtering (include `+`, exclude `-`, neutral) per status plus "Todas" reset. Binds to `$store.search.filters.status` and dispatches `filter-changed` event.                                       |
+| `GameSearch.astro`              | Search input field with 300ms debounce, loading spinner (`.htmx-request`), and clear button. Triggers HTMX `GET /api/games/search` on input and `filter-changed` from body, serializing Alpine store values (`q`, `inc`, `exc`, `offset: 0`, `limit: 24`). |
+| `GameCard.astro`                | 2:3 card displaying cover, status, community votes, and personal vote. Owns Alpine local state (`x-data="{ open: false }"`) for toggling `VoteOverlay`.                                                                                                    |
+| `GameCover.astro`               | Cover image handler with fallback placeholder SVG when `cover_url` is missing.                                                                                                                                                                             |
+| `GameStatusBadge.astro`         | Status badge pinned to top-left of the card cover.                                                                                                                                                                                                         |
+| `GameCommunityVotesBadge.astro` | Displays community vote average (formatted via `formatAvg`) and total vote count on the card.                                                                                                                                                              |
+| `GameUserVoteBadge.astro`       | Highlights the current logged-in user's vote on the card.                                                                                                                                                                                                  |
+| `VoteOverlay.astro`             | Interactive popover overlay with 1–10 rating buttons for authenticated users.                                                                                                                                                                              |
+| `VoteButton.astro`              | HTMX vote button posting to `/api/games/vote`. Replaces card with updated server response via `outerHTML`.                                                                                                                                                 |
+| `InfiniteScrollSentinel.astro`  | Infinite scroll sentinel trigger rendered at grid bottom when more games exist. Triggers HTMX `GET /api/games/search` on `revealed` and swaps `outerHTML` with next batch of cards + next sentinel.                                                        |
 
 ## Progressive Interactivity & State Architecture
 
 Interactivity on `/games` follows a unified Alpine + HTMX pattern:
 
 ```
-[GamesFilterMenu]                  [GameSearch]
-       │                                │
-  toggle status                    type query
-       │                                │
-updates $store.search            updates $store.search.query
-       │                                │
-dispatches 'filter-changed' ───────────►│
-                                   HTMX triggers hx-get="/api/games/search"
-                                   hx-vals bundles { q, inc, exc }
-                                        │
-                                        ▼
-                           GET /api/games/search.astro
-                                        │
-                         Server filters via Supabase
-                                        │
-                    ┌───────────────────┴───────────────────┐
-                    ▼                                       ▼
-        HTML cards swapped into #games-grid     OOB swaps for counts & empty state
+[GamesFilterMenu]                  [GameSearch]                    [InfiniteScrollSentinel]
+       │                                │                                    │
+  toggle status                    type query                           scroll near bottom
+       │                                │                                    │
+resets $store.search.offset = 0    resets $store.search.offset = 0           fires revealed event
+       │                                │                                    │
+dispatches 'filter-changed' ───────────►│                                    │
+                                   HTMX hx-get="/api/games/search"           HTMX hx-get="/api/games/search"
+                                   offset=0, limit=24                        offset=24, 48..., limit=24
+                                   hx-swap="innerHTML" on #games-grid        hx-swap="outerHTML" on sentinel
+                                        │                                    │
+                                        └─────────────────┬──────────────────┘
+                                                          ▼
+                                             GET /api/games/search.astro
+                                                          │
+                                            Server filters & pages via Supabase
+                                                          │
+                    ┌─────────────────────────────────────┴─────────────────────────────────────┐
+                    ▼                                                                           ▼
+        HTML cards + next sentinel swapped into grid                                OOB swaps for counts & empty state
 ```
 
-- **Alpine.js**: Manages purely client-side UI states (`$store.games.layout`, `$store.search`, and card overlay `open`).
+- **Alpine.js**: Manages purely client-side UI states (`$store.games.layout`, `$store.search` with pagination offset
+  tracking & reset, and card overlay `open`).
 - **HTMX**: Handles all server interactions (`/api/games/search` and `/api/games/vote`), rendering and swapping server
   components directly into the DOM without client-side JSON reconstruction.
+- **Infinite Scrolling**: Batches games in chunks of 24. Subsequent batches advance the offset by 24 (`24`, `48`,
+  `72`...). Searching or filtering immediately invokes `resetOffset()` to reset the offset to 0 and replace the grid
+  from the beginning.
 
 ## Theming (`src/styles/`)
 
 All CSS lives in one folder, split by responsibility. Tailwind v4 via `@tailwindcss/vite`; **no config file**.
 
 | File              | Contents                                                                                                     | Loaded by                       |
-|-------------------|--------------------------------------------------------------------------------------------------------------|---------------------------------|
+| ----------------- | ------------------------------------------------------------------------------------------------------------ | ------------------------------- |
 | `global.css`      | entry: `@import "tailwindcss"` + tokens/base/utilities                                                       | Layout (all pages)              |
 | `tokens.css`      | `--knk-*` CSS vars on `:root`                                                                                | via `global.css`                |
 | `base.css`        | `body`, `::selection`, focus ring, reduced-motion, and `[x-cloak]` (`display: none !important`)              | via `global.css`                |
