@@ -1,14 +1,8 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import { createDbClient } from "../lib/db-client";
-
-const dbClient = createDbClient(Astro.request, Astro.cookies);
-const {
-  data: { user },
-} = await dbClient.auth.getUser().catch(() => ({ data: { user: null } }));
 ---
 
-<Layout user={user}>
+<Layout>
   <div class="mb-8">
     <p class="knk-eyebrow mb-2">Lo mejor del año</p>
     <h1 class="font-(--font-display) text-3xl sm:text-4xl tracking-tight text-balance">

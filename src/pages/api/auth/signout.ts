@@ -1,9 +1,9 @@
-import { createDbClient } from "../../../lib/db-client";
+import { createSupabaseServerClient } from "../../../lib/createSupabaseServerClient";
 import type { APIRoute } from "astro";
 
 export const POST: APIRoute = async ({ request, cookies, redirect }) => {
-  const dbClient = createDbClient(request, cookies);
+  const supabase = createSupabaseServerClient(request, cookies);
 
-  await dbClient.auth.signOut();
+  await supabase.auth.signOut();
   return redirect("/");
 };

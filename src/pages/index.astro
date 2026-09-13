@@ -1,13 +1,20 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import { createDbClient } from "../lib/db-client";
+import { createSupabaseServerClient } from "../lib/createSupabaseServerClient";
 
-const dbClient = createDbClient(Astro.request, Astro.cookies);
-const {
-  data: { user },
-} = await dbClient.auth.getUser().catch(() => ({ data: { user: null } }));
+// If OAuth falls back to Site URL root with an auth code, forward to callback handler
+const code = Astro.url.searchParams.get("code");
+if (code) {
+  const callbackUrl = new URL("/auth/callback", Astro.url);
+  callbackUrl.searchParams.set("code", code);
+  const next = Astro.url.searchParams.get("next");
+  if (next) callbackUrl.searchParams.set("next", next);
+  return Astro.redirect(callbackUrl.toString());
+}
 
-const { data: posts, error } = await dbClient
+const dbClient = createSupabaseServerClient(Astro.request, Astro.cookies);
+
+const { data: posts } = await dbClient
   .from("posts")
   .select("id,title,excerpt,created_at")
   .order("created_at", { ascending: false })
@@ -16,7 +23,7 @@ const { data: posts, error } = await dbClient
 const latestPosts = posts ?? [];
 ---
 
-<Layout user={user}>
+<Layout>
   <div class="mb-8">
     <p class="knk-eyebrow mb-2">Directo desde Twitch</p>
   </div>

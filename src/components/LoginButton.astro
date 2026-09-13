@@ -1,8 +1,17 @@
 ---
 import TwitchLogo from "./TwitchLogo.astro";
+
+interface Props {
+  next?: string;
+}
+
+const defaultNext =
+  Astro.url.pathname === "/auth/session-expired" ? "/" : Astro.url.pathname;
+const { next = defaultNext } = Astro.props;
 ---
 
-<form action="/api/auth/signin" method="POST">
+<form action="/api/auth/signin" method="POST" data-login-form>
+  <input type="hidden" name="next" value={next} data-login-next />
   <button
     type="submit"
     class="knk-notch inline-flex items-center gap-2 px-4 py-2 text-sm font-medium
@@ -13,3 +22,25 @@ import TwitchLogo from "./TwitchLogo.astro";
     <span class="sm:hidden">Iniciar sesión</span>
   </button>
 </form>
+
+<script>
+  document.addEventListener("submit", (event) => {
+    const form = (event.target as HTMLElement)?.closest<HTMLFormElement>(
+      "form[data-login-form]",
+    );
+    if (!form) return;
+    const nextInput = form.querySelector<HTMLInputElement>(
+      "input[data-login-next]",
+    );
+    if (nextInput && typeof window !== "undefined") {
+      const pathname = window.location.pathname;
+      if (
+        pathname &&
+        pathname !== "/auth/session-expired" &&
+        (!nextInput.value || nextInput.value === "/")
+      ) {
+        nextInput.value = pathname;
+      }
+    }
+  });
+</script>

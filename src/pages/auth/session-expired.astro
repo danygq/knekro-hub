@@ -1,0 +1,73 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import LoginButton from "../../components/LoginButton.astro";
+
+const nextParam = Astro.url.searchParams.get("next") ?? "/";
+const safeNext =
+  nextParam.startsWith("/") &&
+  !nextParam.startsWith("//") &&
+  !nextParam.startsWith("/\\") &&
+  !nextParam.startsWith("/auth/session-expired")
+    ? nextParam
+    : "/";
+---
+
+<Layout user={null}>
+  <div class="max-w-md mx-auto my-16 px-4">
+    <div
+      class="relative border border-(--knk-line) bg-(--knk-surface) p-8 text-center knk-notch"
+    >
+      <span
+        class="pointer-events-none absolute -top-px -left-px w-4 h-4 border-t-2 border-l-2 border-(--knk-amber)"
+      ></span>
+      <span
+        class="pointer-events-none absolute -top-px -right-px w-4 h-4 border-t-2 border-r-2 border-(--knk-amber)"
+      ></span>
+      <span
+        class="pointer-events-none absolute -bottom-px -left-px w-4 h-4 border-b-2 border-l-2 border-(--knk-amber)"
+      ></span>
+      <span
+        class="pointer-events-none absolute -bottom-px -right-px w-4 h-4 border-b-2 border-r-2 border-(--knk-amber)"
+      ></span>
+
+      <div
+        class="w-12 h-12 mx-auto mb-5 flex items-center justify-center rounded-full bg-(--knk-surface-2) border border-(--knk-line-strong) text-(--knk-amber)"
+      >
+        <svg
+          class="w-6 h-6"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+      </div>
+
+      <h1
+        class="font-(--font-display) text-2xl font-bold tracking-tight text-(--knk-text) mb-3"
+      >
+        Sesión expirada
+      </h1>
+
+      <p class="text-sm text-(--knk-text-muted) mb-6 leading-relaxed">
+        Tu sesión ha expirado. Por favor, inicia sesión de nuevo.
+      </p>
+
+      <div class="flex flex-col items-center gap-4">
+        <LoginButton next={safeNext} />
+        <a
+          href="/"
+          class="text-xs text-(--knk-text-muted) hover:text-(--knk-text) transition-colors"
+        >
+          Volver al inicio
+        </a>
+      </div>
+    </div>
+  </div>
+</Layout>
