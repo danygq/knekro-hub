@@ -1,6 +1,6 @@
 // TypeScript types used across the app.
-// Barrel re-exporting the per-domain type files. Import from "../types"
-// as before, or reach into a specific domain file (e.g. "../types/games").
+// Barrel re-exporting the per-domain type files. Import from "@/types"
+// or reach into a specific domain file (e.g. "@/types/games").
 
 export * from "./games";
 export * from "./categories";

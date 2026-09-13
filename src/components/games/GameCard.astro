@@ -1,8 +1,8 @@
 ---
 import Image from "astro/components/Image.astro";
 import VoteOverlay from "./VoteOverlay.astro";
-import { formatAvg } from "../../lib/games.ts";
-import type { GameDetails } from "../../types";
+import { formatAvg } from "@/lib/games.ts";
+import type { GameDetails } from "@/types";
 import GameStatusBadge from "./GameStatusBadge.astro";
 import GameUserVoteBadge from "./GameUserVoteBadge.astro";
 import GameCommunityVotesBadge from "./GameCommunityVotesBadge.astro";
@@ -34,8 +34,7 @@ const userVote = game.user_vote?.[0]?.vote;
     class=`relative aspect-2/3 bg-(--knk-surface-2) knk-grid-bg overflow-hidden${loggedIn ? " cursor-pointer" : ""}`
     @click.stop={loggedIn ? "open = !open" : undefined}
   >
-    {coverUrl ? (
-      <Image
+    {coverUrl ? (\n      <Image
         src={coverUrl}
         alt={name + " cover"}
         priority

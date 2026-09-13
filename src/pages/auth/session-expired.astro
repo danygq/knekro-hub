@@ -1,6 +1,6 @@
 ---
-import Layout from "../../layouts/Layout.astro";
-import LoginButton from "../../components/LoginButton.astro";
+import Layout from "@/layouts/Layout.astro";
+import LoginButton from "@/components/LoginButton.astro";
 
 const nextParam = Astro.url.searchParams.get("next") ?? "/";
 const safeNext =

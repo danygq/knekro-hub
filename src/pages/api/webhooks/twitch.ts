@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
-import { verifyTwitchSignature } from "../../../lib/twitch/verify-signature";
-import { createSupabaseAdminClient } from "../../../lib/supabase-admin";
+import { verifyTwitchSignature } from "@/lib/twitch/verify-signature";
+import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 
 export const prerender = false;
 

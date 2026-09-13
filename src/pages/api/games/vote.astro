@@ -1,6 +1,6 @@
 ---
-import { loadGameById } from "../../../lib/games";
-import GameCard from "../../../components/games/GameCard.astro";
+import { loadGameById } from "@/lib/games";
+import GameCard from "@/components/games/GameCard.astro";
 
 // DB-first vote endpoint: upserts the user's vote (or clears it on a re-click),
 // then re-queries the game by id and returns a server-rendered <GameCard>.
