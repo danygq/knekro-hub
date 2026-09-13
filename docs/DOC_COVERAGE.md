@@ -1,18 +1,19 @@
 ---
 module: doc-coverage
 owner_area: repo-wide
-last_verified_against_commit: fc4b86e
+last_verified_against_commit: 0d27f3f
 depends_on: []
 ---
 
 # Doc coverage
 
-Cross-checked against source at commit `fc4b86e`.
+Cross-checked against source at commit `0d27f3f`.
 
 | Area                          | Documented? | Doc file                     | Confidence                            |
 |-------------------------------|-------------|------------------------------|---------------------------------------|
 | System architecture           | Yes         | `ARCHITECTURE.md`            | verified                              |
 | Agent onboarding/conventions  | Yes         | `AGENTS.md`                  | verified                              |
+| Protocol: issues, git & PRs   | Yes         | `docs/AGENT_PROTOCOL.md`     | verified                              |
 | Routing + pages               | Yes         | `docs/modules/routing-ui.md` | verified                              |
 | Layout / components / theming | Yes         | `docs/modules/routing-ui.md` | verified                              |
 | Auth (Twitch OAuth, SSR)      | Yes         | `docs/modules/auth.md`       | verified                              |

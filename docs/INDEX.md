@@ -1,7 +1,7 @@
 ---
 module: index
 owner_area: repo-wide
-last_verified_against_commit: fc4b86e
+last_verified_against_commit: 0d27f3f
 depends_on: []
 ---
 
@@ -26,7 +26,7 @@ Token-optimized docs for `knekro-hub`. Load only what you need — each file is 
 - [`QUERY_OPTIMIZATION.md`](QUERY_OPTIMIZATION.md) — Postgres/PostgREST select + join + index rules.
 - [`GOTY.md`](GOTY.md) — awards section design (extensible, not yet built).
 - [`GLOSSARY.md`](GLOSSARY.md) — domain terms.
-- [`AGENT_PROTOCOL.md`](AGENT_PROTOCOL.md) — issue creation & execution protocol (model-agnostic).
+- [`AGENT_PROTOCOL.md`](AGENT_PROTOCOL.md) — issue creation, branching, commits, PRs & execution protocol.
 
 ## Decisions & meta
 

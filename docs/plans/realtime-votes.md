@@ -87,5 +87,5 @@ network activity (both show in DevTools).
 
 1. Open `/games` in two browsers → vote in one, see the other update in ~100ms
 2. Check Supabase Dashboard → Realtime reports for connection count
-3. `npm run build` to confirm no build errors
+3. `pnpm run build` to confirm no build errors
 4. Test clearing a vote, rapid voting, and page navigation

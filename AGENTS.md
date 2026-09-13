@@ -1,7 +1,7 @@
 ---
 module: agent-onboarding
 owner_area: repo-wide
-last_verified_against_commit: d133614
+last_verified_against_commit: 0d27f3f
 depends_on: [ ARCHITECTURE.md, docs/INDEX.md ]
 ---
 
@@ -34,16 +34,19 @@ inquiries:
 - **Never `select("*")` in Supabase queries.** Name columns. See `docs/QUERY_OPTIMIZATION.md` — this is a hard project
   requirement.
 - **Never commit secrets.** Only `PUBLIC_*` keys are client-safe. Service role key is server-only.
-- **Branch/commit naming:** use `docs/…`, `feat/…`, `fix/…`. **Do not use `v0/…`.**
+- **Branch/commit naming:** use `docs/…`, `feat/…`, `fix/…`. **Do not use `v0/…`.** Follow conventions in [
+  `docs/AGENT_PROTOCOL.md`](docs/AGENT_PROTOCOL.md).
 - **No new deps without reason.** Check `package.json` first; the stack is deliberately small.
 - **Don't hallucinate schema.** `posts` and `game_status` are confirmed; `games` is now queried by `/games` (see
   `docs/modules/data-layer.md`) but its schema is still unconfirmed. Anything else is inferred — verify against Supabase
   before relying on it. Mark unknowns "unclear — needs confirmation".
 
-## Issue workflow
+## Development workflow
 
-Follow the model-agnostic protocol in [`docs/AGENT_PROTOCOL.md`](docs/AGENT_PROTOCOL.md) when creating or executing
-issues. Apply a level of rigor proportional to the task's complexity; complex features require thorough architectural
+Follow the model-agnostic protocol in [`docs/AGENT_PROTOCOL.md`](docs/AGENT_PROTOCOL.md) when creating issues, naming
+branches, writing commit messages, opening pull requests, and executing tasks. Remember: strictly no checkboxes on
+issues or PRs (use clean bullet points), and issues must always include concrete technical implementation details.
+Apply a level of rigor proportional to the task's complexity; complex features require thorough architectural
 assessment, while simple fixes can be implemented directly.
 
 ## Conventions
@@ -67,10 +70,10 @@ assessment, while simple fixes can be implemented directly.
 ## Run / verify
 
 ```bash
-npm install
-npm run dev      # astro dev
-npm run build    # astro build (SSR, vercel adapter)
-npm run preview
+pnpm install
+pnpm run dev      # astro dev
+pnpm run build    # astro build (SSR, vercel adapter)
+pnpm run preview
 ```
 
 No test suite exists. Verify changes by building + loading the affected route.
@@ -79,15 +82,15 @@ No test suite exists. Verify changes by building + loading the affected route.
 
 Docs are snapshots pinned to `last_verified_against_commit` (see `docs/DOC_COVERAGE.md`). Keep them in sync:
 
-- [ ] Did the change touch a documented area? (routes/pages, `Layout`, components, theming/`src/styles`, Supabase
-  clients/env,
-  auth flow, DB tables/queries, or new libs/modules) → check the matching file in `docs/` + `ARCHITECTURE.md` +
+- Did the change touch a documented area? (routes/pages, `Layout`, components, theming/`src/styles`, Supabase
+  clients/env, auth flow, DB tables/queries, or new libs/modules) → check the matching file in `docs/` +
+  `ARCHITECTURE.md` +
   `AGENTS.md`.
-- [ ] If yes: update the doc + **propose a `docs/…` branch** with the suggested changes; don't silently ship doc drift.
-- [ ] Bump `last_verified_against_commit` in any doc you re-verify to the current `HEAD` commit hash.
-- [ ] If the change was small/self-contained, include the doc edit in the same branch; otherwise split `docs/…` from the
+- If yes: update the doc + **propose a `docs/…` branch** with the suggested changes; don't silently ship doc drift.
+- Bump `last_verified_against_commit` in any doc you re-verify to the current `HEAD` commit hash.
+- If the change was small/self-contained, include the doc edit in the same branch; otherwise split `docs/…` from the
   feature branch.
-- [ ] Never claim a schema/table as confirmed unless it appears in live queries (rule: don't hallucinate schema).
+- Never claim a schema/table as confirmed unless it appears in live queries (rule: don't hallucinate schema).
 
 ## Open work (status)
 
