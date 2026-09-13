@@ -1,8 +1,8 @@
 ---
-import GamesLayout from "../components/games/GamesLayout.astro";
-import Layout from "../layouts/Layout.astro";
-import { loadGameStatuses, loadGames, loadTotalGamesCount } from "../lib/games";
-import "../styles/pages/games.css";
+import GamesLayout from "@/components/games/GamesLayout.astro";
+import Layout from "@/layouts/Layout.astro";
+import { loadGameStatuses, loadGames, loadTotalGamesCount } from "@/lib/games";
+import "@/styles/pages/games.css";
 import type { User } from "@supabase/auth-js";
 
 const dbClient = Astro.locals.supabase;

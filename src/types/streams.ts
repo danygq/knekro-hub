@@ -1,16 +1,23 @@
-// Stream log domain types (home "Directo desde Twitch" section; table not yet built).
+// Stream domain types (home "Directo desde Twitch" section).
 
 import type { Category } from "./categories";
 
+export interface Stream {
+  id: number;
+  created_at: string;
+  started_at: string | null;
+  ended_at: string | null;
+}
+
 export interface StreamLog {
-  id: number; // UUID or provider ID
+  id: number;
   title: string;
-  started_at: string; // ISO timestamp
-  ended_at?: string; // ISO timestamp, undefined if live
+  started_at: string;
+  ended_at?: string;
   is_live: boolean;
   duration_seconds?: number;
-  categories: Category[]; // list of categories for the stream (always present, can be empty)
-  vod_url?: string; // Twitch VOD
-  youtube_url?: string; // optional YouTube upload
+  categories: Category[];
+  vod_url?: string;
+  youtube_url?: string;
   notes?: string;
 }

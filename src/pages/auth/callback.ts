@@ -1,4 +1,4 @@
-import { createSupabaseServerClient } from "../../lib/createSupabaseServerClient";
+import { createSupabaseServerClient } from "@/lib/createSupabaseServerClient";
 import { type APIRoute } from "astro";
 
 export const GET: APIRoute = async ({ request, cookies, redirect }) => {

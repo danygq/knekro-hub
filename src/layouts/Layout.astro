@@ -1,9 +1,9 @@
 ---
 // Layout.astro
-import "../styles/global.css";
+import "@/styles/global.css";
 import type { User } from "@supabase/supabase-js";
-import LoginButton from "../components/LoginButton.astro";
-import UserMenu from "../components/UserMenu.astro";
+import LoginButton from "@/components/LoginButton.astro";
+import UserMenu from "@/components/UserMenu.astro";
 
 interface Props {
   user?: User | null;
