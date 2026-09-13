@@ -1,20 +1,31 @@
 ---
 module: agent-onboarding
 owner_area: repo-wide
-last_verified_against_commit: 3b1304b
+last_verified_against_commit: d133614
 depends_on: [ ARCHITECTURE.md, docs/INDEX.md ]
 ---
 
 # AGENTS.md — read this first
 
-Onboarding contract for any AI agent working in `knekro-hub`. Load this + `ARCHITECTURE.md` before editing. For deep
-dives, grep `docs/` front-matter (`module`, `depends_on`) and pull only the 1–2 files you need — do not load the whole
-doc set.
+Onboarding contract for any AI agent working in `knekro-hub`. Load this + `ARCHITECTURE.md` before editing. Always
+review the [`.agents/skills/`](.agents/skills/) directory (e.g. [`agentmemory.md`](.agents/skills/agentmemory.md)) for
+local protocols and tools whenever handling inquiries or tasks. For deep dives, grep `docs/` front-matter (`module`,
+`depends_on`) and pull only the 1–2 files you need — do not load the whole doc set.
 
 ## What this repo is
 
 Astro SSR site (a "hub") for the Twitch streamer **Knekro**: a library of games played on stream + a separate **GOTY**
 awards section. Supabase = data + auth. Vercel = deploy. See `ARCHITECTURE.md`.
+
+## Agent Skills & Local Protocols (`.agents/skills/`)
+
+Always inspect the [`.agents/skills/`](.agents/skills/) folder before executing tasks or responding to repository
+inquiries:
+
+- **[`agentmemory.md`](.agents/skills/agentmemory.md)**: Lifecycle skill for token-efficient memory using the
+  `agentmemory` MCP server. Always perform `memory_recall` at task/session start and persist learnings/decisions with
+  `memory_save` or `memory_lesson_save` upon completion.
+- Review and apply any other task-specific skills located in `.agents/skills/`.
 
 ## Golden rules
 
