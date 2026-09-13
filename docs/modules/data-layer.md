@@ -2,7 +2,7 @@
 module: data-layer
 owner_area: backend
 last_verified_against_commit: fc4b86e
-depends_on: [ ]
+depends_on: []
 ---
 
 # Data layer
@@ -119,7 +119,7 @@ update on games_user_votes
 ## Clients
 
 | Client                 | File               | Key                               | Use                                                                |
-|------------------------|--------------------|-----------------------------------|--------------------------------------------------------------------|
+| ---------------------- | ------------------ | --------------------------------- | ------------------------------------------------------------------ |
 | Per-request SSR client | `lib/db-client.ts` | `PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Auth + data queries + vote writes in page frontmatter & API routes |
 
 The SSR client is created per request (not shared) so each call carries the user's cookies/JWT. It is now also used for
@@ -141,7 +141,7 @@ Supabase/Vercel docs but are **not referenced anywhere in `src/`** — unclear, 
 ## Tables — CONFIRMED (schema above)
 
 | Table              | Columns                                                                 | Where                                                                                                                   |
-|--------------------|-------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------|
+| ------------------ | ----------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
 | `game_status`      | `id, name, created_at, games_with_this_status`                          | `lib/games.ts` → `pages/games.astro` (order `id`) → `GamesFilterMenu.astro`                                             |
 | `games`            | `id, created_at, name, game_status_id, cover_url, avg_vote, vote_count` | `lib/games.ts` (`loadGames`, `loadGameById`, `loadTotalGamesCount`) · `api/games/search.astro` · `api/games/vote.astro` |
 | `games_user_votes` | `id, created_at, user_id, game_id, vote`                                | `lib/games.ts` (user votes) · `api/games/vote.astro` (upsert)                                                           |
@@ -196,15 +196,15 @@ the grid plus out-of-band (`hx-swap-oob`) swaps for the `#visible-count`, `#tota
 elements, so a single request updates the entire catalog state.
 
 - Params:
-    - `q`: name substring, case-insensitive `ilike`.
-    - `inc`: comma-separated status IDs to include (`game_status_id in (...)`).
-    - `exc`: comma-separated status IDs to exclude (`game_status_id not in (...)`).
-    - `offset`: numeric offset (default 0).
-    - `limit`: page size (capped at 48, default 24).
+  - `q`: name substring, case-insensitive `ilike`.
+  - `inc`: comma-separated status IDs to include (`game_status_id in (...)`).
+  - `exc`: comma-separated status IDs to exclude (`game_status_id not in (...)`).
+  - `offset`: numeric offset (default 0).
+  - `limit`: page size (capped at 48, default 24).
 - Query filtering logic: `applyFilters` helper applies both search text matching (`ilike`) and status constraints
   (`in` / `not in`) to:
-    1. `countQuery`: exact count head query for matching total.
-    2. `query`: ordered and paginated rows query.
+  1. `countQuery`: exact count head query for matching total.
+  2. `query`: ordered and paginated rows query.
 - Selects the same projection as `loadGames` plus `user_vote` when the user is logged in (so search results show the
   user's existing vote).
 - Accent-insensitive matching ("pokemon" → "Pokémon") is **not** implemented — it needs the Postgres `unaccent`

@@ -37,9 +37,11 @@ sequenceDiagram
 ## Session read & Error handling
 
 `Layout.astro` (or page frontmatter when `user` is needed for data queries like `games.astro`) creates a per-request SSR client via:
+
 ```ts
-createSupabaseServerClient(Astro.request, Astro.cookies)
+createSupabaseServerClient(Astro.request, Astro.cookies);
 ```
+
 and calls `getUser()`.
 
 1. **Active session**: returns `{ data: { user } }`, used to display `UserMenu`.

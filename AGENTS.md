@@ -2,7 +2,7 @@
 module: agent-onboarding
 owner_area: repo-wide
 last_verified_against_commit: 0d27f3f
-depends_on: [ ARCHITECTURE.md, docs/INDEX.md ]
+depends_on: [ARCHITECTURE.md, docs/INDEX.md]
 ---
 
 # AGENTS.md — read this first
@@ -52,7 +52,7 @@ assessment, while simple fixes can be implemented directly.
 ## Conventions
 
 | Topic      | Rule                                                                                                                                                                                                      |
-|------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Language   | TypeScript, `.astro` components                                                                                                                                                                           |
 | Imports    | Relative paths (no tsconfig/aliases)                                                                                                                                                                      |
 | Styling    | Tailwind v4 utilities + all CSS in `src/styles/` (single folder: `global.css` entry importing `tokens.css`/`base.css`/`utilities.css`; per-page files in `src/styles/pages/*.css`). No `tailwind.config`. |

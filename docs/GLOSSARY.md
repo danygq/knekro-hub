@@ -8,7 +8,7 @@ depends_on: []
 # Glossary
 
 | Term          | Meaning                                                                  |
-|---------------|--------------------------------------------------------------------------|
+| ------------- | ------------------------------------------------------------------------ |
 | Knekro        | Twitch streamer; the site's subject and brand                            |
 | Hub           | This site — aggregates stream, games library, awards                     |
 | GOTY          | Awards section: Game of the Year + other yearly tracks                   |

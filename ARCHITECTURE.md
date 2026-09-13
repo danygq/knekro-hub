@@ -2,7 +2,7 @@
 module: architecture
 owner_area: repo-wide
 last_verified_against_commit: fc4b86e
-depends_on: [ AGENTS.md, docs/INDEX.md ]
+depends_on: [AGENTS.md, docs/INDEX.md]
 ---
 
 # Architecture
@@ -39,7 +39,7 @@ flowchart TD
 ## Modules
 
 | Module                         | Responsibility                                                                                                                                                                          | Depends on                                          | Depended on by                                                 |
-|--------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------|----------------------------------------------------------------|
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- | -------------------------------------------------------------- |
 | `layouts/Layout.astro`         | Shell: head, nav, footer, auth UI switch                                                                                                                                                | `LoginButton`, `UserMenu`, `styles/`                | all pages                                                      |
 | `pages/index.astro`            | Home: Twitch player+chat embeds, posts feed                                                                                                                                             | `lib/db-client`, Layout                             | —                                                              |
 | `pages/games.astro`            | Games library page: SSR loaders (`loadGameStatuses`, `loadGames`, `loadTotalGamesCount`), Alpine store init (`games.layout`, `search`), renders `GamesLayout`                           | `lib/db-client`, `lib/games`, `GamesLayout`, Layout | —                                                              |
@@ -77,27 +77,27 @@ flowchart TD
 - **HTMX + Alpine for `/games` progressive interactivity**: The games library combines Alpine for reactive client UI
   state
   with HTMX for server round-trips and HTML fragment swapping:
-    - **Alpine stores & local state**:
-        - `$store.games.layout`: tracks responsive viewport (`isDesktop`) and filter drawer visibility
-          (`gamesFilterMenuOpen`).
-        - `$store.search`: tracks input query (`query`) and status filter sets (`filters.status.included` and
-          `filters.status.excluded`).
-        - `GamesFilterMenu.astro` modifies status sets via `toggle(id, mode)` or `reset()`, then dispatches a
-          `filter-changed` event to `document.body`.
-        - `GameCard.astro` manages local popover state (`open`) for the `VoteOverlay`.
-    - **HTMX communication**:
-        - `GameSearch.astro` listens for input changes (debounced 300ms) and `filter-changed from:body`, bundling
-          `$store.search.query`, `inc`, and `exc` sets into query parameters via `hx-vals="js:..."`.
-        - `GET /api/games/search.astro` filters rows server-side via Supabase and returns server-rendered `<GameCard>`
-          components, simultaneously updating `#visible-count`, `#total-count`, and `#filter-no-results` via out-of-band
-          swaps (`hx-swap-oob`).
-        - `VoteButton.astro` submits votes via `POST /api/games/vote` with outerHTML swapping of the updated card.
+  - **Alpine stores & local state**:
+    - `$store.games.layout`: tracks responsive viewport (`isDesktop`) and filter drawer visibility
+      (`gamesFilterMenuOpen`).
+    - `$store.search`: tracks input query (`query`) and status filter sets (`filters.status.included` and
+      `filters.status.excluded`).
+    - `GamesFilterMenu.astro` modifies status sets via `toggle(id, mode)` or `reset()`, then dispatches a
+      `filter-changed` event to `document.body`.
+    - `GameCard.astro` manages local popover state (`open`) for the `VoteOverlay`.
+  - **HTMX communication**:
+    - `GameSearch.astro` listens for input changes (debounced 300ms) and `filter-changed from:body`, bundling
+      `$store.search.query`, `inc`, and `exc` sets into query parameters via `hx-vals="js:..."`.
+    - `GET /api/games/search.astro` filters rows server-side via Supabase and returns server-rendered `<GameCard>`
+      components, simultaneously updating `#visible-count`, `#total-count`, and `#filter-no-results` via out-of-band
+      swaps (`hx-swap-oob`).
+    - `VoteButton.astro` submits votes via `POST /api/games/vote` with outerHTML swapping of the updated card.
 - **Tailwind v4 token-only theming**: no config file; all theme lives in `src/styles/tokens.css` as `--knk-*` vars.
 
 ## Risks / tech debt (by blast radius)
 
 | Rank | Issue                                                                                                               | Impact                              |
-|------|---------------------------------------------------------------------------------------------------------------------|-------------------------------------|
+| ---- | ------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
 | 1    | `/games` queries `games` (`id, name, cover_url`, FK `game_status_id`); cards are not links (no `/games/[id]` route) | Feature incomplete                  |
 | 2    | `Layout.astro` places `<main>`/`<footer>` outside `</body></html>`                                                  | Invalid HTML structure; fix markup  |
 | 3    | `posts` table queried but no TS type; `goty` unwired                                                                | Type safety gap; incomplete feature |

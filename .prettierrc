@@ -20,9 +20,7 @@
   "tabWidth": 2,
   "useTabs": false,
   "embeddedLanguageFormatting": "auto",
-  "plugins": [
-    "prettier-plugin-astro"
-  ],
+  "plugins": ["prettier-plugin-astro"],
   "overrides": [
     {
       "files": "*.astro",

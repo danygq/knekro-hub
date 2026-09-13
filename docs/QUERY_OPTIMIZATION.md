@@ -15,7 +15,7 @@ Hard requirement for this repo: every read is column-scoped, join-aware, and ind
 1. **Never `select("*")`.** Name exactly the columns the view uses. The `/games` loader in `lib/games.ts` is the
    reference implementation — match its shape.
 2. **Join via PostgREST embedding, never N+1.** One request pulls related rows through FKs.
-3. **Every filter/order/join column must be indexed** (FK columns are *not* auto-indexed in Postgres — add them).
+3. **Every filter/order/join column must be indexed** (FK columns are _not_ auto-indexed in Postgres — add them).
 4. **Bound every list** with `.limit()` or `.range()`. No unbounded reads.
 5. **Order by an indexed column;** prefer keyset over large `OFFSET`.
 6. `count:'exact'` only when the number is displayed — it costs a full scan; prefer `'planned'`/`'estimated'`.
@@ -27,14 +27,17 @@ Hard requirement for this repo: every read is column-scoped, join-aware, and ind
 // games list with status name, one round-trip, scoped columns (confirmed schema)
 const { data } = await supabase
   .from("games")
-  .select("id, name, cover_url, avg_vote, vote_count, status:game_status!game_status_id(id, name)")
-  .order("id", {ascending: true})
+  .select(
+    "id, name, cover_url, avg_vote, vote_count, status:game_status!game_status_id(id, name)",
+  )
+  .order("id", { ascending: true })
   .range(0, 23);
 ```
 
 ```ts
 // filter by embedded FK (games in a status) — inner join semantics
-supabase.from("games")
+supabase
+  .from("games")
   .select("id, name, status:game_status!inner(name)")
   .eq("status.name", "En progreso");
 ```
@@ -49,7 +52,7 @@ Anti-pattern (N+1): fetching games, then a `game_status` query per row. Never.
 ### Confirmed (from DDL)
 
 | Table              | Index                                                               | Serves                                      |
-|--------------------|---------------------------------------------------------------------|---------------------------------------------|
+| ------------------ | ------------------------------------------------------------------- | ------------------------------------------- |
 | `game_status`      | `game_status_name_key` (unique on name)                             | uniqueness on status name                   |
 | `games`            | `games_pkey` (PK on id)                                             | primary lookup                              |
 | `games_user_votes` | `games_user_votes_user_id_game_id_key` (unique on user_id, game_id) | per-user lookup/upsert (votes)              |
@@ -58,7 +61,7 @@ Anti-pattern (N+1): fetching games, then a `game_status` query per row. Never.
 ### Suggested (inferred from access patterns — validate with `EXPLAIN ANALYZE`)
 
 | Table         | Index                                           | Serves                                                                               |
-|---------------|-------------------------------------------------|--------------------------------------------------------------------------------------|
+| ------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------ |
 | `posts`       | `(created_at desc)`                             | home feed order+limit                                                                |
 | `games`       | `(game_status_id)`                              | status filter (FK column is not auto-indexed in Postgres; needed by search & filter) |
 | `goty_items`  | `(year, rank)` composite, `(game_id)` FK        | year ranking, embed join                                                             |
@@ -72,7 +75,8 @@ filtered/sorted columns.
 
 ```ts
 // keyset (preferred for deep pages): cursor = last created_at seen
-supabase.from("posts")
+supabase
+  .from("posts")
   .select("id, title, excerpt, created_at")
   .lt("created_at", cursor)
   .order("created_at", { ascending: false })
@@ -86,4 +90,4 @@ Use `.maybeSingle()` (0-or-1, no throw) for lookups like `/posts/[id]`; `.single
 ## Checklist before merging a query
 
 - [ ] explicit columns - [ ] embedded joins not loops - [ ] indexed filter/order cols - [ ] bounded - [ ] `EXPLAIN`
-  shows index scan - [ ] RLS-safe
+      shows index scan - [ ] RLS-safe

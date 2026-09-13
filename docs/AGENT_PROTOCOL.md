@@ -2,7 +2,7 @@
 module: agent-protocol
 owner_area: repo-wide
 last_verified_against_commit: 0d27f3f
-depends_on: [ agent-onboarding, architecture ]
+depends_on: [agent-onboarding, architecture]
 ---
 
 # Protocol: Issues, Git Workflow & Execution
@@ -53,12 +53,12 @@ fullstack engineering perspective.
 
 Concrete, step-by-step engineering plan and action items (NO checkboxes — use bullet points or numbered lists):
 
-* **Task 1: [Component / Area]**
-  * Specific logic to implement, state handling, and error differentiation.
-* **Task 2: [Backend / Data Layer / Helper Extraction]**
-  * Helpers/utilities to create or parameterize, payload mappings, and auth/cookie handling.
-* **Task 3: [Refactoring & Patterns]**
-  * Surrounding code cleanup, reusability enhancements, backward compatibility safeguards.
+- **Task 1: [Component / Area]**
+  - Specific logic to implement, state handling, and error differentiation.
+- **Task 2: [Backend / Data Layer / Helper Extraction]**
+  - Helpers/utilities to create or parameterize, payload mappings, and auth/cookie handling.
+- **Task 3: [Refactoring & Patterns]**
+  - Surrounding code cleanup, reusability enhancements, backward compatibility safeguards.
 
 #### 4. Impacted Codebase & File Boundaries
 
@@ -93,7 +93,7 @@ Branch names use all lowercase, kebab-case:
 ### Allowed Types
 
 | Type        | Usage                                         |
-|-------------|-----------------------------------------------|
+| ----------- | --------------------------------------------- |
 | `feat/`     | New feature or capability                     |
 | `fix/`      | Bug fix or patch                              |
 | `docs/`     | Documentation additions or updates            |
