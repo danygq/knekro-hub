@@ -21,7 +21,9 @@ const EVENTSUB_SECRET = process.env.TWITCH_EVENTSUB_SECRET;
 const BROADCASTER_ID = process.env.TWITCH_BROADCASTER_ID || "152633332";
 
 if (!CLIENT_ID || !CLIENT_SECRET) {
-  console.error("Error: TWITCH_CLIENT_ID and TWITCH_CLIENT_SECRET must be set in .env.local");
+  console.error(
+    "Error: TWITCH_CLIENT_ID and TWITCH_CLIENT_SECRET must be set in .env.local",
+  );
   process.exit(1);
 }
 
@@ -40,7 +42,9 @@ async function getAppAccessToken(): Promise<string> {
 
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(`Failed to get Twitch App Access Token: ${res.status} ${text}`);
+    throw new Error(
+      `Failed to get Twitch App Access Token: ${res.status} ${text}`,
+    );
   }
 
   const data = (await res.json()) as { access_token: string };
@@ -48,12 +52,15 @@ async function getAppAccessToken(): Promise<string> {
 }
 
 async function listSubscriptions(token: string) {
-  const res = await fetch("https://api.twitch.tv/helix/eventsub/subscriptions", {
-    headers: {
-      "Client-Id": CLIENT_ID!,
-      Authorization: `Bearer ${token}`,
+  const res = await fetch(
+    "https://api.twitch.tv/helix/eventsub/subscriptions",
+    {
+      headers: {
+        "Client-Id": CLIENT_ID!,
+        Authorization: `Bearer ${token}`,
+      },
     },
-  });
+  );
 
   if (!res.ok) {
     const text = await res.text();
@@ -78,7 +85,9 @@ async function listSubscriptions(token: string) {
     }>;
   };
 
-  console.log(`\n--- Active EventSub Subscriptions (${data.data.length}) [Cost: ${data.total_cost}/${data.max_total_cost}] ---`);
+  console.log(
+    `\n--- Active EventSub Subscriptions (${data.data.length}) [Cost: ${data.total_cost}/${data.max_total_cost}] ---`,
+  );
   if (data.data.length === 0) {
     console.log("No active subscriptions found.");
   } else {
@@ -102,7 +111,9 @@ async function createSubscription(
   callbackUrl: string,
 ) {
   if (!EVENTSUB_SECRET) {
-    throw new Error("TWITCH_EVENTSUB_SECRET is required to subscribe to webhooks");
+    throw new Error(
+      "TWITCH_EVENTSUB_SECRET is required to subscribe to webhooks",
+    );
   }
 
   const payload = {
@@ -116,34 +127,44 @@ async function createSubscription(
     },
   };
 
-  const res = await fetch("https://api.twitch.tv/helix/eventsub/subscriptions", {
-    method: "POST",
-    headers: {
-      "Client-Id": CLIENT_ID!,
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
+  const res = await fetch(
+    "https://api.twitch.tv/helix/eventsub/subscriptions",
+    {
+      method: "POST",
+      headers: {
+        "Client-Id": CLIENT_ID!,
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
     },
-    body: JSON.stringify(payload),
-  });
+  );
 
   const responseText = await res.text();
   if (!res.ok) {
-    console.error(`Failed to subscribe to ${type}: ${res.status} ${responseText}`);
+    console.error(
+      `Failed to subscribe to ${type}: ${res.status} ${responseText}`,
+    );
     return;
   }
 
   const data = JSON.parse(responseText);
-  console.log(`Successfully subscribed to ${type}: Subscription ID ${data.data[0]?.id}, Status: ${data.data[0]?.status}`);
+  console.log(
+    `Successfully subscribed to ${type}: Subscription ID ${data.data[0]?.id}, Status: ${data.data[0]?.status}`,
+  );
 }
 
 async function deleteSubscription(token: string, id: string) {
-  const res = await fetch(`https://api.twitch.tv/helix/eventsub/subscriptions?id=${id}`, {
-    method: "DELETE",
-    headers: {
-      "Client-Id": CLIENT_ID!,
-      Authorization: `Bearer ${token}`,
+  const res = await fetch(
+    `https://api.twitch.tv/helix/eventsub/subscriptions?id=${id}`,
+    {
+      method: "DELETE",
+      headers: {
+        "Client-Id": CLIENT_ID!,
+        Authorization: `Bearer ${token}`,
+      },
     },
-  });
+  );
 
   if (res.status === 204) {
     console.log(`Deleted subscription ${id}`);
@@ -167,10 +188,13 @@ async function main() {
     if (command === "subscribe") {
       const callbackUrl =
         process.argv[3] ||
-        process.env.PUBLIC_SITE_URL?.replace(/\/$/, "") + "/api/webhooks/twitch" ||
+        process.env.PUBLIC_SITE_URL?.replace(/\/$/, "") +
+          "/api/webhooks/twitch" ||
         "https://knekro.vercel.app/api/webhooks/twitch";
 
-      console.log(`Registering subscriptions for broadcaster ${BROADCASTER_ID}`);
+      console.log(
+        `Registering subscriptions for broadcaster ${BROADCASTER_ID}`,
+      );
       console.log(`Webhook callback URL: ${callbackUrl}`);
 
       await createSubscription(
@@ -195,7 +219,9 @@ async function main() {
     if (command === "delete") {
       const id = process.argv[3];
       if (!id) {
-        console.error("Usage: node scripts/manage-eventsub.ts delete <subscription_id>");
+        console.error(
+          "Usage: node scripts/manage-eventsub.ts delete <subscription_id>",
+        );
         process.exit(1);
       }
       await deleteSubscription(token, id);
@@ -203,12 +229,15 @@ async function main() {
     }
 
     if (command === "delete-all") {
-      const res = await fetch("https://api.twitch.tv/helix/eventsub/subscriptions", {
-        headers: {
-          "Client-Id": CLIENT_ID!,
-          Authorization: `Bearer ${token}`,
+      const res = await fetch(
+        "https://api.twitch.tv/helix/eventsub/subscriptions",
+        {
+          headers: {
+            "Client-Id": CLIENT_ID!,
+            Authorization: `Bearer ${token}`,
+          },
         },
-      });
+      );
       const data = (await res.json()) as { data: Array<{ id: string }> };
       for (const sub of data.data) {
         await deleteSubscription(token, sub.id);
@@ -218,7 +247,9 @@ async function main() {
     }
 
     console.log(`Unknown command: ${command}`);
-    console.log("Available commands: list, subscribe [callback_url], delete <id>, delete-all");
+    console.log(
+      "Available commands: list, subscribe [callback_url], delete <id>, delete-all",
+    );
   } catch (error) {
     console.error("Error executing EventSub manager:", error);
     process.exit(1);

@@ -135,10 +135,10 @@ update on games_user_votes
 
 ## Clients
 
-| Client                 | File                     | Key                               | Use                                                                |
-| ---------------------- | ------------------------ | --------------------------------- | ------------------------------------------------------------------ |
-| Per-request SSR client | `lib/db-client.ts`       | `PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Auth + data queries + vote writes in page frontmatter & API routes |
-| Admin server client    | `lib/supabase-admin.ts`  | `SUPABASE_SERVICE_ROLE_KEY`       | Server-only admin mutations (Twitch EventSub webhook persistence)  |
+| Client                 | File                    | Key                               | Use                                                                |
+| ---------------------- | ----------------------- | --------------------------------- | ------------------------------------------------------------------ |
+| Per-request SSR client | `lib/db-client.ts`      | `PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Auth + data queries + vote writes in page frontmatter & API routes |
+| Admin server client    | `lib/supabase-admin.ts` | `SUPABASE_SERVICE_ROLE_KEY`       | Server-only admin mutations (Twitch EventSub webhook persistence)  |
 
 The SSR client is created per request (not shared) so each call carries the user's cookies/JWT. It is now also used for
 vote writes (via `pages/api/games/vote.astro`) — the browser-side `supabaseClient` singleton is no longer used for
@@ -158,7 +158,7 @@ Referenced in `src/` (confirmed):
 
 | Table              | Columns                                                                 | Where                                                                                                                   |
 | ------------------ | ----------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `streams`          | `id, created_at, started_at, ended_at`                                  | `pages/index.astro` (select latest) · `pages/api/webhooks/twitch.ts` (insert/update)                                      |
+| `streams`          | `id, created_at, started_at, ended_at`                                  | `pages/index.astro` (select latest) · `pages/api/webhooks/twitch.ts` (insert/update)                                    |
 | `game_status`      | `id, name, created_at, games_with_this_status`                          | `lib/games.ts` → `pages/games.astro` (order `id`) → `GamesFilterMenu.astro`                                             |
 | `games`            | `id, created_at, name, game_status_id, cover_url, avg_vote, vote_count` | `lib/games.ts` (`loadGames`, `loadGameById`, `loadTotalGamesCount`) · `api/games/search.astro` · `api/games/vote.astro` |
 | `games_user_votes` | `id, created_at, user_id, game_id, vote`                                | `lib/games.ts` (user votes) · `api/games/vote.astro` (upsert)                                                           |

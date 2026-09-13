@@ -19,12 +19,22 @@ const SECRET =
   "c8f1d39e5b72a048e91d6c34fa280e71b5692043ca9e28f1b6a7350c4189e472";
 const BROADCASTER_ID = process.env.TWITCH_BROADCASTER_ID || "152633332";
 
-function signPayload(messageId: string, timestamp: string, body: string): string {
+function signPayload(
+  messageId: string,
+  timestamp: string,
+  body: string,
+): string {
   const message = messageId + timestamp + body;
-  return "sha256=" + crypto.createHmac("sha256", SECRET).update(message).digest("hex");
+  return (
+    "sha256=" +
+    crypto.createHmac("sha256", SECRET).update(message).digest("hex")
+  );
 }
 
-async function sendWebhook(eventType: "stream.online" | "stream.offline", url: string) {
+async function sendWebhook(
+  eventType: "stream.online" | "stream.offline",
+  url: string,
+) {
   const messageId = `sim-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const timestamp = new Date().toISOString();
 
@@ -85,7 +95,10 @@ async function sendWebhook(eventType: "stream.online" | "stream.offline", url: s
       console.error(`Webhook returned error ${res.status}: ${errText}`);
     }
   } catch (err: any) {
-    if (err.cause?.code === "ECONNREFUSED" || err.message?.includes("fetch failed")) {
+    if (
+      err.cause?.code === "ECONNREFUSED" ||
+      err.message?.includes("fetch failed")
+    ) {
       console.error(`\nConnection refused at ${url}.`);
       console.error("Make sure your dev server is running ('pnpm run dev')!");
     } else {
@@ -95,13 +108,17 @@ async function sendWebhook(eventType: "stream.online" | "stream.offline", url: s
 }
 
 async function directDbAction(action: "start" | "stop") {
-  const { createSupabaseAdminClient } = await import("../src/lib/supabase-admin.ts");
+  const { createSupabaseAdminClient } =
+    await import("../src/lib/supabase-admin.ts");
   const supabase = createSupabaseAdminClient();
 
   if (action === "start") {
     const now = new Date().toISOString();
     // Close any previous open stream
-    await supabase.from("streams").update({ ended_at: now }).is("ended_at", null);
+    await supabase
+      .from("streams")
+      .update({ ended_at: now })
+      .is("ended_at", null);
     const { data, error } = await supabase
       .from("streams")
       .insert({ started_at: now, ended_at: null })
@@ -135,7 +152,8 @@ async function directDbAction(action: "start" | "stop") {
 
 async function main() {
   const command = process.argv[2] || "start";
-  const targetUrl = process.argv[3] || "http://localhost:4321/api/webhooks/twitch";
+  const targetUrl =
+    process.argv[3] || "http://localhost:4321/api/webhooks/twitch";
 
   if (command === "start" || command === "online") {
     await sendWebhook("stream.online", targetUrl);
@@ -147,10 +165,18 @@ async function main() {
     await directDbAction("stop");
   } else {
     console.log("Usage:");
-    console.log("  node scripts/simulate-stream.ts start [url]    - Sends signed stream.online webhook");
-    console.log("  node scripts/simulate-stream.ts stop [url]     - Sends signed stream.offline webhook");
-    console.log("  node scripts/simulate-stream.ts db-start       - Directly sets live in Supabase");
-    console.log("  node scripts/simulate-stream.ts db-stop        - Directly ends stream in Supabase");
+    console.log(
+      "  node scripts/simulate-stream.ts start [url]    - Sends signed stream.online webhook",
+    );
+    console.log(
+      "  node scripts/simulate-stream.ts stop [url]     - Sends signed stream.offline webhook",
+    );
+    console.log(
+      "  node scripts/simulate-stream.ts db-start       - Directly sets live in Supabase",
+    );
+    console.log(
+      "  node scripts/simulate-stream.ts db-stop        - Directly ends stream in Supabase",
+    );
   }
 }
 

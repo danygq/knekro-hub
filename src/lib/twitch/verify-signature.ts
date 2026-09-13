@@ -33,7 +33,9 @@ export function verifyTwitchSignature(params: VerifySignatureParams): boolean {
   }
 
   const message = messageId + messageTimestamp + rawBody;
-  const computedHmac = "sha256=" + crypto.createHmac("sha256", secret).update(message).digest("hex");
+  const computedHmac =
+    "sha256=" +
+    crypto.createHmac("sha256", secret).update(message).digest("hex");
 
   try {
     const expectedBuffer = Buffer.from(computedHmac, "utf8");

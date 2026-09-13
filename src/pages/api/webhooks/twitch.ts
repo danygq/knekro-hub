@@ -25,16 +25,21 @@ interface TwitchEventSubBody {
 
 export const POST: APIRoute = async ({ request }) => {
   const secret =
-    (typeof import.meta !== "undefined" && import.meta.env?.TWITCH_EVENTSUB_SECRET) ||
+    (typeof import.meta !== "undefined" &&
+      import.meta.env?.TWITCH_EVENTSUB_SECRET) ||
     process.env.TWITCH_EVENTSUB_SECRET;
 
   if (!secret) {
-    console.error("[Twitch EventSub] Missing TWITCH_EVENTSUB_SECRET environment variable");
+    console.error(
+      "[Twitch EventSub] Missing TWITCH_EVENTSUB_SECRET environment variable",
+    );
     return new Response("Server configuration error", { status: 500 });
   }
 
   const messageId = request.headers.get("twitch-eventsub-message-id");
-  const messageTimestamp = request.headers.get("twitch-eventsub-message-timestamp");
+  const messageTimestamp = request.headers.get(
+    "twitch-eventsub-message-timestamp",
+  );
   const signature = request.headers.get("twitch-eventsub-message-signature");
   const messageType = request.headers.get("twitch-eventsub-message-type");
 
@@ -49,8 +54,12 @@ export const POST: APIRoute = async ({ request }) => {
   });
 
   if (!isValid) {
-    console.warn("[Twitch EventSub] Failed signature verification or stale timestamp");
-    return new Response("Forbidden: Invalid signature or timestamp", { status: 403 });
+    console.warn(
+      "[Twitch EventSub] Failed signature verification or stale timestamp",
+    );
+    return new Response("Forbidden: Invalid signature or timestamp", {
+      status: 403,
+    });
   }
 
   let body: TwitchEventSubBody;
@@ -101,7 +110,11 @@ export const POST: APIRoute = async ({ request }) => {
         .limit(1)
         .maybeSingle();
 
-      if (latestStream && latestStream.started_at === startedAt && !latestStream.ended_at) {
+      if (
+        latestStream &&
+        latestStream.started_at === startedAt &&
+        !latestStream.ended_at
+      ) {
         return new Response(null, { status: 204 });
       }
 
@@ -119,7 +132,10 @@ export const POST: APIRoute = async ({ request }) => {
         });
 
       if (insertError) {
-        console.error("[Twitch EventSub] Failed to insert stream.online record:", insertError);
+        console.error(
+          "[Twitch EventSub] Failed to insert stream.online record:",
+          insertError,
+        );
         return new Response("Database error", { status: 500 });
       }
 
@@ -136,7 +152,10 @@ export const POST: APIRoute = async ({ request }) => {
         .is("ended_at", null);
 
       if (updateError) {
-        console.error("[Twitch EventSub] Failed to update stream.offline record:", updateError);
+        console.error(
+          "[Twitch EventSub] Failed to update stream.offline record:",
+          updateError,
+        );
         return new Response("Database error", { status: 500 });
       }
 
