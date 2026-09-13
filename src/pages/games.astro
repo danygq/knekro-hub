@@ -84,6 +84,7 @@ const totalGames = await loadTotalGamesCount(dbClient);
         window.document.body.dispatchEvent(new CustomEvent("filter-changed"));
       },
       reset() {
+        if (this.count === 0) return;
         this.included = new Set();
         this.excluded = new Set();
         // Reset offset on filter reset
