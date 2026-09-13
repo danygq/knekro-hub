@@ -21,11 +21,54 @@ const currentPath = Astro.url.pathname;
     <slot name="head" />
     <title>Knekro Hub</title>
   </head>
-  <body class="min-h-screen bg-(--knk-bg) text-(--knk-text) antialiased">
-    <header class="sticky top-0 z-50 bg-(--knk-bg)/90 backdrop-blur-md border-b border-(--knk-line)">
+  <body class="min-h-screen bg-(--knk-bg) text-(--knk-text) antialiased flex flex-col">
+    <header
+      class="sticky top-0 z-50 bg-(--knk-bg)/90 backdrop-blur-md border-b border-(--knk-line)"
+      x-data="{ mobileMenuOpen: false }"
+    >
       <div class="mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-16">
-          <div class="flex items-center gap-8">
+          <div class="flex items-center gap-3 sm:gap-8">
+            <!-- Mobile Hamburger Toggle (placed to the left of the logo) -->
+            <button
+              type="button"
+              class="sm:hidden knk-notch-sm inline-flex items-center justify-center w-9 h-9 text-(--knk-text-muted) hover:text-(--knk-text) bg-(--knk-surface) border border-(--knk-line) hover:border-(--knk-line-strong) transition-colors"
+              aria-label="Menú principal"
+              :aria-expanded="mobileMenuOpen"
+              @click="mobileMenuOpen = !mobileMenuOpen"
+            >
+              <svg
+                x-show="!mobileMenuOpen"
+                class="w-5 h-5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <line x1="4" y1="6" x2="20" y2="6"></line>
+                <line x1="4" y1="12" x2="20" y2="12"></line>
+                <line x1="4" y1="18" x2="20" y2="18"></line>
+              </svg>
+              <svg
+                x-show="mobileMenuOpen"
+                x-cloak
+                class="w-5 h-5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+
             <a href="/" class="flex items-center gap-2.5 shrink-0 font-bold">
               <span class="font-(--font-display) text-3xl tracking-tight">
                 Knekro{" "}
@@ -71,31 +114,93 @@ const currentPath = Astro.url.pathname;
           </div>
         </div>
       </div>
+
+      <!-- Mobile Dropdown Navigation -->
+      <div
+        x-show="mobileMenuOpen"
+        x-cloak
+        x-transition:enter="transition ease-out duration-150"
+        x-transition:enter-start="opacity-0 -translate-y-2"
+        x-transition:enter-end="opacity-100 translate-y-0"
+        x-transition:leave="transition ease-in duration-100"
+        x-transition:leave-start="opacity-100 translate-y-0"
+        x-transition:leave-end="opacity-0 -translate-y-2"
+        @keydown.escape.window="mobileMenuOpen = false"
+        @click.outside="mobileMenuOpen = false"
+        class="sm:hidden border-b border-(--knk-line) bg-(--knk-bg)/95 backdrop-blur-md px-4 py-3 shadow-xl"
+      >
+        <nav class="flex flex-col space-y-1" aria-label="Navegación móvil">
+          <a
+            href="/"
+            @click="mobileMenuOpen = false"
+            class={`flex items-center justify-between px-3 py-2 text-sm font-medium transition-colors ${
+              currentPath === "/"
+                ? "bg-(--knk-surface) text-(--knk-primary) border-l-2 border-(--knk-primary)"
+                : "text-(--knk-text-muted) hover:text-(--knk-text) hover:bg-(--knk-surface)"
+            }`}
+          >
+            <span>Inicio</span>
+          </a>
+          <a
+            href="/games"
+            @click="mobileMenuOpen = false"
+            class={`flex items-center justify-between px-3 py-2 text-sm font-medium transition-colors ${
+              currentPath.startsWith("/games")
+                ? "bg-(--knk-surface) text-(--knk-primary) border-l-2 border-(--knk-primary)"
+                : "text-(--knk-text-muted) hover:text-(--knk-text) hover:bg-(--knk-surface)"
+            }`}
+          >
+            <span>Juegos</span>
+          </a>
+          <a
+            href="/goty"
+            @click="mobileMenuOpen = false"
+            class={`flex items-center justify-between px-3 py-2 text-sm font-medium transition-colors ${
+              currentPath.startsWith("/goty")
+                ? "bg-(--knk-surface) text-(--knk-primary) border-l-2 border-(--knk-primary)"
+                : "text-(--knk-text-muted) hover:text-(--knk-text) hover:bg-(--knk-surface)"
+            }`}
+          >
+            <span>GOTY</span>
+          </a>
+        </nav>
+
+        <div class="pt-3 mt-2 border-t border-(--knk-line)">
+          <a
+            href="https://discord.com/invite/knekro"
+            target="_blank"
+            rel="noopener"
+            class="knk-notch flex items-center justify-center gap-2 w-full px-4 py-2.5 text-sm font-medium bg-(--knk-discord) text-[white] hover:bg-(--knk-discord-hover) transition-colors"
+          >
+            Discord
+          </a>
+        </div>
+      </div>
     </header>
+
+    <main class="flex-1 mx-auto w-full px-4 sm:px-6 lg:px-8 py-10">
+      <slot />
+    </main>
+
+    <footer class="border-t border-(--knk-line) mt-auto">
+      <div class="mx-auto px-4 sm:px-6 lg:px-8 py-8 text-sm text-(--knk-text-muted)">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div class="flex items-center gap-2">
+            <span>© {new Date().getFullYear()} Knekro Hub</span>
+          </div>
+          <div class="flex items-center gap-5">
+            <a href="/" class="hover:text-(--knk-text) transition-colors">
+              Inicio
+            </a>
+            <a href="/games" class="hover:text-(--knk-text) transition-colors">
+              Juegos
+            </a>
+            <a href="/goty" class="hover:text-(--knk-text) transition-colors">
+              GOTY
+            </a>
+          </div>
+        </div>
+      </div>
+    </footer>
   </body>
 </html>
-
-<main class="mx-auto px-4 sm:px-6 lg:px-8 py-10">
-  <slot />
-</main>
-
-<footer class="border-t border-(--knk-line) mt-8">
-  <div class="mx-auto px-4 sm:px-6 lg:px-8 py-8 text-sm text-(--knk-text-muted)">
-    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-      <div class="flex items-center gap-2">
-        <span>© {new Date().getFullYear()} Knekro Hub</span>
-      </div>
-      <div class="flex items-center gap-5">
-        <a href="/" class="hover:text-(--knk-text) transition-colors">
-          Inicio
-        </a>
-        <a href="/games" class="hover:text-(--knk-text) transition-colors">
-          Juegos
-        </a>
-        <a href="/goty" class="hover:text-(--knk-text) transition-colors">
-          GOTY
-        </a>
-      </div>
-    </div>
-  </div>
-</footer>

@@ -29,11 +29,10 @@ Referenced but **not present**: `/posts/[id]` (linked from home feed). Add when 
 
 ### `Layout.astro`
 
-Sticky header (logo, nav `Juegos`/`GOTY`, Twitch/Discord CTAs), active-nav via `Astro.url.pathname`,
+Sticky header (logo, nav `Juegos`/`GOTY`, mobile dropdown menu with hamburger toggle, Twitch/Discord CTAs), active-nav via `Astro.url.pathname`,
 session via SSR client `getUser()`, renders `UserMenu` or `LoginButton`. Fonts: Space Grotesk (display) + Inter (body),
 self-hosted from `public/fonts/` (see `src/styles/fonts.css`).
-
-> Bug: `<main>` and `<footer>` are emitted **after** `</body></html>`. Fix markup so they sit inside `<body>`.
+Responsive mobile menu is powered by Alpine.js (`x-data="{ mobileMenuOpen: false }"`). `<main>` and `<footer>` reside within `<body>`.
 
 ### `pages/games.astro`
 
@@ -62,8 +61,8 @@ Renders `GamesLayout.astro` with fetched data.
 
 ### Games Library (`src/components/games/`)
 
-| Component                       | Role                                                                                                                                                                                                                             |
-|---------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Component                       | Role                                                                                                                                                                                             |
+|---------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `GamesLayout.astro`             | Main layout container. Manages drawer toggle button (with active filter count badge) and responsive classes (`filters-off`). Contains filter menu, search, and grid.                                                             |
 | `GamesFilterMenu.astro`         | Off-canvas/sidebar filter panel. Provides 3-state status filtering (include `+`, exclude `-`, neutral) per status plus "Todas" reset. Binds to `$store.search.filters.status` and dispatches `filter-changed` event.             |
 | `GameSearch.astro`              | Search input field with 300ms debounce, loading spinner (`.htmx-request`), and clear button. Triggers HTMX `GET /api/games/search` on input and `filter-changed` from body, serializing Alpine store values (`q`, `inc`, `exc`). |
