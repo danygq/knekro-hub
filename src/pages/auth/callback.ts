@@ -4,7 +4,12 @@ import { type APIRoute } from "astro";
 export const GET: APIRoute = async ({ request, cookies, redirect }) => {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
-  const next = url.searchParams.get("next") ?? "/";
+
+  const cookieNext = cookies.get("sb-auth-next")?.value;
+  cookies.delete("sb-auth-next", { path: "/" });
+
+  const next = cookieNext ?? url.searchParams.get("next") ?? "/";
+
   if (!code) {
     // No code → likely a misconfiguration; redirect to error
     return redirect("/auth/auth-code-error");

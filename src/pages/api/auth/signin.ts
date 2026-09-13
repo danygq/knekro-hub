@@ -39,15 +39,27 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
     next = "/";
   }
 
-  const callbackUrl = new URL(`${new URL(request.url).origin}/auth/callback`);
+  // Preserve the next route in a short-lived cookie.
+  // This keeps the OAuth redirectTo URL clean and strictly matches the
+  // exact allowed callback URLs registered in Supabase (avoiding query string mismatch).
   if (next !== "/") {
-    callbackUrl.searchParams.set("next", next);
+    cookies.set("sb-auth-next", next, {
+      path: "/",
+      maxAge: 60 * 5, // 5 minutes
+      httpOnly: true,
+      sameSite: "lax",
+      secure: import.meta.env.PROD,
+    });
+  } else {
+    cookies.delete("sb-auth-next", { path: "/" });
   }
+
+  const callbackUrl = `${new URL(request.url).origin}/auth/callback`;
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "twitch",
     options: {
-      redirectTo: callbackUrl.toString(),
+      redirectTo: callbackUrl,
     },
   });
 

@@ -18,15 +18,18 @@ sequenceDiagram
   participant T as Twitch/Supabase
   participant C as /auth/callback
   B->>S: POST (LoginButton form with next path)
-  S->>T: signInWithOAuth(twitch, redirectTo=/auth/callback?next=...)
+  S->>S: Set temporary httpOnly cookie sb-auth-next
+  S->>T: signInWithOAuth(twitch, redirectTo=/auth/callback)
   S-->>B: redirect to Twitch
   B->>T: authorize
-  T-->>C: redirect ?code=...&next=...
+  T-->>C: redirect ?code=...
+  C->>C: Read & clear sb-auth-next cookie
   C->>T: exchangeCodeForSession(code)
-  C-->>B: redirect next (default /)
+  C-->>B: redirect to next (or default /)
 ```
 
-- **Sign in**: `POST /api/auth/signin` captures `next` route from form data or query parameter and sets `redirectTo: /auth/callback?next=...`.
+- **Sign in**: `POST /api/auth/signin` captures `next` route from form data or query parameter and stores it in a short-lived `sb-auth-next` cookie. The `redirectTo` target URL passed to Supabase remains strictly `${origin}/auth/callback` (without query parameters) to guarantee an exact match against Supabase's allowed Redirect URLs list.
+- **Callback**: `GET /auth/callback` exchanges `code` for session, extracts and cleans up `sb-auth-next` (falling back to `?next=` if present), sanitizes the path, and redirects the user to their destination.
 - **Sign out**: `POST /api/auth/signout` → `supabase.auth.signOut()` → redirect `/`.
 - **OAuth errors**: missing/invalid `code` → redirect `/auth/auth-code-error`.
 - **Expired sessions**: detected in `Layout.astro` or page frontmatter via `isSessionExpiredError(error)` → triggers `signOut({ scope: "local" })` to clear cookies and redirects to `/auth/session-expired?next=...`.
