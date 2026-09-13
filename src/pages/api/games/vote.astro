@@ -1,32 +1,22 @@
 ---
-import {
-  createSupabaseServerClient,
-  isSessionExpiredError,
-} from "../../../lib/createSupabaseServerClient";
 import { loadGameById } from "../../../lib/games";
 import GameCard from "../../../components/games/GameCard.astro";
 
 // DB-first vote endpoint: upserts the user's vote (or clears it on a re-click),
 // then re-queries the game by id and returns a server-rendered <GameCard>.
 // HTMX swaps this response into the card via outerHTML.
-const dbClient = createSupabaseServerClient(Astro.request, Astro.cookies);
-
 if (Astro.request.method !== "POST") {
   return new Response(null, { status: 405, headers: { Allow: "POST" } });
 }
 
-const { data, error } = await dbClient.auth.getUser();
-if (error && isSessionExpiredError(error)) {
-  await dbClient.auth.signOut({ scope: "local" });
-  return new Response("Session expired", {
+const dbClient = Astro.locals.supabase;
+const user = Astro.locals.user;
+
+if (!user) {
+  return new Response("Unauthorized", {
     status: 401,
     headers: { "HX-Redirect": "/auth/session-expired" },
   });
-}
-
-const user = data?.user ?? null;
-if (!user) {
-  return new Response("Unauthorized", { status: 401 });
 }
 
 const form = await Astro.request.formData();

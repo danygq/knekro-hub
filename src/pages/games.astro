@@ -1,25 +1,12 @@
 ---
 import GamesLayout from "../components/games/GamesLayout.astro";
 import Layout from "../layouts/Layout.astro";
-import {
-  createSupabaseServerClient,
-  isSessionExpiredError,
-} from "../lib/createSupabaseServerClient";
 import { loadGameStatuses, loadGames, loadTotalGamesCount } from "../lib/games";
 import "../styles/pages/games.css";
 import type { User } from "@supabase/auth-js";
 
-const dbClient = createSupabaseServerClient(Astro.request, Astro.cookies);
-const { data, error } = await dbClient.auth.getUser();
-
-if (error && isSessionExpiredError(error)) {
-  await dbClient.auth.signOut({ scope: "local" });
-  return Astro.redirect(
-    `/auth/session-expired?next=${encodeURIComponent(Astro.url.pathname)}`,
-  );
-}
-
-const user = data?.user ?? null;
+const dbClient = Astro.locals.supabase;
+const user = Astro.locals.user;
 
 const gameStatuses = await loadGameStatuses(dbClient);
 const games = await loadGames(dbClient, user?.id);
