@@ -10,7 +10,7 @@ depends_on: []
 Cross-checked against source at commit `0d27f3f`.
 
 | Area                          | Documented? | Doc file                     | Confidence                            |
-|-------------------------------|-------------|------------------------------|---------------------------------------|
+| ----------------------------- | ----------- | ---------------------------- | ------------------------------------- |
 | System architecture           | Yes         | `ARCHITECTURE.md`            | verified                              |
 | Agent onboarding/conventions  | Yes         | `AGENTS.md`                  | verified                              |
 | Protocol: issues, git & PRs   | Yes         | `docs/AGENT_PROTOCOL.md`     | verified                              |

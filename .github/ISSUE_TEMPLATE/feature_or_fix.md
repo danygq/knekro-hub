@@ -1,9 +1,9 @@
 ---
 name: Feature or Fix
 about: Propose a new feature, improvement, or bug fix with technical specifications
-title: '[type]: Direct description of the change'
-labels: ''
-assignees: ''
+title: "[type]: Direct description of the change"
+labels: ""
+assignees: ""
 ---
 
 ## Objective
@@ -22,12 +22,12 @@ fullstack engineering perspective.
 
 Concrete, step-by-step engineering plan and action items (NO checkboxes — use bullet points or numbered lists):
 
-* **Task 1: [Component / Area]**
-    * Specific logic to implement, state handling, and error differentiation.
-* **Task 2: [Backend / Data Layer / Helper Extraction]**
-    * Helpers/utilities to create or parameterize, payload mappings, and auth/cookie handling.
-* **Task 3: [Refactoring & Patterns]**
-    * Surrounding code cleanup, reusability enhancements, backward compatibility safeguards.
+- **Task 1: [Component / Area]**
+  - Specific logic to implement, state handling, and error differentiation.
+- **Task 2: [Backend / Data Layer / Helper Extraction]**
+  - Helpers/utilities to create or parameterize, payload mappings, and auth/cookie handling.
+- **Task 3: [Refactoring & Patterns]**
+  - Surrounding code cleanup, reusability enhancements, backward compatibility safeguards.
 
 ## Impacted Codebase & File Boundaries
 

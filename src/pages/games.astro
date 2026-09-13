@@ -5,11 +5,7 @@ import {
   createSupabaseServerClient,
   isSessionExpiredError,
 } from "../lib/createSupabaseServerClient";
-import {
-  loadGameStatuses,
-  loadGames,
-  loadTotalGamesCount,
-} from "../lib/games";
+import { loadGameStatuses, loadGames, loadTotalGamesCount } from "../lib/games";
 import "../styles/pages/games.css";
 import type { User } from "@supabase/auth-js";
 
@@ -82,12 +78,17 @@ const totalGames = await loadTotalGamesCount(dbClient);
         // Re-assign sets so Alpine triggers reactivity
         this.included = new Set(this.included);
         this.excluded = new Set(this.excluded);
+        // Reset offset on filter toggle
+        (Alpine.store("search") as SearchStore).resetOffset();
         // Notify HTMX to perform a new search request
         window.document.body.dispatchEvent(new CustomEvent("filter-changed"));
       },
       reset() {
+        if (this.count === 0) return;
         this.included = new Set();
         this.excluded = new Set();
+        // Reset offset on filter reset
+        (Alpine.store("search") as SearchStore).resetOffset();
         window.document.body.dispatchEvent(new CustomEvent("filter-changed"));
       },
       get count() {
@@ -105,7 +106,12 @@ const totalGames = await loadTotalGamesCount(dbClient);
     };
     const search: SearchStore = {
       query: "",
+      offset: 0,
+      limit: 24,
       filters: filtersStore,
+      resetOffset() {
+        this.offset = 0;
+      },
     };
     Alpine.store("search", search);
   });

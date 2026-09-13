@@ -76,7 +76,7 @@ network activity (both show in DevTools).
 ## Edge Cases Handled
 
 | Concern               | Handling                                                                            |
-|-----------------------|-------------------------------------------------------------------------------------|
+| --------------------- | ----------------------------------------------------------------------------------- |
 | Own vote double-count | `justVotedGames` Set skips the realtime event for a game the user just voted on     |
 | Connection drops      | Realtime auto-reconnects; missed events replay on reconnect                         |
 | 200-connection limit  | Graceful degradation — live updates pause until a slot frees up; voting still works |

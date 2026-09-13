@@ -55,7 +55,7 @@ const { gameStatuses } = Astro.props;
         type="button"
         id="reset-filters"
         :aria-pressed="$store.search.filters.status.count === 0 ? 'true' : 'false'"
-        @click="$store.search.filters.status.reset()"
+        @click="$store.search.filters.status.count > 0 && $store.search.filters.status.reset()"
         class="knk-filter-reset knk-notch-sm inline-flex items-center justify-center gap-2 w-full px-3 py-2 text-sm font-medium bg-(--knk-surface) text-(--knk-text-muted) border border-(--knk-line) hover:text-(--knk-text) hover:border-(--knk-line-strong) transition-colors"
         :class="{ 'active': $store.search.filters.status.count === 0 }"
       >

@@ -53,9 +53,10 @@
       autocomplete="off"
       spellcheck="false"
       x-model="$store.search.query"
+      @input="$store.search?.resetOffset?.()"
       hx-get="/api/games/search"
       hx-trigger="input changed delay:300ms, search, refreshSearch from:body, filter-changed from:body"
-      hx-vals="js:{ q: Alpine.store('search').query, inc: Array.from(Alpine.store('search').filters.status.included).join(','), exc: Array.from(Alpine.store('search').filters.status.excluded).join(',') }"
+      hx-vals="js:{ q: Alpine.store('search').query, inc: Array.from(Alpine.store('search').filters.status.included).join(','), exc: Array.from(Alpine.store('search').filters.status.excluded).join(','), offset: 0, limit: 24 }"
       hx-target="#games-grid"
       hx-swap="innerHTML"
       hx-sync="this:replace"
@@ -69,7 +70,7 @@
       type="button"
       x-show="$store.search.query"
       x-cloak
-      @click="$store.search.query = '';$nextTick(() => $refs.searchInput.dispatchEvent(new Event('input', { bubbles: true })));"
+      @click="$store.search.query = ''; $store.search?.resetOffset?.(); $nextTick(() => $refs.searchInput.dispatchEvent(new Event('input', { bubbles: true })));"
       aria-label="Limpiar búsqueda"
       class="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center justify-center w-6 h-6 text-(--knk-text-muted) hover:text-(--knk-primary) transition-colors"
     >

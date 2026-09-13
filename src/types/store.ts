@@ -9,7 +9,10 @@ interface GamesLayoutStore {
 
 interface SearchStore {
   query: string;
+  offset: number;
+  limit: number;
   filters: FiltersStore;
+  resetOffset(): void;
 }
 
 interface FiltersStore {
