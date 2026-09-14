@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { isIgnoredTwitchCategory } from "./constants";
 
 export interface ReconcileGameResult {
   action: "matched_by_id" | "updated_by_name" | "created" | "skipped";
@@ -25,8 +26,13 @@ export async function reconcileGame(
   const trimmedId = categoryId?.trim();
   const trimmedName = categoryName?.trim();
 
-  // Guard: Skip if ID or Name is absent or invalid
-  if (!trimmedId || !trimmedName || trimmedId === "0") {
+  // Guard: Skip if ID or Name is absent, invalid, or belongs to non-game/ignored categories
+  if (
+    !trimmedId ||
+    !trimmedName ||
+    trimmedId === "0" ||
+    isIgnoredTwitchCategory(trimmedId)
+  ) {
     return { action: "skipped" };
   }
 
