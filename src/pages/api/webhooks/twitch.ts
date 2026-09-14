@@ -100,22 +100,36 @@ export const POST: APIRoute = async ({ request }) => {
     const supabaseAdmin = createSupabaseAdminClient();
 
     if (eventType === "stream.online") {
-      const startedAt = event.started_at || new Date().toISOString();
+      // Use exact started_at provided by Twitch in event payload
+      const startedAt = event.started_at || messageTimestamp || new Date().toISOString();
+      const twitchId = event.id ?? null;
 
       // Check if this stream start was already recorded (idempotency guard)
-      const { data: latestStream } = await supabaseAdmin
-        .from("streams")
-        .select("id, started_at, ended_at")
-        .order("started_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      if (twitchId) {
+        const { data: existingStream } = await supabaseAdmin
+          .from("streams")
+          .select("id")
+          .eq("twitch_id", twitchId)
+          .maybeSingle();
 
-      if (
-        latestStream &&
-        latestStream.started_at === startedAt &&
-        !latestStream.ended_at
-      ) {
-        return new Response(null, { status: 204 });
+        if (existingStream) {
+          return new Response(null, { status: 204 });
+        }
+      } else {
+        const { data: latestStream } = await supabaseAdmin
+          .from("streams")
+          .select("id, started_at, ended_at")
+          .order("started_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (
+          latestStream &&
+          latestStream.started_at === startedAt &&
+          !latestStream.ended_at
+        ) {
+          return new Response(null, { status: 204 });
+        }
       }
 
       // Close any previously unclosed stream row before inserting the new live stream
@@ -124,12 +138,18 @@ export const POST: APIRoute = async ({ request }) => {
         .update({ ended_at: startedAt })
         .is("ended_at", null);
 
+      const newStream: Record<string, unknown> = {
+        started_at: startedAt,
+        ended_at: null,
+      };
+
+      if (twitchId) {
+        newStream.twitch_id = twitchId;
+      }
+
       const { error: insertError } = await supabaseAdmin
         .from("streams")
-        .insert({
-          started_at: startedAt,
-          ended_at: null,
-        });
+        .insert(newStream);
 
       if (insertError) {
         console.error(
@@ -143,20 +163,47 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     if (eventType === "stream.offline") {
-      const endedAt = new Date().toISOString();
+      const endedAt = messageTimestamp || new Date().toISOString();
+      const twitchId = event.id ?? null;
 
-      // Mark the active stream as ended
-      const { error: updateError } = await supabaseAdmin
-        .from("streams")
-        .update({ ended_at: endedAt })
-        .is("ended_at", null);
+      if (twitchId) {
+        // Target the exact stream row by its twitch_id
+        const { data: updatedRows, error: updateError } = await supabaseAdmin
+          .from("streams")
+          .update({ ended_at: endedAt })
+          .eq("twitch_id", twitchId)
+          .select("id");
 
-      if (updateError) {
-        console.error(
-          "[Twitch EventSub] Failed to update stream.offline record:",
-          updateError,
-        );
-        return new Response("Database error", { status: 500 });
+        if (updateError) {
+          console.error(
+            "[Twitch EventSub] Failed to update stream.offline record by twitch_id:",
+            updateError,
+          );
+          return new Response("Database error", { status: 500 });
+        }
+
+        // Fallback: If no row matched by twitch_id (e.g. stream inserted prior to tracking twitch_id),
+        // close any currently open stream
+        if (!updatedRows || updatedRows.length === 0) {
+          await supabaseAdmin
+            .from("streams")
+            .update({ ended_at: endedAt })
+            .is("ended_at", null);
+        }
+      } else {
+        // Fallback when id is not provided
+        const { error: updateError } = await supabaseAdmin
+          .from("streams")
+          .update({ ended_at: endedAt })
+          .is("ended_at", null);
+
+        if (updateError) {
+          console.error(
+            "[Twitch EventSub] Failed to update stream.offline record:",
+            updateError,
+          );
+          return new Response("Database error", { status: 500 });
+        }
       }
 
       return new Response(null, { status: 204 });

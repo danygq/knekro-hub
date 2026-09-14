@@ -28,12 +28,17 @@ create table public.streams
     created_at timestamp with time zone                not null default now(),
     started_at timestamp with time zone                null default (now() AT TIME ZONE 'Europe/Madrid'::text),
     ended_at   timestamp with time zone                null,
-    constraint streams_pkey primary key (id)
+    twitch_id  text                                    null,
+    constraint streams_pkey primary key (id),
+    constraint streams_twitch_id_key unique (twitch_id)
 ) TABLESPACE pg_default;
 ```
 
 - Public read-only policy enabled (`SELECT` for `anon, authenticated`).
 - Writes are restricted to server-side webhook processing using `createSupabaseAdminClient()`.
+- `twitch_id` stores Twitch's opaque broadcast stream ID (`event.id` from `stream.online` and `stream.offline`), ensuring idempotency and direct row targeting via the `streams_twitch_id_key` unique constraint.
+- `started_at` captures the exact timestamp from Twitch's `stream.online` event payload (`event.started_at`), while `created_at` records the row insertion timestamp in Postgres (`default now()`).
+- `ended_at` records the conclusion timestamp when Twitch's `stream.offline` event is processed.
 
 ### `game_status`
 
@@ -158,7 +163,7 @@ Referenced in `src/` (confirmed):
 
 | Table              | Columns                                                                 | Where                                                                                                                   |
 | ------------------ | ----------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `streams`          | `id, created_at, started_at, ended_at`                                  | `pages/index.astro` (select latest) · `pages/api/webhooks/twitch.ts` (insert/update)                                    |
+| `streams`          | `id, created_at, started_at, ended_at, twitch_id`                       | `pages/index.astro` (select latest) · `pages/api/webhooks/twitch.ts` (insert/update)                                    |
 | `game_status`      | `id, name, created_at, games_with_this_status`                          | `lib/games.ts` → `pages/games.astro` (order `id`) → `GamesFilterMenu.astro`                                             |
 | `games`            | `id, created_at, name, game_status_id, cover_url, avg_vote, vote_count` | `lib/games.ts` (`loadGames`, `loadGameById`, `loadTotalGamesCount`) · `api/games/search.astro` · `api/games/vote.astro` |
 | `games_user_votes` | `id, created_at, user_id, game_id, vote`                                | `lib/games.ts` (user votes) · `api/games/vote.astro` (upsert)                                                           |

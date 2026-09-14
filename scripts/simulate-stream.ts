@@ -38,6 +38,25 @@ async function sendWebhook(
   const messageId = `sim-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const timestamp = new Date().toISOString();
 
+  let streamId = `${Date.now()}`;
+  if (eventType === "stream.offline") {
+    try {
+      const { createSupabaseAdminClient } = await import("../src/lib/supabase-admin.ts");
+      const supabase = createSupabaseAdminClient();
+      const { data } = await supabase
+        .from("streams")
+        .select("twitch_id")
+        .is("ended_at", null)
+        .order("started_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (data?.twitch_id) {
+        streamId = String(data.twitch_id);
+      }
+    } catch {}
+  }
+
   const payload = {
     subscription: {
       id: `sub-${Date.now()}`,
@@ -51,7 +70,7 @@ async function sendWebhook(
     event:
       eventType === "stream.online"
         ? {
-            id: `stream-${Date.now()}`,
+            id: streamId,
             broadcaster_user_id: BROADCASTER_ID,
             broadcaster_user_login: "knekro",
             broadcaster_user_name: "KNekro",
@@ -59,6 +78,7 @@ async function sendWebhook(
             started_at: timestamp,
           }
         : {
+            id: streamId,
             broadcaster_user_id: BROADCASTER_ID,
             broadcaster_user_login: "knekro",
             broadcaster_user_name: "KNekro",
@@ -121,8 +141,8 @@ async function directDbAction(action: "start" | "stop") {
       .is("ended_at", null);
     const { data, error } = await supabase
       .from("streams")
-      .insert({ started_at: now, ended_at: null })
-      .select("id, started_at, ended_at")
+      .insert({ started_at: now, ended_at: null, twitch_id: Date.now() })
+      .select("id, started_at, ended_at, twitch_id")
       .single();
 
     if (error) {
@@ -138,7 +158,7 @@ async function directDbAction(action: "start" | "stop") {
       .from("streams")
       .update({ ended_at: now })
       .is("ended_at", null)
-      .select("id, started_at, ended_at");
+      .select("id, started_at, ended_at, twitch_id");
 
     if (error) {
       console.error("Database update error:", error);
