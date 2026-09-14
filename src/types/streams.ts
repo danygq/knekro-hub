@@ -7,6 +7,7 @@ export interface Stream {
   created_at: string;
   started_at: string | null;
   ended_at: string | null;
+  twitch_id?: string | null;
 }
 
 export interface StreamLog {
