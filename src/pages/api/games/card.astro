@@ -1,0 +1,31 @@
+---
+import { loadGameById } from "@/lib/games";
+import GameCard from "@/components/games/GameCard.astro";
+
+if (Astro.request.method !== "GET") {
+  return new Response(null, { status: 405, headers: { Allow: "GET" } });
+}
+
+const dbClient = Astro.locals.supabase;
+const user = Astro.locals.user;
+
+const idParam = Astro.url.searchParams.get("id");
+const gameId = Number(idParam);
+
+if (!gameId || isNaN(gameId)) {
+  return new Response("Missing or invalid game id", { status: 400 });
+}
+
+const game = await loadGameById(dbClient, gameId, user?.id);
+
+if (!game) {
+  return new Response("Game not found", { status: 404 });
+}
+
+Astro.response.headers.set(
+  "Cache-Control",
+  "no-store, no-cache, must-revalidate, max-age=0",
+);
+---
+
+<GameCard game={game} loggedIn={!!user} />

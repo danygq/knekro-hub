@@ -35,9 +35,10 @@ const totalGames = await loadTotalGamesCount(dbClient);
 </Layout>
 
 <script>
-  import "htmx.org";
+  import htmx from "htmx.org";
   import Alpine from "alpinejs";
   (window as any).Alpine = Alpine;
+  (window as any).htmx = htmx;
 
   document.addEventListener("alpine:init", () => {
     const isDesktopViewport = window.innerWidth >= 1024;
