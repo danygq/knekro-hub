@@ -2,8 +2,8 @@
  * CLI utility to manage Twitch EventSub webhook subscriptions for Knekro Hub.
  *
  * Usage:
- *   node scripts/manage-eventsub.ts list
- *   node scripts/manage-eventsub.ts subscribe [callback_url]
+ *   node scripts/manage-eventsub.ts list [type]
+ *   node scripts/manage-eventsub.ts subscribe [callback_url] [type]
  *   node scripts/manage-eventsub.ts delete <subscription_id>
  *   node scripts/manage-eventsub.ts delete-all
  */
@@ -51,16 +51,18 @@ async function getAppAccessToken(): Promise<string> {
   return data.access_token;
 }
 
-async function listSubscriptions(token: string) {
-  const res = await fetch(
-    "https://api.twitch.tv/helix/eventsub/subscriptions",
-    {
-      headers: {
-        "Client-Id": CLIENT_ID!,
-        Authorization: `Bearer ${token}`,
-      },
+async function listSubscriptions(token: string, filterType?: string) {
+  const url = new URL("https://api.twitch.tv/helix/eventsub/subscriptions");
+  if (filterType) {
+    url.searchParams.set("type", filterType);
+  }
+
+  const res = await fetch(url.toString(), {
+    headers: {
+      "Client-Id": CLIENT_ID!,
+      Authorization: `Bearer ${token}`,
     },
-  );
+  });
 
   if (!res.ok) {
     const text = await res.text();
@@ -181,37 +183,60 @@ async function main() {
     const token = await getAppAccessToken();
 
     if (command === "list") {
-      await listSubscriptions(token);
+      const filterType = process.argv[3];
+      await listSubscriptions(token, filterType);
       return;
     }
 
     if (command === "subscribe") {
+      const arg3 = process.argv[3];
+      const arg4 = process.argv[4];
+
+      // Handle cases where 3rd param is type instead of callback url
+      const isArg3Url =
+        arg3?.startsWith("http://") || arg3?.startsWith("https://");
       const callbackUrl =
-        process.argv[3] ||
+        (isArg3Url ? arg3 : null) ||
         process.env.PUBLIC_SITE_URL?.replace(/\/$/, "") +
           "/api/webhooks/twitch" ||
         "https://knekro.vercel.app/api/webhooks/twitch";
+
+      const specificType = !isArg3Url && arg3 ? arg3 : arg4;
 
       console.log(
         `Registering subscriptions for broadcaster ${BROADCASTER_ID}`,
       );
       console.log(`Webhook callback URL: ${callbackUrl}`);
 
-      await createSubscription(
-        token,
-        "stream.online",
-        "1",
-        { broadcaster_user_id: BROADCASTER_ID },
-        callbackUrl,
-      );
+      if (!specificType || specificType === "stream.online") {
+        await createSubscription(
+          token,
+          "stream.online",
+          "1",
+          { broadcaster_user_id: BROADCASTER_ID },
+          callbackUrl,
+        );
+      }
 
-      await createSubscription(
-        token,
-        "stream.offline",
-        "1",
-        { broadcaster_user_id: BROADCASTER_ID },
-        callbackUrl,
-      );
+      if (!specificType || specificType === "stream.offline") {
+        await createSubscription(
+          token,
+          "stream.offline",
+          "1",
+          { broadcaster_user_id: BROADCASTER_ID },
+          callbackUrl,
+        );
+      }
+
+      if (!specificType || specificType === "channel.update") {
+        await createSubscription(
+          token,
+          "channel.update",
+          "2",
+          { broadcaster_user_id: BROADCASTER_ID },
+          callbackUrl,
+        );
+      }
 
       return;
     }
@@ -248,7 +273,7 @@ async function main() {
 
     console.log(`Unknown command: ${command}`);
     console.log(
-      "Available commands: list, subscribe [callback_url], delete <id>, delete-all",
+      "Available commands: list [type], subscribe [callback_url] [type], delete <id>, delete-all",
     );
   } catch (error) {
     console.error("Error executing EventSub manager:", error);

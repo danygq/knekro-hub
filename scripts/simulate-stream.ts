@@ -4,8 +4,10 @@
  * Usage:
  *   node scripts/simulate-stream.ts start [optional_endpoint_url]
  *   node scripts/simulate-stream.ts stop  [optional_endpoint_url]
+ *   node scripts/simulate-stream.ts update [category_name] [category_id] [optional_endpoint_url]
  *   node scripts/simulate-stream.ts db-start
  *   node scripts/simulate-stream.ts db-stop
+ *   node scripts/simulate-stream.ts db-update [category_name] [category_id]
  */
 
 import crypto from "node:crypto";
@@ -31,9 +33,16 @@ function signPayload(
   );
 }
 
+interface WebhookOptions {
+  categoryId?: string;
+  categoryName?: string;
+  title?: string;
+}
+
 async function sendWebhook(
-  eventType: "stream.online" | "stream.offline",
+  eventType: "stream.online" | "stream.offline" | "channel.update",
   url: string,
+  options?: WebhookOptions,
 ) {
   const messageId = `sim-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const timestamp = new Date().toISOString();
@@ -41,7 +50,8 @@ async function sendWebhook(
   let streamId = `${Date.now()}`;
   if (eventType === "stream.offline") {
     try {
-      const { createSupabaseAdminClient } = await import("../src/lib/supabase-admin.ts");
+      const { createSupabaseAdminClient } =
+        await import("../src/lib/supabase-admin.ts");
       const supabase = createSupabaseAdminClient();
       const { data } = await supabase
         .from("streams")
@@ -57,38 +67,61 @@ async function sendWebhook(
     } catch {}
   }
 
+  let eventPayload: Record<string, unknown>;
+  let version = "1";
+
+  if (eventType === "stream.online") {
+    eventPayload = {
+      id: streamId,
+      broadcaster_user_id: BROADCASTER_ID,
+      broadcaster_user_login: "knekro",
+      broadcaster_user_name: "KNekro",
+      type: "live",
+      started_at: timestamp,
+    };
+  } else if (eventType === "stream.offline") {
+    eventPayload = {
+      id: streamId,
+      broadcaster_user_id: BROADCASTER_ID,
+      broadcaster_user_login: "knekro",
+      broadcaster_user_name: "KNekro",
+    };
+  } else {
+    // channel.update
+    version = "2";
+    eventPayload = {
+      broadcaster_user_id: BROADCASTER_ID,
+      broadcaster_user_login: "knekro",
+      broadcaster_user_name: "KNekro",
+      title: options?.title || "Simulated stream update",
+      language: "es",
+      category_id: options?.categoryId || "512953",
+      category_name: options?.categoryName || "ELDEN RING",
+    };
+  }
+
   const payload = {
     subscription: {
       id: `sub-${Date.now()}`,
       type: eventType,
-      version: "1",
+      version,
       status: "enabled",
       condition: { broadcaster_user_id: BROADCASTER_ID },
       transport: { method: "webhook", callback: url },
       created_at: timestamp,
     },
-    event:
-      eventType === "stream.online"
-        ? {
-            id: streamId,
-            broadcaster_user_id: BROADCASTER_ID,
-            broadcaster_user_login: "knekro",
-            broadcaster_user_name: "KNekro",
-            type: "live",
-            started_at: timestamp,
-          }
-        : {
-            id: streamId,
-            broadcaster_user_id: BROADCASTER_ID,
-            broadcaster_user_login: "knekro",
-            broadcaster_user_name: "KNekro",
-          },
+    event: eventPayload,
   };
 
   const rawBody = JSON.stringify(payload);
   const signature = signPayload(messageId, timestamp, rawBody);
 
   console.log(`Sending signed '${eventType}' webhook to: ${url}`);
+  if (eventType === "channel.update") {
+    console.log(
+      `Payload category: ${eventPayload.category_name} (ID: ${eventPayload.category_id})`,
+    );
+  }
 
   try {
     const res = await fetch(url, {
@@ -107,8 +140,10 @@ async function sendWebhook(
       console.log(`Success! Webhook responded with status: ${res.status}`);
       if (eventType === "stream.online") {
         console.log("Knekro is now marked as LIVE (En vivo) in the database.");
-      } else {
+      } else if (eventType === "stream.offline") {
         console.log("Stream marked as ENDED (Desconectado) in the database.");
+      } else {
+        console.log("Channel update processed successfully.");
       }
     } else {
       const errText = await res.text();
@@ -127,7 +162,10 @@ async function sendWebhook(
   }
 }
 
-async function directDbAction(action: "start" | "stop") {
+async function directDbAction(
+  action: "start" | "stop" | "update",
+  options?: { categoryName?: string; categoryId?: string },
+) {
   const { createSupabaseAdminClient } =
     await import("../src/lib/supabase-admin.ts");
   const supabase = createSupabaseAdminClient();
@@ -152,7 +190,7 @@ async function directDbAction(action: "start" | "stop") {
       console.log(data);
       console.log("Reload your browser to see 'En vivo'.");
     }
-  } else {
+  } else if (action === "stop") {
     const now = new Date().toISOString();
     const { data, error } = await supabase
       .from("streams")
@@ -167,35 +205,90 @@ async function directDbAction(action: "start" | "stop") {
       console.log(data);
       console.log("Reload your browser to see 'Desconectado'.");
     }
+  } else if (action === "update") {
+    const categoryName = options?.categoryName || "ELDEN RING";
+    const categoryId = options?.categoryId || "512953";
+
+    const { recordChannelUpdate, reconcileGame } =
+      await import("../src/lib/twitch/reconcile-game.ts");
+
+    const updateRecord = await recordChannelUpdate(
+      supabase,
+      new Date().toISOString(),
+      categoryId,
+      categoryName,
+    );
+    console.log("Logged channel update record:", updateRecord);
+
+    const reconcileResult = await reconcileGame(
+      supabase,
+      categoryId,
+      categoryName,
+    );
+    console.log("Reconcile game result:", reconcileResult);
   }
 }
 
 async function main() {
   const command = process.argv[2] || "start";
-  const targetUrl =
-    process.argv[3] || "http://localhost:4321/api/webhooks/twitch";
+  const defaultUrl = "http://localhost:4321/api/webhooks/twitch";
 
   if (command === "start" || command === "online") {
+    const targetUrl = process.argv[3] || defaultUrl;
     await sendWebhook("stream.online", targetUrl);
   } else if (command === "stop" || command === "offline") {
+    const targetUrl = process.argv[3] || defaultUrl;
     await sendWebhook("stream.offline", targetUrl);
+  } else if (command === "update" || command === "channel.update") {
+    let categoryName = "ELDEN RING";
+    let categoryId = "512953";
+    let targetUrl = defaultUrl;
+
+    const arg3 = process.argv[3];
+    const arg4 = process.argv[4];
+    const arg5 = process.argv[5];
+
+    if (arg3?.startsWith("http://") || arg3?.startsWith("https://")) {
+      targetUrl = arg3;
+    } else {
+      if (arg3) categoryName = arg3;
+      if (arg4) categoryId = arg4;
+      if (arg5?.startsWith("http://") || arg5?.startsWith("https://")) {
+        targetUrl = arg5;
+      }
+    }
+
+    await sendWebhook("channel.update", targetUrl, {
+      categoryName,
+      categoryId,
+    });
   } else if (command === "db-start") {
     await directDbAction("start");
   } else if (command === "db-stop") {
     await directDbAction("stop");
+  } else if (command === "db-update") {
+    const categoryName = process.argv[3];
+    const categoryId = process.argv[4];
+    await directDbAction("update", { categoryName, categoryId });
   } else {
     console.log("Usage:");
     console.log(
-      "  node scripts/simulate-stream.ts start [url]    - Sends signed stream.online webhook",
+      "  node scripts/simulate-stream.ts start [url]                                 - Sends signed stream.online webhook",
     );
     console.log(
-      "  node scripts/simulate-stream.ts stop [url]     - Sends signed stream.offline webhook",
+      "  node scripts/simulate-stream.ts stop [url]                                  - Sends signed stream.offline webhook",
     );
     console.log(
-      "  node scripts/simulate-stream.ts db-start       - Directly sets live in Supabase",
+      "  node scripts/simulate-stream.ts update [category_name] [category_id] [url]   - Sends signed channel.update webhook",
     );
     console.log(
-      "  node scripts/simulate-stream.ts db-stop        - Directly ends stream in Supabase",
+      "  node scripts/simulate-stream.ts db-start                                    - Directly sets live in Supabase",
+    );
+    console.log(
+      "  node scripts/simulate-stream.ts db-stop                                     - Directly ends stream in Supabase",
+    );
+    console.log(
+      "  node scripts/simulate-stream.ts db-update [category_name] [category_id]        - Directly records update and reconciles game",
     );
   }
 }
