@@ -16,7 +16,7 @@ depends_on: []
 | Games library | `/games` — catalog of games played on stream, filtered by status         |
 | `game_status` | Lookup table of library states (e.g. "En progreso"), drives filter tabs  |
 | Post          | Community/news entry shown in the home feed (`posts` table)              |
-| Stream log    | A single stream session record (`StreamLog` type; table not yet built)   |
+| Stream        | A single stream session record (`Stream` type)                           |
 | Category      | Twitch/provider category attached to a stream (`Category` type)          |
 | Notch         | `.knk-notch` clipped-corner shape — the site's signature UI motif        |
 | SSR client    | Per-request `@supabase/ssr` `createServerClient` for cookie sessions     |

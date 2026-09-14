@@ -3,6 +3,6 @@
 // or reach into a specific domain file (e.g. "@/types/games").
 
 export * from "./games";
-export * from "./categories";
-export * from "./streams";
 export * from "./goty";
+export * from "./streams";
+export * from "./twitch";

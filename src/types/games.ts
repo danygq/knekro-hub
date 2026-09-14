@@ -25,6 +25,7 @@ export interface GameDetails {
   status: GameStatus;
   game_status_id: number | null;
   user_vote?: UserVoteEmbed[] | null;
+  twitch_game_id?: string | null;
 }
 
 export interface UserVoteEmbed {
@@ -77,4 +78,5 @@ export interface Game {
   added_at?: string; // ISO timestamp
   updated_at?: string; // ISO timestamp
   tags?: string[];
+  twitch_game_id?: string | null;
 }

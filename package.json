@@ -1,6 +1,7 @@
 {
   "name": "knekro-hub",
   "version": "0.0.1",
+  "type": "module",
   "private": true,
   "scripts": {
     "dev": "astro dev",
@@ -8,7 +9,8 @@
     "preview": "astro preview",
     "eventsub": "node scripts/manage-eventsub.ts",
     "stream:start": "node scripts/simulate-stream.ts start",
-    "stream:stop": "node scripts/simulate-stream.ts stop"
+    "stream:stop": "node scripts/simulate-stream.ts stop",
+    "stream:update": "node scripts/simulate-stream.ts update"
   },
   "dependencies": {
     "@astrojs/alpinejs": "^1.0.0",

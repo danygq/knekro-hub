@@ -1,6 +1,12 @@
 import type { APIRoute } from "astro";
 import { verifyTwitchSignature } from "@/lib/twitch/verify-signature";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
+import { getHelixStream } from "@/lib/twitch/helix";
+import {
+  reconcileGame,
+  recordChannelUpdate,
+} from "@/lib/twitch/reconcile-game";
+import { DEFAULT_TWITCH_BROADCASTER_ID } from "@/lib/twitch/constants";
 
 export const prerender = false;
 
@@ -20,13 +26,16 @@ interface TwitchEventSubBody {
     broadcaster_user_name: string;
     type?: string;
     started_at?: string;
+    category_id?: string;
+    category_name?: string;
+    title?: string;
+    language?: string;
   };
 }
 
 export const POST: APIRoute = async ({ request }) => {
   const secret =
-    (typeof import.meta !== "undefined" &&
-      import.meta.env?.TWITCH_EVENTSUB_SECRET) ||
+    import.meta?.env?.TWITCH_EVENTSUB_SECRET ||
     process.env.TWITCH_EVENTSUB_SECRET;
 
   if (!secret) {
@@ -101,7 +110,8 @@ export const POST: APIRoute = async ({ request }) => {
 
     if (eventType === "stream.online") {
       // Use exact started_at provided by Twitch in event payload
-      const startedAt = event.started_at || messageTimestamp || new Date().toISOString();
+      const startedAt =
+        event.started_at || messageTimestamp || new Date().toISOString();
       const twitchId = event.id ?? null;
 
       // Check if this stream start was already recorded (idempotency guard)
@@ -158,6 +168,56 @@ export const POST: APIRoute = async ({ request }) => {
         );
         return new Response("Database error", { status: 500 });
       }
+
+      // Query broadcaster's initial stream category via Helix API
+      try {
+        const broadcasterId =
+          event.broadcaster_user_id ||
+          import.meta?.env?.TWITCH_BROADCASTER_ID ||
+          process.env.TWITCH_BROADCASTER_ID ||
+          DEFAULT_TWITCH_BROADCASTER_ID;
+
+        const currentStream = await getHelixStream(broadcasterId);
+        if (
+          currentStream &&
+          (currentStream.game_id || currentStream.game_name)
+        ) {
+          const categoryId = currentStream.game_id || null;
+          const categoryName = currentStream.game_name || null;
+
+          await recordChannelUpdate(
+            supabaseAdmin,
+            messageTimestamp || startedAt,
+            categoryId,
+            categoryName,
+          );
+
+          await reconcileGame(supabaseAdmin, categoryId, categoryName);
+        }
+      } catch (helixErr) {
+        console.error(
+          "[Twitch EventSub] Error resolving Helix stream category on stream.online:",
+          helixErr,
+        );
+      }
+
+      return new Response(null, { status: 204 });
+    }
+
+    if (eventType === "channel.update") {
+      const categoryId = event.category_id ?? null;
+      const categoryName = event.category_name ?? null;
+
+      // 1. Record category transition in twitch_channel_update
+      await recordChannelUpdate(
+        supabaseAdmin,
+        messageTimestamp,
+        categoryId,
+        categoryName,
+      );
+
+      // 2. Reconcile game in public.games
+      await reconcileGame(supabaseAdmin, categoryId, categoryName);
 
       return new Response(null, { status: 204 });
     }
