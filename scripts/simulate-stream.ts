@@ -13,7 +13,10 @@
 
 import crypto from "node:crypto";
 import { parseArgs } from "node:util";
-import { DEFAULT_TWITCH_BROADCASTER_ID } from "../src/lib/twitch/constants.ts";
+import {
+  DEFAULT_TWITCH_BROADCASTER_ID,
+  toMadridDateTimeString,
+} from "../src/lib/twitch/constants.ts";
 
 try {
   process.loadEnvFile(".env.local");
@@ -211,7 +214,7 @@ async function directDbAction(
   const supabase = createSupabaseAdminClient();
 
   if (action === "start") {
-    const now = new Date().toISOString();
+    const now = toMadridDateTimeString();
     await supabase
       .from("streams")
       .update({ ended_at: now })
@@ -230,7 +233,7 @@ async function directDbAction(
       console.log("Reload your browser to see 'En vivo'.");
     }
   } else if (action === "stop") {
-    const now = new Date().toISOString();
+    const now = toMadridDateTimeString();
     const { data, error } = await supabase
       .from("streams")
       .update({ ended_at: now })
@@ -253,7 +256,7 @@ async function directDbAction(
 
     const updateRecord = await recordChannelUpdate(
       supabase,
-      new Date().toISOString(),
+      toMadridDateTimeString(),
       categoryId,
       categoryName,
     );

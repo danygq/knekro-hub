@@ -60,3 +60,31 @@ export function isIgnoredTwitchCategory(
   if (!categoryId) return false;
   return IGNORED_TWITCH_CATEGORY_IDS.has(categoryId.trim());
 }
+
+/**
+ * Formats a Date or ISO timestamp into Europe/Madrid wall-clock timestamp string (YYYY-MM-DD HH:mm:ss).
+ * This ensures Postgres timestamptz and timestamp columns store the local Spanish broadcast time.
+ */
+export function toMadridDateTimeString(
+  dateInput?: string | Date | null,
+): string {
+  const date = dateInput ? new Date(dateInput) : new Date();
+  const validDate = Number.isNaN(date.getTime()) ? new Date() : date;
+
+  const formatter = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/Madrid",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  });
+
+  const parts = formatter.formatToParts(validDate);
+  const get = (type: string) =>
+    parts.find((p) => p.type === type)?.value ?? "00";
+
+  return `${get("year")}-${get("month")}-${get("day")} ${get("hour")}:${get("minute")}:${get("second")}`;
+}

@@ -40,6 +40,7 @@ const lastStreamFormatted = latestStream?.ended_at
       month: "short",
       hour: "2-digit",
       minute: "2-digit",
+      timeZone: "UTC",
     })
   : latestStream?.started_at
     ? new Date(latestStream.started_at).toLocaleDateString("es-ES", {
@@ -47,6 +48,7 @@ const lastStreamFormatted = latestStream?.ended_at
         month: "short",
         hour: "2-digit",
         minute: "2-digit",
+        timeZone: "UTC",
       })
     : "--";
 ---
