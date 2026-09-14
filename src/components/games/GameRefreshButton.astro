@@ -1,0 +1,80 @@
+---
+interface Props {
+  gameId: number;
+}
+
+const { gameId } = Astro.props;
+---
+
+<button
+  type="button"
+  x-data={`{
+    timeLeft: 0,
+    timer: null,
+    init() {
+      const until = window.__knkRefreshCooldowns?.[${gameId}] || 0;
+      const rem = Math.ceil((until - Date.now()) / 1000);
+      if (rem > 0) {
+        this.timeLeft = rem;
+        this.startTimer();
+      }
+    },
+    startTimer() {
+      clearInterval(this.timer);
+      this.timer = setInterval(() => {
+        const until = window.__knkRefreshCooldowns?.[${gameId}] || 0;
+        const rem = Math.ceil((until - Date.now()) / 1000);
+        if (rem > 0) {
+          this.timeLeft = rem;
+        } else {
+          this.timeLeft = 0;
+          clearInterval(this.timer);
+        }
+      }, 500);
+    },
+    handleClick(e) {
+      if (this.timeLeft > 0) {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+      window.__knkRefreshCooldowns = window.__knkRefreshCooldowns || {};
+      window.__knkRefreshCooldowns[${gameId}] = Date.now() + 5000;
+      this.timeLeft = 5;
+      this.startTimer();
+    }
+  }`}
+  @click.stop="handleClick($event)"
+  :disabled="timeLeft > 0"
+  :title="timeLeft > 0 ? ('Disponible en ' + timeLeft + 's') : 'Actualizar votos del juego'"
+  aria-label="Actualizar votos del juego"
+  hx-get={`/api/games/card?id=${gameId}`}
+  hx-target="closest .knk-game-card"
+  hx-swap="outerHTML"
+  class="absolute top-3 left-3 z-10 knk-notch-sm px-2 py-1 inline-flex items-center gap-1 text-xs font-medium border bg-(--knk-bg)/80 backdrop-blur-xs text-(--knk-text-muted) border-(--knk-line) hover:text-(--knk-primary) hover:border-(--knk-line-strong) transition-all duration-200 disabled:text-(--knk-text-faint)"
+  :class="{ 'opacity-0 group-hover:opacity-100 focus-visible:opacity-100 cursor-pointer': timeLeft === 0, 'opacity-90 !cursor-not-allowed pointer-events-auto': timeLeft > 0 }"
+>
+  <svg
+    width="13"
+    height="13"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    :class="{ 'animate-spin': timeLeft > 0 }"
+    class="shrink-0"
+    aria-hidden="true"
+  >
+    <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+    <path d="M3 3v5h5"></path>
+    <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"></path>
+    <path d="M16 21h5v-5"></path>
+  </svg>
+  <span
+    x-show="timeLeft > 0"
+    x-text="timeLeft + 's'"
+    class="tabular-nums font-semibold text-[11px]"
+  ></span>
+</button>

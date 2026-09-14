@@ -6,6 +6,7 @@ import type { GameDetails } from "@/types";
 import GameStatusBadge from "./GameStatusBadge.astro";
 import GameUserVoteBadge from "./GameUserVoteBadge.astro";
 import GameCommunityVotesBadge from "./GameCommunityVotesBadge.astro";
+import GameRefreshButton from "./GameRefreshButton.astro";
 
 interface Props {
   game: GameDetails;
@@ -67,6 +68,7 @@ const userVote = game.user_vote?.[0]?.vote;
       </div>
     )}
 
+    <GameRefreshButton gameId={gameId} />
     <GameStatusBadge status={status} />
 
     <div class="absolute bottom-3 left-3 right-3 z-10 flex items-end justify-between gap-2 pointer-events-none">
