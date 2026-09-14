@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { isIgnoredTwitchCategory } from "./constants";
+import { isIgnoredTwitchCategory, toMadridDateTimeString } from "./constants";
 
 export interface ReconcileGameResult {
   action: "matched_by_id" | "updated_by_name" | "created" | "skipped";
@@ -33,6 +33,15 @@ export async function reconcileGame(
     trimmedId === "0" ||
     isIgnoredTwitchCategory(trimmedId)
   ) {
+    const reason =
+      !trimmedId || !trimmedName
+        ? "missing ID or name"
+        : trimmedId === "0"
+          ? "category ID is 0"
+          : "ignored category";
+    console.log(
+      `[Twitch Reconcile] Skipped: category="${trimmedName}" (id: ${trimmedId}) - reason: ${reason}`,
+    );
     return { action: "skipped" };
   }
 
@@ -51,6 +60,9 @@ export async function reconcileGame(
   }
 
   if (existingById) {
+    console.log(
+      `[Twitch Reconcile] Game "${existingById.name}" already exists in database (twitch_game_id: ${trimmedId}, id: ${existingById.id}).`,
+    );
     return { action: "matched_by_id", game: existingById };
   }
 
@@ -71,6 +83,9 @@ export async function reconcileGame(
 
   if (matchedByName) {
     if (!matchedByName.twitch_game_id) {
+      console.log(
+        `[Twitch Reconcile] Matched existing game "${matchedByName.name}" (id: ${matchedByName.id}) by name. Backfilling twitch_game_id: ${trimmedId}...`,
+      );
       const { data: updatedGame, error: updateError } = await supabaseAdmin
         .from("games")
         .update({ twitch_game_id: trimmedId })
@@ -80,17 +95,26 @@ export async function reconcileGame(
 
       if (updateError) {
         console.error(
-          "[Twitch Reconcile] Failed to backfill twitch_game_id:",
+          `[Twitch Reconcile] Failed to backfill twitch_game_id for "${matchedByName.name}":`,
           updateError,
         );
         return { action: "updated_by_name", game: matchedByName };
       }
+      console.log(
+        `[Twitch Reconcile] Successfully linked game "${matchedByName.name}" (id: ${matchedByName.id}) to twitch_game_id: ${trimmedId}.`,
+      );
       return { action: "updated_by_name", game: updatedGame };
     }
+    console.log(
+      `[Twitch Reconcile] Matched existing game "${matchedByName.name}" (id: ${matchedByName.id}) by name, but it already has twitch_game_id: ${matchedByName.twitch_game_id}.`,
+    );
     return { action: "matched_by_id", game: matchedByName };
   }
 
   // 3. Create New Game
+  console.log(
+    `[Twitch Reconcile] Game "${trimmedName}" (twitch_game_id: ${trimmedId}) not found in database. Inserting new game...`,
+  );
   const { data: newGame, error: insertError } = await supabaseAdmin
     .from("games")
     .insert({
@@ -102,10 +126,14 @@ export async function reconcileGame(
     .single();
 
   if (insertError) {
-    console.error("[Twitch Reconcile] Failed to insert new game:", insertError);
+    console.error(
+      `[Twitch Reconcile] Failed to insert new game "${trimmedName}":`,
+      insertError,
+    );
     return { action: "created", game: null };
   }
 
+  console.log(`Game ${newGame.name} was added to the database.`);
   return { action: "created", game: newGame };
 }
 
@@ -118,20 +146,25 @@ export async function recordChannelUpdate(
   categoryId: string | null | undefined,
   categoryName: string | null | undefined,
 ) {
+  const timestamp = eventTimestamp || toMadridDateTimeString();
   const { data, error } = await supabaseAdmin
     .from("twitch_channel_update")
     .insert({
-      event_timestamp: eventTimestamp || new Date().toISOString(),
+      event_timestamp: timestamp,
       category_id: categoryId?.trim() || null,
       category_name: categoryName?.trim() || null,
     })
-    .select()
+    .select("id, category_id, category_name, event_timestamp")
     .single();
 
   if (error) {
     console.error(
       "[Twitch EventSub] Failed to insert twitch_channel_update:",
       error,
+    );
+  } else {
+    console.log(
+      `[Twitch ChannelUpdate] Recorded category update: "${categoryName}" (ID: ${categoryId}) at ${timestamp}`,
     );
   }
   return data;

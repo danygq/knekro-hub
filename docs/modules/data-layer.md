@@ -1,7 +1,7 @@
 ---
 module: data-layer
 owner_area: backend
-last_verified_against_commit: fc4b86e
+last_verified_against_commit: bedcc3c
 depends_on: []
 ---
 
@@ -37,8 +37,8 @@ create table public.streams
 - Public read-only policy enabled (`SELECT` for `anon, authenticated`).
 - Writes are restricted to server-side webhook processing using `createSupabaseAdminClient()`.
 - `twitch_id` stores Twitch's opaque broadcast stream ID (`event.id` from `stream.online` and `stream.offline`), ensuring idempotency and direct row targeting via the `streams_twitch_id_key` unique constraint.
-- `started_at` captures the exact timestamp from Twitch's `stream.online` event payload (`event.started_at`), while `created_at` records the row insertion timestamp in Postgres (`default now()`).
-- `ended_at` records the conclusion timestamp when Twitch's `stream.offline` event is processed.
+- `started_at` captures the timestamp from Twitch's `stream.online` event payload (`event.started_at`) normalized into Europe/Madrid wall-clock time (`toMadridDateTimeString`), while `created_at` records the row insertion timestamp in Postgres (`default now()`).
+- `ended_at` records the conclusion timestamp normalized into Europe/Madrid wall-clock time when Twitch's `stream.offline` event is processed.
 
 ### `twitch_channel_update`
 
@@ -58,7 +58,7 @@ create table public.twitch_channel_update
 
 - Row Level Security (RLS) is enabled.
 - Writes are performed by server-side webhook handlers using `createSupabaseAdminClient()`.
-- `event_timestamp` tracks the message timestamp sent by Twitch EventSub or stream start time.
+- `event_timestamp` tracks the message timestamp sent by Twitch EventSub or stream start time normalized into Europe/Madrid wall-clock time (`toMadridDateTimeString`).
 - `category_id` and `category_name` store the raw Twitch category identifier and display name.
 
 ### `game_status`

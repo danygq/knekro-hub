@@ -6,7 +6,10 @@ import {
   reconcileGame,
   recordChannelUpdate,
 } from "@/lib/twitch/reconcile-game";
-import { DEFAULT_TWITCH_BROADCASTER_ID } from "@/lib/twitch/constants";
+import {
+  DEFAULT_TWITCH_BROADCASTER_ID,
+  toMadridDateTimeString,
+} from "@/lib/twitch/constants";
 
 export const prerender = false;
 
@@ -52,6 +55,10 @@ export const POST: APIRoute = async ({ request }) => {
   const signature = request.headers.get("twitch-eventsub-message-signature");
   const messageType = request.headers.get("twitch-eventsub-message-type");
 
+  console.log(
+    `[Twitch EventSub] Incoming webhook request: messageType=${messageType}, messageId=${messageId}, timestamp=${messageTimestamp}`,
+  );
+
   const rawBody = await request.text();
 
   const isValid = verifyTwitchSignature({
@@ -64,7 +71,7 @@ export const POST: APIRoute = async ({ request }) => {
 
   if (!isValid) {
     console.warn(
-      "[Twitch EventSub] Failed signature verification or stale timestamp",
+      `[Twitch EventSub] Failed signature verification or stale timestamp. messageId=${messageId}, timestamp=${messageTimestamp}, signaturePresent=${Boolean(signature)}`,
     );
     return new Response("Forbidden: Invalid signature or timestamp", {
       status: 403,
@@ -75,24 +82,31 @@ export const POST: APIRoute = async ({ request }) => {
   try {
     body = JSON.parse(rawBody);
   } catch {
+    console.error("[Twitch EventSub] Bad Request: Invalid JSON body");
     return new Response("Bad Request: Invalid JSON", { status: 400 });
   }
 
   // 1. Webhook subscription verification challenge
   if (messageType === "webhook_callback_verification") {
     if (typeof body.challenge === "string") {
+      console.log(
+        `[Twitch EventSub] Responding to verification challenge for subscription ${body.subscription?.id} (type: ${body.subscription?.type}, version: ${body.subscription?.version})`,
+      );
       return new Response(body.challenge, {
         status: 200,
         headers: { "Content-Type": "text/plain" },
       });
     }
+    console.error(
+      "[Twitch EventSub] Verification callback missing challenge string",
+    );
     return new Response("Missing challenge string", { status: 400 });
   }
 
   // 2. Revocation notice
   if (messageType === "revocation") {
     console.warn(
-      `[Twitch EventSub] Subscription ${body.subscription.id} revoked. Type: ${body.subscription.type}`,
+      `[Twitch EventSub] Subscription ${body.subscription.id} revoked. Type: ${body.subscription.type}, status: ${body.subscription.status}`,
     );
     return new Response(null, { status: 204 });
   }
@@ -103,16 +117,28 @@ export const POST: APIRoute = async ({ request }) => {
     const event = body.event;
 
     if (!event) {
+      console.error(
+        "[Twitch EventSub] Notification payload missing event object",
+      );
       return new Response("Missing event payload", { status: 400 });
     }
+
+    console.log(
+      `[Twitch EventSub] Processing notification event '${eventType}' for broadcaster ${event.broadcaster_user_name || event.broadcaster_user_id}`,
+    );
 
     const supabaseAdmin = createSupabaseAdminClient();
 
     if (eventType === "stream.online") {
-      // Use exact started_at provided by Twitch in event payload
-      const startedAt =
+      // Use started_at formatted to Europe/Madrid local time
+      const rawStartedAt =
         event.started_at || messageTimestamp || new Date().toISOString();
+      const startedAt = toMadridDateTimeString(rawStartedAt);
       const twitchId = event.id ?? null;
+
+      console.log(
+        `[Twitch EventSub] stream.online: twitchId=${twitchId}, rawStartedAt=${rawStartedAt}, startedAt (Europe/Madrid)=${startedAt}`,
+      );
 
       // Check if this stream start was already recorded (idempotency guard)
       if (twitchId) {
@@ -123,6 +149,9 @@ export const POST: APIRoute = async ({ request }) => {
           .maybeSingle();
 
         if (existingStream) {
+          console.log(
+            `[Twitch EventSub] Stream with twitch_id=${twitchId} already recorded (id: ${existingStream.id}), skipping.`,
+          );
           return new Response(null, { status: 204 });
         }
       } else {
@@ -138,6 +167,9 @@ export const POST: APIRoute = async ({ request }) => {
           latestStream.started_at === startedAt &&
           !latestStream.ended_at
         ) {
+          console.log(
+            `[Twitch EventSub] Stream already active with matching started_at=${startedAt}, skipping.`,
+          );
           return new Response(null, { status: 204 });
         }
       }
@@ -157,9 +189,11 @@ export const POST: APIRoute = async ({ request }) => {
         newStream.twitch_id = twitchId;
       }
 
-      const { error: insertError } = await supabaseAdmin
+      const { data: insertedStream, error: insertError } = await supabaseAdmin
         .from("streams")
-        .insert(newStream);
+        .insert(newStream)
+        .select("id, started_at, twitch_id")
+        .single();
 
       if (insertError) {
         console.error(
@@ -169,6 +203,10 @@ export const POST: APIRoute = async ({ request }) => {
         return new Response("Database error", { status: 500 });
       }
 
+      console.log(
+        `[Twitch EventSub] Successfully inserted stream.online: id=${insertedStream.id}, started_at=${insertedStream.started_at}`,
+      );
+
       // Query broadcaster's initial stream category via Helix API
       try {
         const broadcasterId =
@@ -177,6 +215,9 @@ export const POST: APIRoute = async ({ request }) => {
           process.env.TWITCH_BROADCASTER_ID ||
           DEFAULT_TWITCH_BROADCASTER_ID;
 
+        console.log(
+          `[Twitch EventSub] Resolving current stream category via Helix for broadcaster ${broadcasterId}...`,
+        );
         const currentStream = await getHelixStream(broadcasterId);
         if (
           currentStream &&
@@ -185,14 +226,29 @@ export const POST: APIRoute = async ({ request }) => {
           const categoryId = currentStream.game_id || null;
           const categoryName = currentStream.game_name || null;
 
+          console.log(
+            `[Twitch EventSub] Helix category resolved on stream.online: "${categoryName}" (ID: ${categoryId})`,
+          );
+
           await recordChannelUpdate(
             supabaseAdmin,
-            messageTimestamp || startedAt,
+            startedAt,
             categoryId,
             categoryName,
           );
 
-          await reconcileGame(supabaseAdmin, categoryId, categoryName);
+          const result = await reconcileGame(
+            supabaseAdmin,
+            categoryId,
+            categoryName,
+          );
+          console.log(
+            `[Twitch EventSub] Stream start game reconciliation for "${categoryName}": ${result.action}`,
+          );
+        } else {
+          console.log(
+            `[Twitch EventSub] Helix returned no stream category for broadcaster ${broadcasterId} on stream.online`,
+          );
         }
       } catch (helixErr) {
         console.error(
@@ -207,24 +263,40 @@ export const POST: APIRoute = async ({ request }) => {
     if (eventType === "channel.update") {
       const categoryId = event.category_id ?? null;
       const categoryName = event.category_name ?? null;
+      const eventTimestamp = toMadridDateTimeString(messageTimestamp);
+
+      console.log(
+        `[Twitch EventSub] channel.update received: category="${categoryName}" (ID: ${categoryId}), title="${event.title || ""}", eventTimestamp=${eventTimestamp}`,
+      );
 
       // 1. Record category transition in twitch_channel_update
       await recordChannelUpdate(
         supabaseAdmin,
-        messageTimestamp,
+        eventTimestamp,
         categoryId,
         categoryName,
       );
 
       // 2. Reconcile game in public.games
-      await reconcileGame(supabaseAdmin, categoryId, categoryName);
+      const result = await reconcileGame(
+        supabaseAdmin,
+        categoryId,
+        categoryName,
+      );
+      console.log(
+        `[Twitch EventSub] channel.update game reconciliation for "${categoryName}": ${result.action}`,
+      );
 
       return new Response(null, { status: 204 });
     }
 
     if (eventType === "stream.offline") {
-      const endedAt = messageTimestamp || new Date().toISOString();
+      const endedAt = toMadridDateTimeString(messageTimestamp);
       const twitchId = event.id ?? null;
+
+      console.log(
+        `[Twitch EventSub] stream.offline received: twitchId=${twitchId}, ended_at (Europe/Madrid)=${endedAt}`,
+      );
 
       if (twitchId) {
         // Target the exact stream row by its twitch_id
@@ -242,13 +314,19 @@ export const POST: APIRoute = async ({ request }) => {
           return new Response("Database error", { status: 500 });
         }
 
-        // Fallback: If no row matched by twitch_id (e.g. stream inserted prior to tracking twitch_id),
-        // close any currently open stream
+        // Fallback: If no row matched by twitch_id, close any currently open stream
         if (!updatedRows || updatedRows.length === 0) {
+          console.log(
+            `[Twitch EventSub] stream.offline: No row found with twitch_id=${twitchId}, closing any open stream.`,
+          );
           await supabaseAdmin
             .from("streams")
             .update({ ended_at: endedAt })
             .is("ended_at", null);
+        } else {
+          console.log(
+            `[Twitch EventSub] Closed stream id=${updatedRows[0]?.id} with ended_at=${endedAt}`,
+          );
         }
       } else {
         // Fallback when id is not provided
@@ -264,13 +342,18 @@ export const POST: APIRoute = async ({ request }) => {
           );
           return new Response("Database error", { status: 500 });
         }
+        console.log(
+          `[Twitch EventSub] Closed active stream with ended_at=${endedAt}`,
+        );
       }
 
       return new Response(null, { status: 204 });
     }
 
+    console.warn(`[Twitch EventSub] Unhandled eventType: ${eventType}`);
     return new Response(null, { status: 204 });
   }
 
+  console.warn(`[Twitch EventSub] Unhandled messageType: ${messageType}`);
   return new Response("Unhandled message type", { status: 400 });
 };
