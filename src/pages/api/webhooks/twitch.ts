@@ -6,6 +6,7 @@ import {
   reconcileGame,
   recordChannelUpdate,
 } from "@/lib/twitch/reconcile-game";
+import { DEFAULT_TWITCH_BROADCASTER_ID } from "@/lib/twitch/constants";
 
 export const prerender = false;
 
@@ -174,7 +175,7 @@ export const POST: APIRoute = async ({ request }) => {
           event.broadcaster_user_id ||
           import.meta?.env?.TWITCH_BROADCASTER_ID ||
           process.env.TWITCH_BROADCASTER_ID ||
-          "152633332";
+          DEFAULT_TWITCH_BROADCASTER_ID;
 
         const currentStream = await getHelixStream(broadcasterId);
         if (

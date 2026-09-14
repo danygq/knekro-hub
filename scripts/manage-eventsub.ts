@@ -2,35 +2,71 @@
  * CLI utility to manage Twitch EventSub webhook subscriptions for Knekro Hub.
  *
  * Usage:
- *   node scripts/manage-eventsub.ts list [type]
- *   node scripts/manage-eventsub.ts subscribe [callback_url] [type]
- *   node scripts/manage-eventsub.ts delete <subscription_id>
+ *   node scripts/manage-eventsub.ts list [--type <type>]
+ *   node scripts/manage-eventsub.ts subscribe [--url <callback_url>] [--type <type>] [--broadcaster-id <id>]
+ *   node scripts/manage-eventsub.ts delete --id <subscription_id>
  *   node scripts/manage-eventsub.ts delete-all
+ *   node scripts/manage-eventsub.ts --help
  */
+
+import { parseArgs } from "node:util";
+import {
+  DEFAULT_TWITCH_BROADCASTER_ID,
+  TWITCH_EVENTSUB_SUBSCRIPTIONS,
+} from "../src/lib/twitch/constants.ts";
 
 // Load .env.local if present
 try {
   process.loadEnvFile(".env.local");
 } catch {
-  // If already loaded or file missing, fallback to process.env
+  // Fallback if .env.local is already loaded or absent
 }
 
 const CLIENT_ID = process.env.TWITCH_CLIENT_ID;
 const CLIENT_SECRET = process.env.TWITCH_CLIENT_SECRET;
 const EVENTSUB_SECRET = process.env.TWITCH_EVENTSUB_SECRET;
-const BROADCASTER_ID = process.env.TWITCH_BROADCASTER_ID || "152633332";
 
-if (!CLIENT_ID || !CLIENT_SECRET) {
-  console.error(
-    "Error: TWITCH_CLIENT_ID and TWITCH_CLIENT_SECRET must be set in .env.local",
-  );
-  process.exit(1);
+function printHelp() {
+  console.log(`
+Twitch EventSub Management CLI
+
+Usage:
+  node scripts/manage-eventsub.ts <command> [options]
+
+Commands:
+  list                 List all active EventSub subscriptions
+  subscribe            Create subscriptions for Twitch webhook events
+  delete               Delete a subscription by its ID
+  delete-all           Delete all existing EventSub subscriptions
+  help                 Display this help message
+
+Options:
+  -u, --url <url>             Webhook callback URL (default: PUBLIC_SITE_URL/api/webhooks/twitch)
+  -t, --type <type>           Filter by or subscribe to specific event type (e.g. stream.online, channel.update)
+  -i, --id <id>               Subscription ID for deletion
+  -b, --broadcaster-id <id>   Broadcaster user ID (default: TWITCH_BROADCASTER_ID or "${DEFAULT_TWITCH_BROADCASTER_ID}")
+  -h, --help                  Show help
+
+Examples:
+  node scripts/manage-eventsub.ts list
+  node scripts/manage-eventsub.ts list --type stream.online
+  node scripts/manage-eventsub.ts subscribe --url https://your-domain.vercel.app/api/webhooks/twitch
+  node scripts/manage-eventsub.ts subscribe -u https://example.com/api/webhooks/twitch -t channel.update
+  node scripts/manage-eventsub.ts delete --id 82fb55f2-b883-4a16-bb70-13f50ef75f28
+  node scripts/manage-eventsub.ts delete-all
+`);
 }
 
 async function getAppAccessToken(): Promise<string> {
+  if (!CLIENT_ID || !CLIENT_SECRET) {
+    throw new Error(
+      "TWITCH_CLIENT_ID and TWITCH_CLIENT_SECRET must be set in environment (.env.local)",
+    );
+  }
+
   const params = new URLSearchParams({
-    client_id: CLIENT_ID!,
-    client_secret: CLIENT_SECRET!,
+    client_id: CLIENT_ID,
+    client_secret: CLIENT_SECRET,
     grant_type: "client_credentials",
   });
 
@@ -177,64 +213,113 @@ async function deleteSubscription(token: string, id: string) {
 }
 
 async function main() {
-  const command = process.argv[2] || "list";
+  let parsedArgs;
+  try {
+    parsedArgs = parseArgs({
+      args: process.argv.slice(2),
+      allowPositionals: true,
+      options: {
+        url: {
+          type: "string",
+          short: "u",
+        },
+        type: {
+          type: "string",
+          short: "t",
+        },
+        id: {
+          type: "string",
+          short: "i",
+        },
+        "broadcaster-id": {
+          type: "string",
+          short: "b",
+        },
+        help: {
+          type: "boolean",
+          short: "h",
+        },
+      },
+    });
+  } catch (err: any) {
+    console.error(`Argument error: ${err.message}`);
+    printHelp();
+    process.exit(1);
+  }
+
+  const { values, positionals } = parsedArgs;
+
+  if (values.help || positionals[0] === "help") {
+    printHelp();
+    return;
+  }
+
+  const command = positionals[0] || "list";
+  const broadcasterId =
+    values["broadcaster-id"] ||
+    process.env.TWITCH_BROADCASTER_ID ||
+    DEFAULT_TWITCH_BROADCASTER_ID;
 
   try {
     const token = await getAppAccessToken();
 
     if (command === "list") {
-      const filterType = process.argv[3];
+      // Allow --type flag or 2nd positional argument as fallback
+      const filterType = values.type || positionals[1];
       await listSubscriptions(token, filterType);
       return;
     }
 
     if (command === "subscribe") {
-      const arg3 = process.argv[3];
-      const arg4 = process.argv[4];
+      // Check for positional URL / type fallback if flags were not provided
+      let callbackUrl = values.url;
+      let specificType = values.type;
 
-      // Handle cases where 3rd param is type instead of callback url
-      const isArg3Url =
-        arg3?.startsWith("http://") || arg3?.startsWith("https://");
-      const callbackUrl =
-        (isArg3Url ? arg3 : null) ||
-        process.env.PUBLIC_SITE_URL?.replace(/\/$/, "") +
-          "/api/webhooks/twitch" ||
-        "https://knekro.vercel.app/api/webhooks/twitch";
+      if (!callbackUrl && positionals[1]) {
+        if (
+          positionals[1].startsWith("http://") ||
+          positionals[1].startsWith("https://")
+        ) {
+          callbackUrl = positionals[1];
+          if (positionals[2]) {
+            specificType = positionals[2];
+          }
+        } else {
+          specificType = positionals[1];
+        }
+      }
 
-      const specificType = !isArg3Url && arg3 ? arg3 : arg4;
+      const defaultPublicSiteUrl = process.env.PUBLIC_SITE_URL
+        ? `${process.env.PUBLIC_SITE_URL.replace(/\/$/, "")}/api/webhooks/twitch`
+        : "https://knekro.vercel.app/api/webhooks/twitch";
+
+      const finalCallbackUrl = callbackUrl || defaultPublicSiteUrl;
 
       console.log(
-        `Registering subscriptions for broadcaster ${BROADCASTER_ID}`,
+        `Registering subscriptions for broadcaster ID: ${broadcasterId}`,
       );
-      console.log(`Webhook callback URL: ${callbackUrl}`);
+      console.log(`Webhook callback URL: ${finalCallbackUrl}`);
 
-      if (!specificType || specificType === "stream.online") {
-        await createSubscription(
-          token,
-          "stream.online",
-          "1",
-          { broadcaster_user_id: BROADCASTER_ID },
-          callbackUrl,
+      const subscriptionsToRegister = specificType
+        ? TWITCH_EVENTSUB_SUBSCRIPTIONS.filter(
+            (sub) => sub.type === specificType,
+          )
+        : TWITCH_EVENTSUB_SUBSCRIPTIONS;
+
+      if (subscriptionsToRegister.length === 0) {
+        console.error(
+          `Unknown subscription type: '${specificType}'. Supported types: ${TWITCH_EVENTSUB_SUBSCRIPTIONS.map((s) => s.type).join(", ")}`,
         );
+        process.exit(1);
       }
 
-      if (!specificType || specificType === "stream.offline") {
+      for (const sub of subscriptionsToRegister) {
         await createSubscription(
           token,
-          "stream.offline",
-          "1",
-          { broadcaster_user_id: BROADCASTER_ID },
-          callbackUrl,
-        );
-      }
-
-      if (!specificType || specificType === "channel.update") {
-        await createSubscription(
-          token,
-          "channel.update",
-          "2",
-          { broadcaster_user_id: BROADCASTER_ID },
-          callbackUrl,
+          sub.type,
+          sub.version,
+          { broadcaster_user_id: broadcasterId },
+          finalCallbackUrl,
         );
       }
 
@@ -242,14 +327,15 @@ async function main() {
     }
 
     if (command === "delete") {
-      const id = process.argv[3];
-      if (!id) {
+      const subscriptionId = values.id || positionals[1];
+      if (!subscriptionId) {
         console.error(
-          "Usage: node scripts/manage-eventsub.ts delete <subscription_id>",
+          "Error: Missing subscription ID. Pass --id <subscription_id> or provide it as a positional argument.",
         );
+        printHelp();
         process.exit(1);
       }
-      await deleteSubscription(token, id);
+      await deleteSubscription(token, subscriptionId);
       return;
     }
 
@@ -267,14 +353,13 @@ async function main() {
       for (const sub of data.data) {
         await deleteSubscription(token, sub.id);
       }
-      console.log("All subscriptions deleted.");
+      console.log(`All ${data.data.length} subscriptions deleted.`);
       return;
     }
 
-    console.log(`Unknown command: ${command}`);
-    console.log(
-      "Available commands: list [type], subscribe [callback_url] [type], delete <id>, delete-all",
-    );
+    console.error(`Unknown command: '${command}'`);
+    printHelp();
+    process.exit(1);
   } catch (error) {
     console.error("Error executing EventSub manager:", error);
     process.exit(1);

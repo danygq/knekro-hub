@@ -1,4 +1,19 @@
 /**
+ * Twitch constants and helper definitions for Knekro Hub.
+ */
+
+export const DEFAULT_TWITCH_BROADCASTER_ID = "152633332";
+
+export const TWITCH_EVENTSUB_SUBSCRIPTIONS = [
+  { type: "stream.online", version: "1" },
+  { type: "stream.offline", version: "1" },
+  { type: "channel.update", version: "2" },
+] as const;
+
+export type TwitchEventSubType =
+  (typeof TWITCH_EVENTSUB_SUBSCRIPTIONS)[number]["type"];
+
+/**
  * Twitch category/game IDs that are non-game or excluded categories
  * that should not be inserted or reconciled into the `games` table.
  */

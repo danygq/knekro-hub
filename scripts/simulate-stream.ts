@@ -2,24 +2,62 @@
  * Helper to simulate Twitch EventSub webhook events locally or in production.
  *
  * Usage:
- *   node scripts/simulate-stream.ts start [optional_endpoint_url]
- *   node scripts/simulate-stream.ts stop  [optional_endpoint_url]
- *   node scripts/simulate-stream.ts update [category_name] [category_id] [optional_endpoint_url]
+ *   node scripts/simulate-stream.ts start [--url <url>]
+ *   node scripts/simulate-stream.ts stop [--url <url>]
+ *   node scripts/simulate-stream.ts update [--name <category_name>] [--category-id <id>] [--title <title>] [--url <url>]
  *   node scripts/simulate-stream.ts db-start
  *   node scripts/simulate-stream.ts db-stop
- *   node scripts/simulate-stream.ts db-update [category_name] [category_id]
+ *   node scripts/simulate-stream.ts db-update [--name <category_name>] [--category-id <id>]
+ *   node scripts/simulate-stream.ts --help
  */
 
 import crypto from "node:crypto";
+import { parseArgs } from "node:util";
+import { DEFAULT_TWITCH_BROADCASTER_ID } from "../src/lib/twitch/constants.ts";
 
 try {
   process.loadEnvFile(".env.local");
-} catch {}
+} catch {
+  // Fallback if .env.local is already loaded or absent
+}
 
 const SECRET =
   process.env.TWITCH_EVENTSUB_SECRET ||
   "c8f1d39e5b72a048e91d6c34fa280e71b5692043ca9e28f1b6a7350c4189e472";
-const BROADCASTER_ID = process.env.TWITCH_BROADCASTER_ID || "152633332";
+const BROADCASTER_ID =
+  process.env.TWITCH_BROADCASTER_ID || DEFAULT_TWITCH_BROADCASTER_ID;
+const DEFAULT_WEBHOOK_URL = "http://localhost:4321/api/webhooks/twitch";
+
+function printHelp() {
+  console.log(`
+Twitch EventSub Stream Simulator CLI
+
+Usage:
+  node scripts/simulate-stream.ts <command> [options]
+
+Commands:
+  start, online               Send signed stream.online webhook to target URL
+  stop, offline               Send signed stream.offline webhook to target URL
+  update, channel.update      Send signed channel.update webhook to target URL
+  db-start                    Directly insert active stream record in Supabase
+  db-stop                     Directly end active stream record in Supabase
+  db-update                   Directly record channel update & reconcile game in DB
+  help                        Show this help message
+
+Options:
+  -u, --url <url>             Target webhook URL (default: ${DEFAULT_WEBHOOK_URL})
+  -n, --name <name>           Twitch category/game name (default: "ELDEN RING")
+  -c, --category-id <id>      Twitch category ID (default: "512953")
+  -t, --title <title>         Stream title (default: "Simulated stream update")
+  -h, --help                  Show help
+
+Examples:
+  node scripts/simulate-stream.ts start
+  node scripts/simulate-stream.ts start --url https://your-domain.vercel.app/api/webhooks/twitch
+  node scripts/simulate-stream.ts update --name "Dark Souls" --category-id "29093"
+  node scripts/simulate-stream.ts db-update --name "Final Fantasy VII" --category-id "12345"
+`);
+}
 
 function signPayload(
   messageId: string,
@@ -64,7 +102,9 @@ async function sendWebhook(
       if (data?.twitch_id) {
         streamId = String(data.twitch_id);
       }
-    } catch {}
+    } catch {
+      // Ignore fallback error
+    }
   }
 
   let eventPayload: Record<string, unknown>;
@@ -172,7 +212,6 @@ async function directDbAction(
 
   if (action === "start") {
     const now = new Date().toISOString();
-    // Close any previous open stream
     await supabase
       .from("streams")
       .update({ ended_at: now })
@@ -230,66 +269,93 @@ async function directDbAction(
 }
 
 async function main() {
-  const command = process.argv[2] || "start";
-  const defaultUrl = "http://localhost:4321/api/webhooks/twitch";
+  let parsedArgs;
+  try {
+    parsedArgs = parseArgs({
+      args: process.argv.slice(2),
+      allowPositionals: true,
+      options: {
+        url: {
+          type: "string",
+          short: "u",
+        },
+        name: {
+          type: "string",
+          short: "n",
+        },
+        "category-id": {
+          type: "string",
+          short: "c",
+        },
+        title: {
+          type: "string",
+          short: "t",
+        },
+        help: {
+          type: "boolean",
+          short: "h",
+        },
+      },
+    });
+  } catch (err: any) {
+    console.error(`Argument error: ${err.message}`);
+    printHelp();
+    process.exit(1);
+  }
+
+  const { values, positionals } = parsedArgs;
+
+  if (values.help || positionals[0] === "help") {
+    printHelp();
+    return;
+  }
+
+  const command = positionals[0] || "start";
+  const targetUrl = values.url || positionals[1]?.startsWith("http") ? positionals[1] : (values.url || DEFAULT_WEBHOOK_URL);
 
   if (command === "start" || command === "online") {
-    const targetUrl = process.argv[3] || defaultUrl;
-    await sendWebhook("stream.online", targetUrl);
+    const finalUrl = values.url || (positionals[1]?.startsWith("http") ? positionals[1] : DEFAULT_WEBHOOK_URL);
+    await sendWebhook("stream.online", finalUrl);
   } else if (command === "stop" || command === "offline") {
-    const targetUrl = process.argv[3] || defaultUrl;
-    await sendWebhook("stream.offline", targetUrl);
+    const finalUrl = values.url || (positionals[1]?.startsWith("http") ? positionals[1] : DEFAULT_WEBHOOK_URL);
+    await sendWebhook("stream.offline", finalUrl);
   } else if (command === "update" || command === "channel.update") {
-    let categoryName = "ELDEN RING";
-    let categoryId = "512953";
-    let targetUrl = defaultUrl;
+    let categoryName = values.name || "ELDEN RING";
+    let categoryId = values["category-id"] || "512953";
+    let finalUrl = values.url || DEFAULT_WEBHOOK_URL;
 
-    const arg3 = process.argv[3];
-    const arg4 = process.argv[4];
-    const arg5 = process.argv[5];
-
-    if (arg3?.startsWith("http://") || arg3?.startsWith("https://")) {
-      targetUrl = arg3;
-    } else {
-      if (arg3) categoryName = arg3;
-      if (arg4) categoryId = arg4;
-      if (arg5?.startsWith("http://") || arg5?.startsWith("https://")) {
-        targetUrl = arg5;
+    // Positional fallback compatibility
+    if (!values.name && positionals[1] && !positionals[1].startsWith("http")) {
+      categoryName = positionals[1];
+    }
+    if (!values["category-id"] && positionals[2] && !positionals[2].startsWith("http")) {
+      categoryId = positionals[2];
+    }
+    if (!values.url) {
+      const urlCandidate = [positionals[1], positionals[2], positionals[3]].find(
+        (arg) => arg?.startsWith("http://") || arg?.startsWith("https://"),
+      );
+      if (urlCandidate) {
+        finalUrl = urlCandidate;
       }
     }
 
-    await sendWebhook("channel.update", targetUrl, {
+    await sendWebhook("channel.update", finalUrl, {
       categoryName,
       categoryId,
+      title: values.title,
     });
   } else if (command === "db-start") {
     await directDbAction("start");
   } else if (command === "db-stop") {
     await directDbAction("stop");
   } else if (command === "db-update") {
-    const categoryName = process.argv[3];
-    const categoryId = process.argv[4];
+    const categoryName = values.name || positionals[1];
+    const categoryId = values["category-id"] || positionals[2];
     await directDbAction("update", { categoryName, categoryId });
   } else {
-    console.log("Usage:");
-    console.log(
-      "  node scripts/simulate-stream.ts start [url]                                 - Sends signed stream.online webhook",
-    );
-    console.log(
-      "  node scripts/simulate-stream.ts stop [url]                                  - Sends signed stream.offline webhook",
-    );
-    console.log(
-      "  node scripts/simulate-stream.ts update [category_name] [category_id] [url]   - Sends signed channel.update webhook",
-    );
-    console.log(
-      "  node scripts/simulate-stream.ts db-start                                    - Directly sets live in Supabase",
-    );
-    console.log(
-      "  node scripts/simulate-stream.ts db-stop                                     - Directly ends stream in Supabase",
-    );
-    console.log(
-      "  node scripts/simulate-stream.ts db-update [category_name] [category_id]        - Directly records update and reconciles game",
-    );
+    console.log(`Unknown command: '${command}'`);
+    printHelp();
   }
 }
 
