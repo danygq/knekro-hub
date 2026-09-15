@@ -158,7 +158,7 @@ create table public.roles
 
 - Row Level Security (RLS) is enabled.
 - Read policies: viewable by authenticated and anon users (`SELECT`).
-- Mutation policies: `INSERT`, `UPDATE`, `DELETE` enabled for authenticated users.
+- Mutation policies: `INSERT`, `UPDATE`, `DELETE` strictly restricted to users holding the `owner` role via `public.is_owner()`.
 
 ### `user_roles`
 
@@ -188,7 +188,7 @@ create index if not exists user_roles_role_id_idx
 - Cascade deletes: deleting a user or role automatically cleans up associated junction records.
 - Row Level Security (RLS) is enabled.
 - Read policy: authenticated users can query their own assigned roles (`auth.uid() = user_id`).
-- Mutation policies: `INSERT`, `UPDATE`, `DELETE` enabled for authenticated users.
+- Mutation policies: `INSERT`, `UPDATE`, `DELETE` strictly restricted to users holding the `owner` role via `public.is_owner()`.
 
 ### Triggers
 
