@@ -67,7 +67,7 @@ export function isIgnoredTwitchCategory(
  * This ensures Postgres timestamptz and timestamp columns store the local Spanish broadcast time.
  */
 export function toMadridDateTimeString(
-  dateInput?: string | Date | null,
+  dateInput?: string | Date | number | null,
 ): string {
   const date = dateInput ? new Date(dateInput) : new Date();
   const validDate = Number.isNaN(date.getTime()) ? new Date() : date;
@@ -88,4 +88,127 @@ export function toMadridDateTimeString(
     parts.find((p) => p.type === type)?.value ?? "00";
 
   return `${get("year")}-${get("month")}-${get("day")} ${get("hour")}:${get("minute")}:${get("second")}`;
+}
+
+/**
+ * Safely parses a stream timestamp string or Date object into a valid Date.
+ */
+export function parseStreamDate(
+  dateInput: string | Date | null | undefined,
+): Date | null {
+  if (!dateInput) return null;
+  if (dateInput instanceof Date) {
+    return Number.isNaN(dateInput.getTime()) ? null : dateInput;
+  }
+  if (typeof dateInput === "string") {
+    const trimmed = dateInput.trim();
+    if (!trimmed) return null;
+    const normalized = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/.test(trimmed)
+      ? trimmed.replace(" ", "T")
+      : trimmed;
+    const date = new Date(normalized);
+    if (!Number.isNaN(date.getTime())) {
+      return date;
+    }
+  }
+  return null;
+}
+
+/**
+ * Extracts Madrid wall-clock epoch timestamp (in UTC pseudo-milliseconds) from any stream timestamp representation.
+ * Supports strings formatted as "YYYY-MM-DD HH:mm:ss", ISO strings ("2026-09-15T19:36:00+00:00"), or Date instances.
+ */
+export function getStreamMadridEpoch(
+  dateInput: string | Date | null | undefined,
+): number | null {
+  if (!dateInput) return null;
+
+  if (typeof dateInput === "string") {
+    const trimmed = dateInput.trim();
+    const match = trimmed.match(
+      /^(\d{4})-(\d{2})-(\d{2})[T\s](\d{2}):(\d{2}):?(\d{2})?/,
+    );
+    if (match) {
+      const [, y, m, d, h, min, s] = match;
+      const sec = s ?? "00";
+      return Date.parse(`${y}-${m}-${d}T${h}:${min}:${sec}Z`);
+    }
+  }
+
+  if (dateInput instanceof Date && !Number.isNaN(dateInput.getTime())) {
+    const madridStr = toMadridDateTimeString(dateInput);
+    return Date.parse(madridStr.replace(" ", "T") + "Z");
+  }
+
+  return null;
+}
+
+/**
+ * Formats stream started_at time in Spain wall-clock time (HH:mm).
+ * Example: "18:30"
+ */
+export function formatStreamStartTime(
+  dateInput: string | Date | null | undefined,
+): string {
+  if (!dateInput) return "--:--";
+
+  if (typeof dateInput === "string") {
+    const trimmed = dateInput.trim();
+    const match = trimmed.match(/^\d{4}-\d{2}-\d{2}[T\s](\d{2}):(\d{2})/);
+    if (match) {
+      return `${match[1]}:${match[2]}`;
+    }
+  }
+
+  const date = parseStreamDate(dateInput);
+  if (!date) return "--:--";
+
+  return date.toLocaleTimeString("es-ES", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Europe/Madrid",
+  });
+}
+
+/**
+ * Formats elapsed stream duration since started_at into human-readable Spanish text.
+ * Examples:
+ * - "25 secs"
+ * - "30 min y 20 secs"
+ * - "1 h, 15 min y 30 secs"
+ */
+export function formatStreamElapsedTime(
+  dateInput: string | Date | null | undefined,
+  nowInput?: Date | number,
+): string {
+  if (!dateInput) return "0 secs";
+
+  const startedMadridEpoch = getStreamMadridEpoch(dateInput);
+  if (!startedMadridEpoch) return "0 secs";
+
+  const madridNowStr = toMadridDateTimeString(nowInput);
+  const nowMadridEpoch = Date.parse(madridNowStr.replace(" ", "T") + "Z");
+
+  if (Number.isNaN(nowMadridEpoch)) return "0 secs";
+
+  const elapsedMs = Math.max(0, nowMadridEpoch - startedMadridEpoch);
+  const totalSeconds = Math.floor(elapsedMs / 1000);
+
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  const secUnit = seconds === 1 ? "sec" : "secs";
+  const minUnit = "min";
+  const hrUnit = "h";
+
+  if (hours > 0) {
+    return `${hours} ${hrUnit}, ${minutes} ${minUnit} y ${seconds} ${secUnit}`;
+  }
+
+  if (minutes > 0) {
+    return `${minutes} ${minUnit} y ${seconds} ${secUnit}`;
+  }
+
+  return `${seconds} ${secUnit}`;
 }
