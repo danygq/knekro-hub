@@ -45,7 +45,9 @@ export async function loadUserRoleNames(
   }
 
   return (data ?? [])
-    .map((row) => (row as unknown as { role: { name: string } | null }).role?.name)
+    .map(
+      (row) => (row as unknown as { role: { name: string } | null }).role?.name,
+    )
     .filter((name): name is string => typeof name === "string");
 }
 
@@ -66,7 +68,10 @@ export async function userHasRole(
     .maybeSingle();
 
   if (error) {
-    console.error(`Error checking role "${roleName}" for user ${userId}:`, error);
+    console.error(
+      `Error checking role "${roleName}" for user ${userId}:`,
+      error,
+    );
     return false;
   }
 
@@ -90,7 +95,10 @@ export async function userHasRoleId(
     .maybeSingle();
 
   if (error) {
-    console.error(`Error checking role ID ${roleId} for user ${userId}:`, error);
+    console.error(
+      `Error checking role ID ${roleId} for user ${userId}:`,
+      error,
+    );
     return false;
   }
 
@@ -100,9 +108,7 @@ export async function userHasRoleId(
 /**
  * Loads all defined system roles.
  */
-export async function loadAllRoles(
-  client: SupabaseClient,
-): Promise<Role[]> {
+export async function loadAllRoles(client: SupabaseClient): Promise<Role[]> {
   const { data, error } = await client
     .from("roles")
     .select("id, name, created_at")

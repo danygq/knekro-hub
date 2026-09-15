@@ -112,7 +112,9 @@ export async function reconcileGame(
         .from("games")
         .update({ twitch_game_id: trimmedId, last_played_at: timestamp })
         .eq("id", matchedByName.id)
-        .select("id, name, twitch_game_id, game_status_id, cover_url, last_played_at")
+        .select(
+          "id, name, twitch_game_id, game_status_id, cover_url, last_played_at",
+        )
         .single();
 
       if (updateError) {
