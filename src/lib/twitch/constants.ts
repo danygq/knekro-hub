@@ -45,6 +45,7 @@ export const IGNORED_TWITCH_CATEGORIES: Record<string, string> = {
   "772157971": "Narrativa y escritura",
   "43579844": "LEGO y construcción con bloques",
   "1397210469": "miniaturas y modelos",
+  "329951934": "Pokémon Community Game",
 };
 
 export const IGNORED_TWITCH_CATEGORY_IDS = new Set<string>(
