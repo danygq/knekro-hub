@@ -1,5 +1,9 @@
 ---
 import Layout from "@/layouts/Layout.astro";
+import {
+  formatStreamStartTime,
+  formatStreamElapsedTime,
+} from "@/lib/twitch/constants";
 
 // If OAuth falls back to Site URL root with an auth code, forward to callback handler
 const code = Astro.url.searchParams.get("code");
@@ -33,6 +37,16 @@ const latestStream = streamResult.data;
 const isLive = Boolean(
   latestStream && latestStream.started_at && !latestStream.ended_at,
 );
+
+const streamStartedFormatted =
+  isLive && latestStream?.started_at
+    ? formatStreamStartTime(latestStream.started_at)
+    : null;
+
+const streamElapsedFormatted =
+  isLive && latestStream?.started_at
+    ? formatStreamElapsedTime(latestStream.started_at)
+    : null;
 
 const lastStreamFormatted = latestStream?.ended_at
   ? new Date(latestStream.ended_at).toLocaleDateString("es-ES", {
@@ -77,10 +91,23 @@ const lastStreamFormatted = latestStream?.ended_at
 
       <div class="mt-4 flex flex-wrap items-center gap-4 pb-6 border-b border-(--knk-line)">
         {isLive ? (
-          <div class="knk-notch-sm inline-flex items-center gap-2 px-3 py-1 bg-(--knk-red-400)/10 border border-(--knk-red-400)/40 text-sm font-medium text-(--knk-text)">
-            <span class="w-1.5 h-1.5 rounded-full bg-(--knk-red-400) animate-pulse" />
-            En vivo
-          </div>
+          <>
+            <div class="knk-notch-sm inline-flex items-center gap-2 px-3 py-1 bg-(--knk-red-400)/10 border border-(--knk-red-400)/40 text-sm font-medium text-(--knk-text)">
+              <span class="w-1.5 h-1.5 rounded-full bg-(--knk-red-400) animate-pulse" />
+              En vivo
+            </div>
+            <div
+              id="stream-live-timer"
+              data-started-at={latestStream?.started_at}
+              class="text-sm text-(--knk-text-muted)"
+            >
+              Empezó a las{" "}
+              <span class="text-(--knk-text)">{streamStartedFormatted}</span>{" "}
+              <span id="stream-elapsed-time" class="text-(--knk-text)">
+                ({streamElapsedFormatted})
+              </span>
+            </div>
+          </>
         ) : (
           <>
             <div class="knk-notch-sm inline-flex items-center gap-2 px-3 py-1 bg-(--knk-surface-2) border border-(--knk-line) text-sm font-medium text-(--knk-text-muted)">
@@ -169,6 +196,8 @@ const lastStreamFormatted = latestStream?.ended_at
   </section>
 
   <script>
+    import { formatStreamElapsedTime } from "@/lib/twitch/constants";
+
     (function () {
       const hostname = window.location.hostname;
 
@@ -184,6 +213,23 @@ const lastStreamFormatted = latestStream?.ended_at
       ) as HTMLIFrameElement;
       if (chatIframe) {
         chatIframe.src = `https://www.twitch.tv/embed/knekro/chat?parent=${hostname}&darkpopout`;
+      }
+
+      const timerContainer = document.getElementById("stream-live-timer");
+      const elapsedEl = document.getElementById("stream-elapsed-time");
+      const startedAt = timerContainer?.getAttribute("data-started-at");
+
+      if (timerContainer && elapsedEl && startedAt) {
+        const updateTimer = () => {
+          elapsedEl.textContent = `(${formatStreamElapsedTime(startedAt)})`;
+        };
+        updateTimer();
+        const timerInterval = setInterval(updateTimer, 1000);
+        window.addEventListener(
+          "pagehide",
+          () => clearInterval(timerInterval),
+          { once: true },
+        );
       }
     })();
   </script>
