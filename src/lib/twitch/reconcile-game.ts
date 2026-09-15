@@ -17,9 +17,9 @@ export interface ReconcileGameResult {
  * 1. Lookup by `twitch_game_id`: Check if a game exists with `twitch_game_id = category_id`.
  * 2. Fallback Lookup by `name` (case-insensitive): If not found by ID, query `games` via `.ilike('name', category_name)`.
  *    If found with `twitch_game_id IS NULL`, update the existing record to backfill `twitch_game_id`.
- *    Also fetches a cover (SteamGridDB with IGDB fallback) when `cover_url` is null.
+ *    Also fetches a cover (IGDB with SteamGridDB fallback) when `cover_url` is null.
  * 3. Create New Game: If neither query yields a match, insert a new record with default `game_status_id = 11`.
- *    Immediately attempts a cover fetch (SteamGridDB with IGDB fallback) and writes `cover_url` if a match is found.
+ *    Immediately attempts a cover fetch (IGDB with SteamGridDB fallback) and writes `cover_url` if a match is found.
  */
 export async function reconcileGame(
   supabaseAdmin: SupabaseClient,
@@ -107,10 +107,10 @@ export async function reconcileGame(
         `[Twitch Reconcile] Successfully linked game "${matchedByName.name}" (id: ${matchedByName.id}) to twitch_game_id: ${trimmedId}.`,
       );
 
-      // Attempt cover fetch (SteamGridDB with IGDB fallback) when cover_url is still null
+      // Attempt cover fetch (IGDB with SteamGridDB fallback) when cover_url is still null
       if (!updatedGame.cover_url) {
         console.log(
-          `[Twitch Reconcile] cover_url is null for "${updatedGame.name}" (id: ${updatedGame.id}) — attempting cover lookup (SteamGridDB with IGDB fallback)...`,
+          `[Twitch Reconcile] cover_url is null for "${updatedGame.name}" (id: ${updatedGame.id}) — attempting cover lookup (IGDB with SteamGridDB fallback)...`,
         );
         try {
           const coverResult = await resolveGameCover(updatedGame.name ?? "");
@@ -131,7 +131,7 @@ export async function reconcileGame(
             }
           } else {
             console.log(
-              `[Twitch Reconcile] No cover found on SteamGridDB or IGDB for "${updatedGame.name}" (id: ${updatedGame.id}), cover_url left null.`,
+              `[Twitch Reconcile] No cover found on IGDB or SteamGridDB for "${updatedGame.name}" (id: ${updatedGame.id}), cover_url left null.`,
             );
           }
         } catch (coverErr) {
@@ -178,9 +178,9 @@ export async function reconcileGame(
 
   console.log(`Game ${newGame.name} was added to the database.`);
 
-  // Attempt cover fetch (SteamGridDB with IGDB fallback) for the newly inserted game
+  // Attempt cover fetch (IGDB with SteamGridDB fallback) for the newly inserted game
   console.log(
-    `[Twitch Reconcile] cover_url is null for new game "${newGame.name}" (id: ${newGame.id}) — attempting cover lookup (SteamGridDB with IGDB fallback)...`,
+    `[Twitch Reconcile] cover_url is null for new game "${newGame.name}" (id: ${newGame.id}) — attempting cover lookup (IGDB with SteamGridDB fallback)...`,
   );
   try {
     const coverResult = await resolveGameCover(newGame.name ?? "");
@@ -201,7 +201,7 @@ export async function reconcileGame(
       }
     } else {
       console.log(
-        `[Twitch Reconcile] No cover found on SteamGridDB or IGDB for "${newGame.name}" (id: ${newGame.id}), cover_url left null.`,
+        `[Twitch Reconcile] No cover found on IGDB or SteamGridDB for "${newGame.name}" (id: ${newGame.id}), cover_url left null.`,
       );
     }
   } catch (coverErr) {

@@ -1,10 +1,10 @@
 /**
  * CLI utility to retroactively populate cover_url for games in the database
- * using SteamGridDB with an automated IGDB fallback.
+ * using IGDB with an automated SteamGridDB fallback.
  *
  * For each game with cover_url = null (or all games when --force is passed):
- *   1. Primary lookup: SteamGridDB 600×900 grid image
- *   2. Fallback lookup: IGDB v4 search by name → cover.image_id (t_cover_big webp)
+ *   1. Primary lookup: IGDB v4 search by name → cover.image_id (t_cover_big webp)
+ *   2. Fallback lookup: SteamGridDB 600×900 grid image
  *
  * Follows the same pattern as scripts/sync-twitch-game-ids.ts.
  *
@@ -31,12 +31,12 @@ for (const envFile of [".env", ".env.local"]) {
 
 function printHelp() {
   console.log(`
-Game Cover Sync Script (SteamGridDB with IGDB fallback)
+Game Cover Sync Script (IGDB with SteamGridDB fallback)
 
 For each game in the database that is missing cover_url (or all games with --force),
 fetches the cover image using:
-  1. SteamGridDB (600×900 grid)
-  2. IGDB fallback (t_cover_big webp via Twitch OAuth)
+  1. IGDB primary (t_cover_big webp via Twitch OAuth)
+  2. SteamGridDB fallback (600×900 grid)
 
 Usage:
   node scripts/sync-covers-steamgriddb.ts [options]
@@ -49,9 +49,9 @@ Options:
   -h, --help         Show this help message
 
 Environment:
-  STEAMGRIDDB_API_KEY   Optional/Recommended. SteamGridDB API key.
-  TWITCH_CLIENT_ID      Optional/Recommended. Twitch client ID for IGDB fallback.
-  TWITCH_CLIENT_SECRET  Optional/Recommended. Twitch client secret for IGDB fallback.
+  TWITCH_CLIENT_ID      Optional/Recommended. Twitch client ID for IGDB.
+  TWITCH_CLIENT_SECRET  Optional/Recommended. Twitch client secret for IGDB.
+  STEAMGRIDDB_API_KEY   Optional/Recommended. SteamGridDB API key for fallback.
 
 Examples:
   node scripts/sync-covers-steamgriddb.ts --help
@@ -100,26 +100,26 @@ async function main() {
   }
 
   // ── Validate env ──────────────────────────────────────────────────────────
-  const hasSgdbKey = Boolean(process.env.STEAMGRIDDB_API_KEY);
   const hasTwitchCreds = Boolean(
     process.env.TWITCH_CLIENT_ID && process.env.TWITCH_CLIENT_SECRET,
   );
+  const hasSgdbKey = Boolean(process.env.STEAMGRIDDB_API_KEY);
 
-  if (!hasSgdbKey && !hasTwitchCreds) {
+  if (!hasTwitchCreds && !hasSgdbKey) {
     console.error(
-      "[Error] Neither STEAMGRIDDB_API_KEY nor TWITCH_CLIENT_ID/TWITCH_CLIENT_SECRET are set. Please provide at least one provider's credentials in .env.local.",
+      "[Error] Neither TWITCH_CLIENT_ID/TWITCH_CLIENT_SECRET nor STEAMGRIDDB_API_KEY are set. Please provide at least one provider's credentials in .env.local.",
     );
     process.exit(1);
   }
 
-  if (!hasSgdbKey) {
-    console.warn(
-      "[Warning] STEAMGRIDDB_API_KEY is not set. Only IGDB fallback will be used.",
-    );
-  }
   if (!hasTwitchCreds) {
     console.warn(
-      "[Warning] TWITCH_CLIENT_ID and/or TWITCH_CLIENT_SECRET not set. IGDB fallback will be disabled.",
+      "[Warning] TWITCH_CLIENT_ID and/or TWITCH_CLIENT_SECRET not set. Primary IGDB lookup will be disabled.",
+    );
+  }
+  if (!hasSgdbKey) {
+    console.warn(
+      "[Warning] STEAMGRIDDB_API_KEY is not set. SteamGridDB fallback will be disabled.",
     );
   }
 
@@ -138,7 +138,7 @@ async function main() {
   }
 
   console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-  console.log("  Game Cover Sync (SteamGridDB + IGDB Fallback)");
+  console.log("  Game Cover Sync (IGDB + SteamGridDB Fallback)");
   console.log(`  Mode     : ${isDryRun ? "DRY-RUN (no writes)" : "LIVE"}`);
   console.log(
     `  Scope    : ${isForce ? "ALL games" : "games with cover_url = null"}`,
@@ -189,8 +189,8 @@ async function main() {
   // ── Counters ───────────────────────────────────────────────────────────────
   const startTime = Date.now();
   let updatedCount = 0;
-  let sgdbCount = 0;
   let igdbCount = 0;
+  let sgdbCount = 0;
   let skippedCount = 0; // no match from either provider
   let alreadySetCount = 0; // cover_url already identical
   let errorCount = 0;
@@ -201,7 +201,7 @@ async function main() {
 
     if (!coverResult) {
       console.log(
-        `[SYNC] ${game.id} | ${game.name} → null (no SteamGridDB or IGDB match)`,
+        `[SYNC] ${game.id} | ${game.name} → null (no IGDB or SteamGridDB match)`,
       );
       skippedCount++;
     } else if (coverResult.url === game.cover_url) {
@@ -211,10 +211,10 @@ async function main() {
       console.log(
         `[DRY-RUN] ${game.id} | ${game.name} → ${coverResult.url} (source: ${coverResult.source})`,
       );
-      if (coverResult.source === "steamgriddb") {
-        sgdbCount++;
-      } else {
+      if (coverResult.source === "igdb") {
         igdbCount++;
+      } else {
+        sgdbCount++;
       }
       updatedCount++;
     } else {
@@ -232,10 +232,10 @@ async function main() {
         console.log(
           `[SYNC] ${game.id} | ${game.name} → ${coverResult.url} (source: ${coverResult.source})`,
         );
-        if (coverResult.source === "steamgriddb") {
-          sgdbCount++;
-        } else {
+        if (coverResult.source === "igdb") {
           igdbCount++;
+        } else {
+          sgdbCount++;
         }
         updatedCount++;
       }
@@ -255,8 +255,8 @@ async function main() {
   console.log(
     `  Updated    : ${updatedCount}${isDryRun ? " (simulated)" : ""}`,
   );
-  console.log(`    - SteamGridDB : ${sgdbCount}`);
   console.log(`    - IGDB        : ${igdbCount}`);
+  console.log(`    - SteamGridDB : ${sgdbCount}`);
   console.log(`  Skipped    : ${skippedCount} (no match on either provider)`);
   console.log(`  Already OK : ${alreadySetCount}`);
   console.log(`  Errors     : ${errorCount}`);
