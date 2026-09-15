@@ -48,3 +48,12 @@
     );
   background-size: 28px 28px;
 }
+
+/* Game card fixed dimensions */
+.knk-game-card {
+  width: 260px;
+}
+
+.knk-game-card > div:first-child {
+  height: 390px;
+}

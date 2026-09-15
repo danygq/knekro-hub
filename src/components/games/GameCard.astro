@@ -27,12 +27,12 @@ const userVote = game.user_vote?.[0]?.vote;
 ---
 
 <article
-  class="knk-game-card min-w-75 max-w-75 h-auto group border border-(--knk-line) bg-(--knk-surface) hover:border-(--knk-line-strong) transition-colors"
+  class="knk-game-card group border border-(--knk-line) bg-(--knk-surface) hover:border-(--knk-line-strong) transition-colors"
   x-data="{ open: false }"
   @keydown.escape.window="open = false"
 >
   <div
-    class=`relative aspect-2/3 bg-(--knk-surface-2) knk-grid-bg overflow-hidden${loggedIn ? " cursor-pointer" : ""}`
+    class=`relative bg-(--knk-surface-2) knk-grid-bg overflow-hidden${loggedIn ? " cursor-pointer" : ""}`
     @click.stop={loggedIn ? "open = !open" : undefined}
   >
     {coverUrl ? (
@@ -40,8 +40,8 @@ const userVote = game.user_vote?.[0]?.vote;
         src={coverUrl}
         alt={name + " cover"}
         priority
-        width="360"
-        height="540"
+        width="260"
+        height="390"
         decoding="async"
         class="absolute inset-0 h-full w-full object-cover"
       />
