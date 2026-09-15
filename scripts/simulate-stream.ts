@@ -250,13 +250,14 @@ async function directDbAction(
   } else if (action === "update") {
     const categoryName = options?.categoryName || "ELDEN RING";
     const categoryId = options?.categoryId || "512953";
+    const now = toMadridDateTimeString();
 
     const { recordChannelUpdate, reconcileGame } =
       await import("../src/lib/twitch/reconcile-game.ts");
 
     const updateRecord = await recordChannelUpdate(
       supabase,
-      toMadridDateTimeString(),
+      now,
       categoryId,
       categoryName,
     );
@@ -266,6 +267,7 @@ async function directDbAction(
       supabase,
       categoryId,
       categoryName,
+      now,
     );
     console.log("Reconcile game result:", reconcileResult);
   }

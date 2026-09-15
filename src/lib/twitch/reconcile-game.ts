@@ -12,25 +12,30 @@ export interface ReconcileGameResult {
     name: string | null;
     twitch_game_id: string | null;
     game_status_id: number | null;
+    last_played_at?: string | null;
   } | null;
 }
 
 /**
  * Reconciles a game played on Twitch with the `public.games` table:
  * 1. Lookup by `twitch_game_id`: Check if a game exists with `twitch_game_id = category_id`.
+ *    Updates `last_played_at` with the event's Madrid timestamp.
  * 2. Fallback Lookup by `name` (case-insensitive): If not found by ID, query `games` via `.ilike('name', category_name)`.
- *    If found with `twitch_game_id IS NULL`, update the existing record to backfill `twitch_game_id`.
+ *    If found with `twitch_game_id IS NULL`, update the existing record to backfill `twitch_game_id` and `last_played_at`.
  *    Also fetches a cover (IGDB with SteamGridDB fallback) when `cover_url` is null.
- * 3. Create New Game: If neither query yields a match, insert a new record with default `game_status_id = 11`.
+ * 3. Create New Game: If neither query yields a match, insert a new record with default `game_status_id = 11`
+ *    and `last_played_at = timestamp`.
  *    Immediately attempts a cover fetch (IGDB with SteamGridDB fallback) and writes `cover_url` if a match is found.
  */
 export async function reconcileGame(
   supabaseAdmin: SupabaseClient,
   categoryId: string | null | undefined,
   categoryName: string | null | undefined,
+  eventTimestamp?: string | null,
 ): Promise<ReconcileGameResult> {
   const trimmedId = categoryId?.trim();
   const trimmedName = categoryName?.trim();
+  const timestamp = eventTimestamp || toMadridDateTimeString();
 
   // Guard: Skip if ID or Name is absent, invalid, or belongs to non-game/ignored categories
   if (
@@ -54,7 +59,7 @@ export async function reconcileGame(
   // 1. Lookup by twitch_game_id
   const { data: existingById, error: idError } = await supabaseAdmin
     .from("games")
-    .select("id, name, twitch_game_id, game_status_id")
+    .select("id, name, twitch_game_id, game_status_id, last_played_at")
     .eq("twitch_game_id", trimmedId)
     .maybeSingle();
 
@@ -67,15 +72,26 @@ export async function reconcileGame(
 
   if (existingById) {
     console.log(
-      `[Twitch Reconcile] Game "${existingById.name}" already exists in database (twitch_game_id: ${trimmedId}, id: ${existingById.id}).`,
+      `[Twitch Reconcile] Game "${existingById.name}" already exists in database (twitch_game_id: ${trimmedId}, id: ${existingById.id}). Updating last_played_at: ${timestamp}...`,
     );
+    const { error: updatePlayedError } = await supabaseAdmin
+      .from("games")
+      .update({ last_played_at: timestamp })
+      .eq("id", existingById.id);
+
+    if (updatePlayedError) {
+      console.error(
+        `[Twitch Reconcile] Failed to update last_played_at for "${existingById.name}":`,
+        updatePlayedError,
+      );
+    }
     return { action: "matched_by_id", game: existingById };
   }
 
   // 2. Fallback Lookup by name (Case-Insensitive)
   const { data: matchedByName, error: nameError } = await supabaseAdmin
     .from("games")
-    .select("id, name, twitch_game_id, game_status_id")
+    .select("id, name, twitch_game_id, game_status_id, last_played_at")
     .ilike("name", trimmedName)
     .limit(1)
     .maybeSingle();
@@ -90,13 +106,13 @@ export async function reconcileGame(
   if (matchedByName) {
     if (!matchedByName.twitch_game_id) {
       console.log(
-        `[Twitch Reconcile] Matched existing game "${matchedByName.name}" (id: ${matchedByName.id}) by name. Backfilling twitch_game_id: ${trimmedId}...`,
+        `[Twitch Reconcile] Matched existing game "${matchedByName.name}" (id: ${matchedByName.id}) by name. Backfilling twitch_game_id: ${trimmedId} and last_played_at: ${timestamp}...`,
       );
       const { data: updatedGame, error: updateError } = await supabaseAdmin
         .from("games")
-        .update({ twitch_game_id: trimmedId })
+        .update({ twitch_game_id: trimmedId, last_played_at: timestamp })
         .eq("id", matchedByName.id)
-        .select("id, name, twitch_game_id, game_status_id, cover_url")
+        .select("id, name, twitch_game_id, game_status_id, cover_url, last_played_at")
         .single();
 
       if (updateError) {
@@ -151,15 +167,28 @@ export async function reconcileGame(
 
       return { action: "updated_by_name", game: updatedGame };
     }
+
     console.log(
-      `[Twitch Reconcile] Matched existing game "${matchedByName.name}" (id: ${matchedByName.id}) by name, but it already has twitch_game_id: ${matchedByName.twitch_game_id}.`,
+      `[Twitch Reconcile] Matched existing game "${matchedByName.name}" (id: ${matchedByName.id}) by name, updating last_played_at: ${timestamp}...`,
     );
+    const { error: updatePlayedError } = await supabaseAdmin
+      .from("games")
+      .update({ last_played_at: timestamp })
+      .eq("id", matchedByName.id);
+
+    if (updatePlayedError) {
+      console.error(
+        `[Twitch Reconcile] Failed to update last_played_at for "${matchedByName.name}":`,
+        updatePlayedError,
+      );
+    }
+
     return { action: "matched_by_id", game: matchedByName };
   }
 
   // 3. Create New Game
   console.log(
-    `[Twitch Reconcile] Game "${trimmedName}" (twitch_game_id: ${trimmedId}) not found in database. Inserting new game...`,
+    `[Twitch Reconcile] Game "${trimmedName}" (twitch_game_id: ${trimmedId}) not found in database. Inserting new game with last_played_at: ${timestamp}...`,
   );
   const { data: newGame, error: insertError } = await supabaseAdmin
     .from("games")
@@ -167,8 +196,9 @@ export async function reconcileGame(
       name: trimmedName,
       twitch_game_id: trimmedId,
       game_status_id: 11,
+      last_played_at: timestamp,
     })
-    .select("id, name, twitch_game_id, game_status_id")
+    .select("id, name, twitch_game_id, game_status_id, last_played_at")
     .single();
 
   if (insertError) {

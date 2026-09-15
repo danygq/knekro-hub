@@ -241,6 +241,7 @@ export const POST: APIRoute = async ({ request }) => {
             supabaseAdmin,
             categoryId,
             categoryName,
+            startedAt,
           );
           console.log(
             `[Twitch EventSub] Stream start game reconciliation for "${categoryName}": ${result.action}`,
@@ -282,6 +283,7 @@ export const POST: APIRoute = async ({ request }) => {
         supabaseAdmin,
         categoryId,
         categoryName,
+        eventTimestamp,
       );
       console.log(
         `[Twitch EventSub] channel.update game reconciliation for "${categoryName}": ${result.action}`,

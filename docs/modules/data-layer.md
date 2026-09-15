@@ -95,6 +95,7 @@ create table public.games
     avg_vote       numeric(4, 2) null default 0,
     vote_count     integer null default 0,
     twitch_game_id text null,
+    last_played_at timestamp with time zone                null default (now() AT TIME ZONE 'Europe/Madrid'::text),
     constraint games_pkey primary key (id),
     constraint games_twitch_game_id_key unique (twitch_game_id),
     constraint games_game_status_id_fkey foreign KEY (game_status_id)
@@ -106,6 +107,7 @@ create table public.games
 - `avg_vote` is `numeric(4, 2)` — max `99.99`, two decimal places.
 - `game_status_id` is nullable and set to NULL on parent delete (orphaned games are preserved).
 - `twitch_game_id` stores Twitch's category ID for unique resolution and deduplication against live stream categories.
+- `last_played_at` records the timestamp normalized into Europe/Madrid wall-clock time (`toMadridDateTimeString`) when the game was last played on stream via Twitch EventSub `channel.update`.
 
 ### `games_user_votes`
 
@@ -187,13 +189,13 @@ Referenced in `src/` (confirmed):
 
 ## Tables — CONFIRMED (schema above)
 
-| Table                   | Columns                                                                                 | Where                                                                                                                                                                |
-| ----------------------- | --------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `streams`               | `id, created_at, started_at, ended_at, twitch_id`                                       | `pages/index.astro` (select latest) · `pages/api/webhooks/twitch.ts` (insert/update)                                                                                 |
-| `twitch_channel_update` | `id, created_at, event_timestamp, category_id, category_name`                           | `pages/api/webhooks/twitch.ts` (insert)                                                                                                                              |
-| `game_status`           | `id, name, created_at, games_with_this_status`                                          | `lib/games.ts` → `pages/games.astro` (order `id`) → `GamesFilterMenu.astro`                                                                                          |
-| `games`                 | `id, created_at, name, game_status_id, cover_url, avg_vote, vote_count, twitch_game_id` | `lib/games.ts` (`loadGames`, `loadGameById`, `loadTotalGamesCount`) · `api/games/search.astro` · `api/games/vote.astro` · `pages/api/webhooks/twitch.ts` (reconcile) |
-| `games_user_votes`      | `id, created_at, user_id, game_id, vote`                                                | `lib/games.ts` (user votes) · `api/games/vote.astro` (upsert)                                                                                                        |
+| Table                   | Columns                                                                                                   | Where                                                                                                                                                                |
+| ----------------------- | --------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `streams`               | `id, created_at, started_at, ended_at, twitch_id`                                                         | `pages/index.astro` (select latest) · `pages/api/webhooks/twitch.ts` (insert/update)                                                                                 |
+| `twitch_channel_update` | `id, created_at, event_timestamp, category_id, category_name`                                             | `pages/api/webhooks/twitch.ts` (insert)                                                                                                                              |
+| `game_status`           | `id, name, created_at, games_with_this_status`                                                            | `lib/games.ts` → `pages/games.astro` (order `id`) → `GamesFilterMenu.astro`                                                                                          |
+| `games`                 | `id, created_at, name, game_status_id, cover_url, avg_vote, vote_count, twitch_game_id, last_played_at`   | `lib/games.ts` (`loadGames`, `loadGameById`, `loadTotalGamesCount`) · `api/games/search.astro` · `api/games/vote.astro` · `pages/api/webhooks/twitch.ts` (reconcile) |
+| `games_user_votes`      | `id, created_at, user_id, game_id, vote`                                                                  | `lib/games.ts` (user votes) · `api/games/vote.astro` (upsert)                                                                                                        |
 
 ## Reads are server-side
 
