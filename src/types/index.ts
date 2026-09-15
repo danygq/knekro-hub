@@ -4,5 +4,6 @@
 
 export * from "./games";
 export * from "./goty";
+export * from "./roles";
 export * from "./streams";
 export * from "./twitch";
