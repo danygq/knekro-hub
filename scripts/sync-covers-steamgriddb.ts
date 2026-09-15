@@ -1,11 +1,10 @@
 /**
  * CLI utility to retroactively populate cover_url for games in the database
- * using the SteamGridDB API v2.
+ * using SteamGridDB with an automated IGDB fallback.
  *
- * For each game with cover_url = null (or all games when --force is passed),
- * performs a two-step SteamGridDB lookup:
- *   1. GET /api/v2/search/autocomplete/{name} → resolves SGDB game ID
- *   2. GET /api/v2/grids/game/{sgdbId}?dimensions=600x900 → picks first url
+ * For each game with cover_url = null (or all games when --force is passed):
+ *   1. Primary lookup: SteamGridDB 600×900 grid image
+ *   2. Fallback lookup: IGDB v4 search by name → cover.image_id (t_cover_big webp)
  *
  * Follows the same pattern as scripts/sync-twitch-game-ids.ts.
  *
@@ -28,14 +27,16 @@ for (const envFile of [".env", ".env.local"]) {
   }
 }
 
-// ── Helpers ────────────────────────────────────────────────────────────────────────────
+// ── Helpers ──────────────────────────────────────────────────────────────────
 
 function printHelp() {
   console.log(`
-SteamGridDB Cover Sync Script
+Game Cover Sync Script (SteamGridDB with IGDB fallback)
 
 For each game in the database that is missing cover_url (or all games with --force),
-fetches the best 600×900 grid image from SteamGridDB and writes the URL back to cover_url.
+fetches the cover image using:
+  1. SteamGridDB (600×900 grid)
+  2. IGDB fallback (t_cover_big webp via Twitch OAuth)
 
 Usage:
   node scripts/sync-covers-steamgriddb.ts [options]
@@ -48,7 +49,9 @@ Options:
   -h, --help         Show this help message
 
 Environment:
-  STEAMGRIDDB_API_KEY  Required. Set in .env.local or Vercel env vars.
+  STEAMGRIDDB_API_KEY   Optional/Recommended. SteamGridDB API key.
+  TWITCH_CLIENT_ID      Optional/Recommended. Twitch client ID for IGDB fallback.
+  TWITCH_CLIENT_SECRET  Optional/Recommended. Twitch client secret for IGDB fallback.
 
 Examples:
   node scripts/sync-covers-steamgriddb.ts --help
@@ -62,7 +65,7 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// ── Main ────────────────────────────────────────────────────────────────────────────
+// ── Main ──────────────────────────────────────────────────────────────────────
 
 async function main() {
   let opts: {
@@ -96,13 +99,28 @@ async function main() {
     process.exit(0);
   }
 
-  // ── Validate env ───────────────────────────────────────────────────────────────
-  const apiKey = process.env.STEAMGRIDDB_API_KEY;
-  if (!apiKey) {
+  // ── Validate env ──────────────────────────────────────────────────────────
+  const hasSgdbKey = Boolean(process.env.STEAMGRIDDB_API_KEY);
+  const hasTwitchCreds = Boolean(
+    process.env.TWITCH_CLIENT_ID && process.env.TWITCH_CLIENT_SECRET,
+  );
+
+  if (!hasSgdbKey && !hasTwitchCreds) {
     console.error(
-      "[Error] STEAMGRIDDB_API_KEY is not set. Add it to .env.local or set it in your environment.",
+      "[Error] Neither STEAMGRIDDB_API_KEY nor TWITCH_CLIENT_ID/TWITCH_CLIENT_SECRET are set. Please provide at least one provider's credentials in .env.local.",
     );
     process.exit(1);
+  }
+
+  if (!hasSgdbKey) {
+    console.warn(
+      "[Warning] STEAMGRIDDB_API_KEY is not set. Only IGDB fallback will be used.",
+    );
+  }
+  if (!hasTwitchCreds) {
+    console.warn(
+      "[Warning] TWITCH_CLIENT_ID and/or TWITCH_CLIENT_SECRET not set. IGDB fallback will be disabled.",
+    );
   }
 
   const isDryRun = opts["dry-run"] ?? false;
@@ -119,24 +137,27 @@ async function main() {
     process.exit(1);
   }
 
-  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-  console.log("  SteamGridDB Cover Sync");
+  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  console.log("  Game Cover Sync (SteamGridDB + IGDB Fallback)");
   console.log(`  Mode     : ${isDryRun ? "DRY-RUN (no writes)" : "LIVE"}`);
-  console.log(`  Scope    : ${isForce ? "ALL games" : "games with cover_url = null"}`);
+  console.log(
+    `  Scope    : ${isForce ? "ALL games" : "games with cover_url = null"}`,
+  );
   console.log(`  Delay    : ${delayMs}ms between API calls`);
   if (limitCount !== undefined) {
     console.log(`  Limit    : first ${limitCount} games`);
   }
-  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
-  // ── Supabase setup ──────────────────────────────────────────────────────────────
-  const { createSupabaseAdminClient } = await import("../src/lib/supabase-admin.ts");
+  // ── Supabase setup ────────────────────────────────────────────────────────
+  const { createSupabaseAdminClient } =
+    await import("../src/lib/supabase-admin.ts");
   const supabase = createSupabaseAdminClient();
 
-  // ── Import SteamGridDB helper ───────────────────────────────────────────────────────
-  const { fetchSgdbCover } = await import("../src/lib/steamgriddb.ts");
+  // ── Import unified cover resolver ─────────────────────────────────────────
+  const { resolveGameCover } = await import("../src/lib/covers.ts");
 
-  // ── Fetch target games ─────────────────────────────────────────────────────────────
+  // ── Fetch target games ────────────────────────────────────────────────────
   console.log("\n[DB] Fetching target games...");
   let query = supabase
     .from("games")
@@ -165,30 +186,41 @@ async function main() {
 
   console.log(`[DB] ${games.length} game(s) to process.\n`);
 
-  // ── Counters ───────────────────────────────────────────────────────────────────────
+  // ── Counters ───────────────────────────────────────────────────────────────
   const startTime = Date.now();
   let updatedCount = 0;
-  let skippedCount = 0; // no SGDB match
+  let sgdbCount = 0;
+  let igdbCount = 0;
+  let skippedCount = 0; // no match from either provider
   let alreadySetCount = 0; // cover_url already identical
   let errorCount = 0;
 
-  // ── Process each game ─────────────────────────────────────────────────────────────
+  // ── Process each game ─────────────────────────────────────────────────────
   for (const game of games) {
-    const coverUrl = await fetchSgdbCover(game.name ?? "");
+    const coverResult = await resolveGameCover(game.name ?? "");
 
-    if (!coverUrl) {
-      console.log(`[SYNC] ${game.id} | ${game.name} → null (no SGDB match)`);
+    if (!coverResult) {
+      console.log(
+        `[SYNC] ${game.id} | ${game.name} → null (no SteamGridDB or IGDB match)`,
+      );
       skippedCount++;
-    } else if (coverUrl === game.cover_url) {
+    } else if (coverResult.url === game.cover_url) {
       console.log(`[SYNC] ${game.id} | ${game.name} → already set, skipping`);
       alreadySetCount++;
     } else if (isDryRun) {
-      console.log(`[DRY-RUN] ${game.id} | ${game.name} → ${coverUrl}`);
+      console.log(
+        `[DRY-RUN] ${game.id} | ${game.name} → ${coverResult.url} (source: ${coverResult.source})`,
+      );
+      if (coverResult.source === "steamgriddb") {
+        sgdbCount++;
+      } else {
+        igdbCount++;
+      }
       updatedCount++;
     } else {
       const { error: updateError } = await supabase
         .from("games")
-        .update({ cover_url: coverUrl })
+        .update({ cover_url: coverResult.url })
         .eq("id", game.id);
 
       if (updateError) {
@@ -197,7 +229,14 @@ async function main() {
         );
         errorCount++;
       } else {
-        console.log(`[SYNC] ${game.id} | ${game.name} → ${coverUrl}`);
+        console.log(
+          `[SYNC] ${game.id} | ${game.name} → ${coverResult.url} (source: ${coverResult.source})`,
+        );
+        if (coverResult.source === "steamgriddb") {
+          sgdbCount++;
+        } else {
+          igdbCount++;
+        }
         updatedCount++;
       }
     }
@@ -205,20 +244,24 @@ async function main() {
     await sleep(delayMs);
   }
 
-  // ── Summary ───────────────────────────────────────────────────────────────────────
+  // ── Summary ───────────────────────────────────────────────────────────────
   const durationSec = ((Date.now() - startTime) / 1000).toFixed(1);
 
-  console.log("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  console.log("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
   console.log("  Sync Summary");
-  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
   console.log(`  Mode       : ${isDryRun ? "DRY-RUN" : "LIVE"}`);
   console.log(`  Evaluated  : ${games.length}`);
-  console.log(`  Updated    : ${updatedCount}${isDryRun ? " (simulated)" : ""}`);
-  console.log(`  Skipped    : ${skippedCount} (no SGDB match)`);
+  console.log(
+    `  Updated    : ${updatedCount}${isDryRun ? " (simulated)" : ""}`,
+  );
+  console.log(`    - SteamGridDB : ${sgdbCount}`);
+  console.log(`    - IGDB        : ${igdbCount}`);
+  console.log(`  Skipped    : ${skippedCount} (no match on either provider)`);
   console.log(`  Already OK : ${alreadySetCount}`);
   console.log(`  Errors     : ${errorCount}`);
   console.log(`  Duration   : ${durationSec}s`);
-  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
+  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
 }
 
 main().catch((err) => {
