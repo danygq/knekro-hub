@@ -6,10 +6,8 @@ import {
   reconcileGame,
   recordChannelUpdate,
 } from "@/lib/twitch/reconcile-game";
-import {
-  DEFAULT_TWITCH_BROADCASTER_ID,
-  toMadridDateTimeString,
-} from "@/lib/twitch/constants";
+import { DEFAULT_TWITCH_BROADCASTER_ID } from "@/lib/twitch/constants";
+import { toMadridDateTimeString } from "@/lib/time";
 
 export const prerender = false;
 

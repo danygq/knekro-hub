@@ -45,7 +45,7 @@ const { gameId, userVote } = Astro.props;
 
   <div class="grid grid-cols-5 gap-2" id="vote-grid">
     {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
-      <VoteButton gameId={gameId} vote={n} isActive={n === userVote} />
+      <VoteButton gameId={gameId} vote={n} isVoted={n === userVote} />
     ))}
   </div>
 </div>

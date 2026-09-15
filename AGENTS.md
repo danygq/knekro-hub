@@ -34,6 +34,7 @@ inquiries:
 - **Never `select("*")` in Supabase queries.** Name columns. See `docs/QUERY_OPTIMIZATION.md` — this is a hard project
   requirement.
 - **Never commit secrets.** Only `PUBLIC_*` keys are client-safe. Service role key is server-only.
+- **Format before commit.** Always run `npx prettier --write <file>` on every file pending to commit before committing, ensuring all staged changes are formatted.
 - **Branch/commit naming:** use `docs/…`, `feat/…`, `fix/…`. **Do not use `v0/…`.** Follow conventions in [
   `docs/AGENT_PROTOCOL.md`](docs/AGENT_PROTOCOL.md).
 - **No new deps without reason.** Check `package.json` first; the stack is deliberately small.
@@ -74,6 +75,7 @@ pnpm install
 pnpm run dev      # astro dev
 pnpm run build    # astro build (SSR, vercel adapter)
 pnpm run preview
+npx prettier --write <files...> # format pending files before commit
 ```
 
 No test suite exists. Verify changes by building + loading the affected route.

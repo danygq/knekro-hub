@@ -155,6 +155,7 @@ Scopes align with repository modules and functional boundaries:
 
 ### Commit Rules
 
+- **Pre-commit Formatting:** Run `npx prettier --write <file>` on every file pending to commit before committing so all staged changes are properly formatted.
 - **Imperative Mood:** Write in imperative present tense ("add", "fix", "refactor" — not "added", "fixes",
   "refactoring").
 - **Lowercase Summary:** Start the description with a lowercase letter (unless starting with a proper noun or code
@@ -244,5 +245,6 @@ new features, architectural refactors, DB schema changes), follow the recommende
 #### Step 4: Implementation & Verification
 
 - Implement the changes adhering to established project conventions (naming rules, type safety, directory structures).
+- Run `npx prettier --write <file>` on every modified file pending to commit to guarantee standard formatting.
 - Verify every Acceptance Criterion listed in the issue step-by-step.
 - Confirm all touched code is self-documenting and typed correctly.

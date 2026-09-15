@@ -2,20 +2,23 @@
 interface Props {
   gameId: number;
   vote: number;
-  isActive: boolean;
+  isVoted: boolean;
 }
 
-const { gameId, vote, isActive } = Astro.props;
-const numCls = `knk-vote-num knk-vote-num-${vote} knk-notch-sm w-11 h-11 text-base font-medium border transition-colors${isActive ? " active" : ""}`;
+const { gameId, vote, isVoted } = Astro.props;
+const numCls = `knk-vote-num knk-vote-num-${vote} knk-notch-sm w-11 h-11 text-base font-medium border transition-colors`;
 ---
 
 <button
   type="button"
-  class={numCls}
+  x-data={`{ isActive: ${isVoted} }`}
+  :class="{ 'active': isActive }"
+  class:list={[numCls, { active: isVoted }]}
   hx-post="/api/games/vote"
   hx-vals={`{"game_id": ${gameId}, "vote": ${vote}}`}
   hx-target="closest .knk-game-card"
   hx-swap="outerHTML"
+  @click.stop="isActive = !isActive"
 >
   {vote}
 </button>

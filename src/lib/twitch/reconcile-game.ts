@@ -1,8 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import {
-  isIgnoredTwitchCategory,
-  toMadridDateTimeString,
-} from "./constants.ts";
+import { isIgnoredTwitchCategory } from "./constants.ts";
+import { toMadridDateTimeString } from "../time.ts";
 import { resolveGameCover } from "../covers.ts";
 
 export interface ReconcileGameResult {

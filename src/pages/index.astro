@@ -3,7 +3,8 @@ import Layout from "@/layouts/Layout.astro";
 import {
   formatStreamStartTime,
   formatStreamElapsedTime,
-} from "@/lib/twitch/constants";
+  formatStreamDate,
+} from "@/lib/time";
 
 // If OAuth falls back to Site URL root with an auth code, forward to callback handler
 const code = Astro.url.searchParams.get("code");
@@ -49,21 +50,9 @@ const streamElapsedFormatted =
     : null;
 
 const lastStreamFormatted = latestStream?.ended_at
-  ? new Date(latestStream.ended_at).toLocaleDateString("es-ES", {
-      day: "2-digit",
-      month: "short",
-      hour: "2-digit",
-      minute: "2-digit",
-      timeZone: "UTC",
-    })
+  ? formatStreamDate(latestStream.ended_at)
   : latestStream?.started_at
-    ? new Date(latestStream.started_at).toLocaleDateString("es-ES", {
-        day: "2-digit",
-        month: "short",
-        hour: "2-digit",
-        minute: "2-digit",
-        timeZone: "UTC",
-      })
+    ? formatStreamDate(latestStream.started_at)
     : "--";
 ---
 
@@ -196,7 +185,7 @@ const lastStreamFormatted = latestStream?.ended_at
   </section>
 
   <script>
-    import { formatStreamElapsedTime } from "@/lib/twitch/constants";
+    import { formatStreamElapsedTime } from "@/lib/time";
 
     (function () {
       const hostname = window.location.hostname;

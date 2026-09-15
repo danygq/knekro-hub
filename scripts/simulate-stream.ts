@@ -12,11 +12,8 @@
  */
 
 import crypto from "node:crypto";
-import { parseArgs } from "node:util";
-import {
-  DEFAULT_TWITCH_BROADCASTER_ID,
-  toMadridDateTimeString,
-} from "../src/lib/twitch/constants.ts";
+import { DEFAULT_TWITCH_BROADCASTER_ID } from "../src/lib/twitch/constants.ts";
+import { toMadridDateTimeString } from "../src/lib/time.ts";
 
 try {
   process.loadEnvFile(".env.local");
