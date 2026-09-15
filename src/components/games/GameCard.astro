@@ -7,6 +7,7 @@ import GameStatusBadge from "./GameStatusBadge.astro";
 import GameUserVoteBadge from "./GameUserVoteBadge.astro";
 import GameCommunityVotesBadge from "./GameCommunityVotesBadge.astro";
 import GameRefreshButton from "./GameRefreshButton.astro";
+import GameCover from "@/components/games/GameCover.astro";
 
 interface Props {
   game: GameDetails;
@@ -35,39 +36,7 @@ const userVote = game.user_vote?.[0]?.vote;
     class=`relative bg-(--knk-surface-2) knk-grid-bg overflow-hidden${loggedIn ? " cursor-pointer" : ""}`
     @click.stop={loggedIn ? "open = !open" : undefined}
   >
-    {coverUrl ? (
-      <Image
-        src={coverUrl}
-        alt={name + " cover"}
-        priority
-        width="260"
-        height="390"
-        decoding="async"
-        class="absolute inset-0 h-full w-full object-cover"
-      />
-    ) : (
-      <div class="absolute inset-0 flex items-center justify-center">
-        <svg
-          width="32"
-          height="32"
-          viewBox="0 0 24 24"
-          fill="none"
-          class="text-(--knk-text-faint)"
-        >
-          <path
-            d="M7 7h10a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-1l-1.5-2h-5L8 17H7a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Z"
-            stroke="currentColor"
-            stroke-width="1.5"
-          />
-          <path
-            d="M9.5 11.5v2M8.5 12.5h2M16 11h.01M14.5 12.5h.01"
-            stroke="currentColor"
-            stroke-width="1.5"
-          />
-        </svg>
-      </div>
-    )}
-
+    <GameCover coverUrl={coverUrl} name={name} />
     <GameRefreshButton gameId={gameId} />
     <GameStatusBadge status={status} />
 
