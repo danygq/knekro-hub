@@ -28,7 +28,7 @@ for (const envFile of [".env", ".env.local"]) {
   }
 }
 
-// ── Helpers ────────────────────────────────────────────────────────────────────────────
+// ── Helpers ──────────────────────────────────────────────────────────────────
 
 function printHelp() {
   console.log(`
@@ -62,7 +62,7 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// ── Main ────────────────────────────────────────────────────────────────────────────
+// ── Main ──────────────────────────────────────────────────────────────────────
 
 async function main() {
   let opts: {
@@ -96,7 +96,7 @@ async function main() {
     process.exit(0);
   }
 
-  // ── Validate env ───────────────────────────────────────────────────────────────
+  // ── Validate env ──────────────────────────────────────────────────────────
   const apiKey = process.env.STEAMGRIDDB_API_KEY;
   if (!apiKey) {
     console.error(
@@ -119,24 +119,27 @@ async function main() {
     process.exit(1);
   }
 
-  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
   console.log("  SteamGridDB Cover Sync");
   console.log(`  Mode     : ${isDryRun ? "DRY-RUN (no writes)" : "LIVE"}`);
-  console.log(`  Scope    : ${isForce ? "ALL games" : "games with cover_url = null"}`);
+  console.log(
+    `  Scope    : ${isForce ? "ALL games" : "games with cover_url = null"}`,
+  );
   console.log(`  Delay    : ${delayMs}ms between API calls`);
   if (limitCount !== undefined) {
     console.log(`  Limit    : first ${limitCount} games`);
   }
-  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
-  // ── Supabase setup ──────────────────────────────────────────────────────────────
-  const { createSupabaseAdminClient } = await import("../src/lib/supabase-admin.ts");
+  // ── Supabase setup ────────────────────────────────────────────────────────
+  const { createSupabaseAdminClient } =
+    await import("../src/lib/supabase-admin.ts");
   const supabase = createSupabaseAdminClient();
 
-  // ── Import SteamGridDB helper ───────────────────────────────────────────────────────
+  // ── Import SteamGridDB helper ─────────────────────────────────────────────
   const { fetchSgdbCover } = await import("../src/lib/steamgriddb.ts");
 
-  // ── Fetch target games ─────────────────────────────────────────────────────────────
+  // ── Fetch target games ────────────────────────────────────────────────────
   console.log("\n[DB] Fetching target games...");
   let query = supabase
     .from("games")
@@ -165,14 +168,14 @@ async function main() {
 
   console.log(`[DB] ${games.length} game(s) to process.\n`);
 
-  // ── Counters ───────────────────────────────────────────────────────────────────────
+  // ── Counters ───────────────────────────────────────────────────────────────
   const startTime = Date.now();
   let updatedCount = 0;
   let skippedCount = 0; // no SGDB match
   let alreadySetCount = 0; // cover_url already identical
   let errorCount = 0;
 
-  // ── Process each game ─────────────────────────────────────────────────────────────
+  // ── Process each game ─────────────────────────────────────────────────────
   for (const game of games) {
     const coverUrl = await fetchSgdbCover(game.name ?? "");
 
@@ -205,20 +208,22 @@ async function main() {
     await sleep(delayMs);
   }
 
-  // ── Summary ───────────────────────────────────────────────────────────────────────
+  // ── Summary ───────────────────────────────────────────────────────────────
   const durationSec = ((Date.now() - startTime) / 1000).toFixed(1);
 
-  console.log("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  console.log("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
   console.log("  Sync Summary");
-  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
   console.log(`  Mode       : ${isDryRun ? "DRY-RUN" : "LIVE"}`);
   console.log(`  Evaluated  : ${games.length}`);
-  console.log(`  Updated    : ${updatedCount}${isDryRun ? " (simulated)" : ""}`);
+  console.log(
+    `  Updated    : ${updatedCount}${isDryRun ? " (simulated)" : ""}`,
+  );
   console.log(`  Skipped    : ${skippedCount} (no SGDB match)`);
   console.log(`  Already OK : ${alreadySetCount}`);
   console.log(`  Errors     : ${errorCount}`);
   console.log(`  Duration   : ${durationSec}s`);
-  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
+  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
 }
 
 main().catch((err) => {

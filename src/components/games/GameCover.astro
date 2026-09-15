@@ -14,10 +14,10 @@ const { coverUrl, name } = Astro.props;
     src={coverUrl}
     alt={name + " cover"}
     priority
-    width="360"
-    height="540"
+    width="260"
+    height="390"
     decoding="async"
-    class="absolute inset-0 h-full w-full object-cover"
+    class="absolute inset-0 h-full w-full object-fill"
   />
 ) : (
   <div class="absolute inset-0 flex items-center justify-center">
