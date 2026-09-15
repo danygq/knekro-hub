@@ -11,7 +11,8 @@
     "stream:start": "node scripts/simulate-stream.ts start",
     "stream:stop": "node scripts/simulate-stream.ts stop",
     "stream:update": "node scripts/simulate-stream.ts update",
-    "games:sync-twitch-games-ids": "node scripts/sync-twitch-game-ids.ts"
+    "games:sync-twitch-games-ids": "node scripts/sync-twitch-game-ids.ts",
+    "games:sync-covers": "node scripts/sync-covers-steamgriddb.ts"
   },
   "dependencies": {
     "@astrojs/alpinejs": "^1.0.0",
