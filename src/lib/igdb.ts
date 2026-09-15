@@ -1,4 +1,4 @@
-import { getTwitchAppAccessToken } from "./twitch/helix";
+import { getTwitchAppAccessToken } from "./twitch/helix.ts";
 
 interface IgdbGameItem {
   id: number;
@@ -11,7 +11,8 @@ interface IgdbGameItem {
 
 function getTwitchClientId(): string | null {
   return (
-    (typeof import.meta !== "undefined" && import.meta?.env?.TWITCH_CLIENT_ID) ||
+    (typeof import.meta !== "undefined" &&
+      import.meta?.env?.TWITCH_CLIENT_ID) ||
     process.env.TWITCH_CLIENT_ID ||
     null
   );

@@ -9,11 +9,11 @@
  * Follows the same pattern as scripts/sync-twitch-game-ids.ts.
  *
  * Usage:
- *   node scripts/sync-covers-steamgriddb.ts [options]
- *   node scripts/sync-covers-steamgriddb.ts --dry-run
- *   node scripts/sync-covers-steamgriddb.ts --force
- *   node scripts/sync-covers-steamgriddb.ts --delay 500 --limit 10
- *   node scripts/sync-covers-steamgriddb.ts --help
+ *   node scripts/sync-covers.ts [options]
+ *   node scripts/sync-covers.ts --dry-run
+ *   node scripts/sync-covers.ts --force
+ *   node scripts/sync-covers.ts --delay 500 --limit 10
+ *   node scripts/sync-covers.ts --help
  */
 
 import { parseArgs } from "node:util";

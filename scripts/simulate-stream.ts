@@ -314,13 +314,24 @@ async function main() {
   }
 
   const command = positionals[0] || "start";
-  const targetUrl = values.url || positionals[1]?.startsWith("http") ? positionals[1] : (values.url || DEFAULT_WEBHOOK_URL);
+  const targetUrl =
+    values.url || positionals[1]?.startsWith("http")
+      ? positionals[1]
+      : values.url || DEFAULT_WEBHOOK_URL;
 
   if (command === "start" || command === "online") {
-    const finalUrl = values.url || (positionals[1]?.startsWith("http") ? positionals[1] : DEFAULT_WEBHOOK_URL);
+    const finalUrl =
+      values.url ||
+      (positionals[1]?.startsWith("http")
+        ? positionals[1]
+        : DEFAULT_WEBHOOK_URL);
     await sendWebhook("stream.online", finalUrl);
   } else if (command === "stop" || command === "offline") {
-    const finalUrl = values.url || (positionals[1]?.startsWith("http") ? positionals[1] : DEFAULT_WEBHOOK_URL);
+    const finalUrl =
+      values.url ||
+      (positionals[1]?.startsWith("http")
+        ? positionals[1]
+        : DEFAULT_WEBHOOK_URL);
     await sendWebhook("stream.offline", finalUrl);
   } else if (command === "update" || command === "channel.update") {
     let categoryName = values.name || "ELDEN RING";
@@ -331,11 +342,19 @@ async function main() {
     if (!values.name && positionals[1] && !positionals[1].startsWith("http")) {
       categoryName = positionals[1];
     }
-    if (!values["category-id"] && positionals[2] && !positionals[2].startsWith("http")) {
+    if (
+      !values["category-id"] &&
+      positionals[2] &&
+      !positionals[2].startsWith("http")
+    ) {
       categoryId = positionals[2];
     }
     if (!values.url) {
-      const urlCandidate = [positionals[1], positionals[2], positionals[3]].find(
+      const urlCandidate = [
+        positionals[1],
+        positionals[2],
+        positionals[3],
+      ].find(
         (arg) => arg?.startsWith("http://") || arg?.startsWith("https://"),
       );
       if (urlCandidate) {

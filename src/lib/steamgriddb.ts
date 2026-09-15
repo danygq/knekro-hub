@@ -28,7 +28,8 @@ interface SgdbGridsResponse {
 
 function getSgdbApiKey(): string | null {
   return (
-    (typeof import.meta !== "undefined" && import.meta?.env?.STEAMGRIDDB_API_KEY) ||
+    (typeof import.meta !== "undefined" &&
+      import.meta?.env?.STEAMGRIDDB_API_KEY) ||
     process.env.STEAMGRIDDB_API_KEY ||
     null
   );
@@ -60,7 +61,9 @@ export async function fetchSgdbCover(name: string): Promise<string | null> {
 
   const trimmedName = name.trim();
   if (!trimmedName) {
-    console.warn("[SteamGridDB] fetchSgdbCover called with empty name — skipping.");
+    console.warn(
+      "[SteamGridDB] fetchSgdbCover called with empty name — skipping.",
+    );
     return null;
   }
 
@@ -103,7 +106,9 @@ export async function fetchSgdbCover(name: string): Promise<string | null> {
   // Step 2: Fetch 600×900 grid covers for the resolved SGDB game ID
   try {
     const gridsUrl = `https://www.steamgriddb.com/api/v2/grids/game/${sgdbId}?dimensions=600x900`;
-    console.log(`[SteamGridDB] Fetching grids for SGDB id=${sgdbId} → ${gridsUrl}`);
+    console.log(
+      `[SteamGridDB] Fetching grids for SGDB id=${sgdbId} → ${gridsUrl}`,
+    );
 
     const gridsRes = await fetch(gridsUrl, { headers });
 

@@ -1,8 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
 import {
+  type CookieStore,
   createSupabaseServerClient,
   isSessionExpiredError,
-  type CookieStore,
 } from "./createSupabaseServerClient";
 
 export { createSupabaseServerClient, isSessionExpiredError, type CookieStore };

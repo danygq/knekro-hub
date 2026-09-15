@@ -223,9 +223,8 @@ async function main() {
   console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
   // ── Supabase setup ────────────────────────────────────────────────────────
-  const { createSupabaseAdminClient } = await import(
-    "../src/lib/supabase-admin.ts"
-  );
+  const { createSupabaseAdminClient } =
+    await import("../src/lib/supabase-admin.ts");
   const supabase = createSupabaseAdminClient();
 
   // ── Load existing twitch_game_id values to prevent unique constraint collisions
@@ -236,7 +235,10 @@ async function main() {
     .not("twitch_game_id", "is", null);
 
   if (existingError) {
-    console.error("[Error] Failed to load existing game mappings:", existingError.message);
+    console.error(
+      "[Error] Failed to load existing game mappings:",
+      existingError.message,
+    );
     process.exit(1);
   }
 
@@ -247,7 +249,9 @@ async function main() {
       assignedTwitchIds.set(g.twitch_game_id, g.name ?? "(unknown)");
     }
   }
-  console.log(`[DB] ${assignedTwitchIds.size} games already have twitch_game_id set.`);
+  console.log(
+    `[DB] ${assignedTwitchIds.size} games already have twitch_game_id set.`,
+  );
 
   // ── Fetch unlinked games from database ────────────────────────────────────
   console.log("\n[DB] Fetching games with missing twitch_game_id...");
@@ -264,14 +268,19 @@ async function main() {
   const { data: unlinkedGames, error: fetchError } = await query;
 
   if (fetchError) {
-    console.error("[Error] Failed to fetch unlinked games:", fetchError.message);
+    console.error(
+      "[Error] Failed to fetch unlinked games:",
+      fetchError.message,
+    );
     process.exit(1);
   }
 
   const games = (unlinkedGames ?? []) as DbGame[];
 
   if (games.length === 0) {
-    console.log("[DB] No games found with missing twitch_game_id. Nothing to do.");
+    console.log(
+      "[DB] No games found with missing twitch_game_id. Nothing to do.",
+    );
     process.exit(0);
   }
 
@@ -287,7 +296,9 @@ async function main() {
 
   // ── Process in batches ────────────────────────────────────────────────────
   const batches = chunk(games, batchSize);
-  console.log(`[Sync] Processing ${batches.length} batch(es) of up to ${batchSize}...\n`);
+  console.log(
+    `[Sync] Processing ${batches.length} batch(es) of up to ${batchSize}...\n`,
+  );
 
   for (let batchIdx = 0; batchIdx < batches.length; batchIdx++) {
     const batch = batches[batchIdx];
@@ -295,9 +306,9 @@ async function main() {
     const batchNames = batch.map((g) => g.name);
 
     console.log(
-      `[${batchLabel}] Querying Twitch for ${batch.length} game(s): ${
-        batchNames.slice(0, 5).join(", ")
-      }${batch.length > 5 ? "..." : ""}`,
+      `[${batchLabel}] Querying Twitch for ${batch.length} game(s): ${batchNames
+        .slice(0, 5)
+        .join(", ")}${batch.length > 5 ? "..." : ""}`,
     );
 
     let helixGames: HelixGameItem[];

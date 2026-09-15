@@ -1,5 +1,5 @@
-import { fetchIgdbCover } from "./igdb";
-import { fetchSgdbCover } from "./steamgriddb";
+import { fetchIgdbCover } from "./igdb.ts";
+import { fetchSgdbCover } from "./steamgriddb.ts";
 
 export interface GameCoverResult {
   url: string;

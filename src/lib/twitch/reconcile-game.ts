@@ -1,6 +1,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { isIgnoredTwitchCategory, toMadridDateTimeString } from "./constants";
-import { resolveGameCover } from "../covers";
+import {
+  isIgnoredTwitchCategory,
+  toMadridDateTimeString,
+} from "./constants.ts";
+import { resolveGameCover } from "../covers.ts";
 
 export interface ReconcileGameResult {
   action: "matched_by_id" | "updated_by_name" | "created" | "skipped";
