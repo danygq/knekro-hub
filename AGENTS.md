@@ -96,5 +96,4 @@ Docs are snapshots pinned to `last_verified_against_commit` (see `docs/DOC_COVER
 
 ## Open work (status)
 
-`/games` is wired to Supabase (`games` + `game_status`) via `lib/games.ts`; `/goty` remains a static placeholder (design
-in `docs/GOTY.md`).
+`/games` is wired to Supabase (`games` + `game_status`) via `lib/games.ts`; `/ranking` and `/ranking/goty` are wired to Supabase (`ranking_categories` + `ranking_items`) via `lib/ranking.ts` (see `docs/modules/rankings.md`).

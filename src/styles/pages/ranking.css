@@ -1,0 +1,198 @@
+/* Ranking section page styles */
+
+/* Hub categories grid */
+.knk-ranking-hub-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .knk-ranking-hub-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .knk-ranking-hub-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1280px) {
+  .knk-ranking-hub-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (min-width: 1536px) {
+  .knk-ranking-hub-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+/* Category square panel */
+.knk-ranking-panel-btn {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--knk-line);
+  background-color: var(--knk-surface);
+  aspect-ratio: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1.5rem;
+  transition: all 0.2s ease-in-out;
+  text-decoration: none;
+}
+
+.knk-ranking-panel-btn:hover {
+  border-color: var(--knk-line-strong);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+}
+
+.knk-ranking-panel-bg {
+  position: absolute;
+  inset: 0;
+  background-size: auto;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: brightness(0.25) saturate(1.2);
+  transition:
+    transform 0.4s ease-out,
+    filter 0.4s ease-out;
+}
+
+.knk-ranking-panel-btn:hover .knk-ranking-panel-bg {
+  transform: scale(1.05);
+  filter: brightness(0.35) saturate(1.4);
+}
+
+.knk-ranking-panel-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(17, 17, 17, 0.1) 0%,
+    rgba(17, 17, 17, 0.1) 100%
+  );
+}
+
+/* Podium layouts: vertical stack on mobile, pyramid on desktop */
+.knk-podium-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  align-items: center;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+  .knk-podium-container {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas:
+      "gold gold"
+      "silver bronze";
+    gap: 2.5rem;
+    max-width: 620px;
+  }
+
+  .knk-podium-slot-1 {
+    grid-area: gold;
+    justify-self: center;
+    width: 100%;
+    max-width: 260px;
+  }
+
+  .knk-podium-slot-2 {
+    grid-area: silver;
+    justify-self: end;
+    width: 100%;
+    max-width: 260px;
+  }
+
+  .knk-podium-slot-3 {
+    grid-area: bronze;
+    justify-self: start;
+    width: 100%;
+    max-width: 260px;
+  }
+}
+
+/* Medal badges */
+.knk-medal-gold {
+  color: #fbbf24;
+  border-color: rgba(251, 191, 36, 0.4);
+  background-color: rgba(251, 191, 36, 0.1);
+}
+
+.knk-medal-silver {
+  color: #e2e8f0;
+  border-color: rgba(226, 232, 240, 0.4);
+  background-color: rgba(226, 232, 240, 0.1);
+}
+
+.knk-medal-bronze {
+  color: #d97706;
+  border-color: rgba(217, 119, 6, 0.4);
+  background-color: rgba(217, 119, 6, 0.1);
+}
+
+/* Drag and Drop dropzone: matches 260x390 card dimensions */
+.knk-podium-dropzone {
+  min-height: 390px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+/* Direct replacement behavior: when dragging over, hide existing items */
+.knk-podium-dropzone:has(.sortable-ghost) > *:not(.sortable-ghost) {
+  display: none !important;
+}
+
+/* SortableJS drag & drop visual feedback */
+.sortable-ghost {
+  opacity: 0.4;
+  border: 2px dashed var(--knk-primary) !important;
+  background: rgba(227, 6, 19, 0.15) !important;
+  box-shadow: 0 0 15px rgba(227, 6, 19, 0.3);
+}
+
+.sortable-chosen {
+  opacity: 0.9;
+  cursor: grabbing !important;
+}
+
+.sortable-drag {
+  opacity: 1 !important;
+  transform: scale(1.04) rotate(1deg);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.6);
+  z-index: 9999 !important;
+}
+
+/* Card hover actions */
+.knk-card-medal-overlay {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease-in-out;
+}
+
+.knk-ranking-card:hover .knk-card-medal-overlay,
+.knk-podium-item:hover .knk-card-medal-overlay {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Draggable cursor feedback */
+.knk-ranking-card {
+  cursor: grab;
+}
+
+.knk-ranking-card:active {
+  cursor: grabbing;
+}

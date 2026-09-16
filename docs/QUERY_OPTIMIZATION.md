@@ -60,13 +60,13 @@ Anti-pattern (N+1): fetching games, then a `game_status` query per row. Never.
 
 ### Suggested (inferred from access patterns — validate with `EXPLAIN ANALYZE`)
 
-| Table         | Index                                           | Serves                                                                               |
-| ------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------ |
-| `posts`       | `(created_at desc)`                             | home feed order+limit                                                                |
-| `games`       | `(game_status_id)`                              | status filter (FK column is not auto-indexed in Postgres; needed by search & filter) |
-| `goty_items`  | `(year, rank)` composite, `(game_id)` FK        | year ranking, embed join                                                             |
-| `stream_logs` | `(started_at desc)`, `(is_live)` partial        | timeline, live lookup                                                                |
-| join table    | `(stream_log_id)`, `(category_id)`, unique pair | M:N categories                                                                       |
+| Table           | Index                                                                                              | Serves                                                                               |
+| --------------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `posts`         | `(created_at desc)`                                                                                | home feed order+limit                                                                |
+| `games`         | `(game_status_id)`                                                                                 | status filter (FK column is not auto-indexed in Postgres; needed by search & filter) |
+| `ranking_items` | `(user_id, year, category_id, rank)` composite, `(user_id)` FK, `(category_id)` FK, `(game_id)` FK | user rankings, podium queries, embed joins                                           |
+| `stream_logs`   | `(started_at desc)`, `(is_live)` partial                                                           | timeline, live lookup                                                                |
+| join table      | `(stream_log_id)`, `(category_id)`, unique pair                                                    | M:N categories                                                                       |
 
 Verify a query hits an index: `EXPLAIN ANALYZE` in Supabase SQL editor → expect `Index Scan`, not `Seq Scan`, on
 filtered/sorted columns.

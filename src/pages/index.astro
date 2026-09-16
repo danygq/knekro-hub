@@ -49,11 +49,9 @@ const streamElapsedFormatted =
     ? formatStreamElapsedTime(latestStream.started_at)
     : null;
 
-const lastStreamFormatted = latestStream?.ended_at
-  ? formatStreamDate(latestStream.ended_at)
-  : latestStream?.started_at
-    ? formatStreamDate(latestStream.started_at)
-    : "--";
+const lastStreamFormatted = latestStream?.started_at
+  ? formatStreamDate(latestStream.started_at)
+  : "--";
 ---
 
 <Layout>

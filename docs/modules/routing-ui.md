@@ -15,13 +15,18 @@ File-based routing (Astro). All pages wrap `layouts/Layout.astro`.
 | ----------------------- | ---------------------------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
 | `/`                     | `pages/index.astro`                | Twitch player + chat embeds, live broadcast status & timer, YouTube slot, posts feed     | `posts`, `streams` (server)                                                                            |
 | `/games`                | `pages/games.astro`                | Status filter drawer (`GamesFilterMenu`) + name search (`GameSearch`) + games grid       | `game_status` + `games` via `lib/games.ts` (server); search & status filtering via `/api/games/search` |
-| `/goty`                 | `pages/goty.astro`                 | Awards intro + "coming soon" tier list                                                   | none (static)                                                                                          |
+| `/ranking`              | `pages/ranking/index.astro`        | Rankings hub — category track panels (`ranking_categories`)                              | `ranking_categories` via `lib/ranking.ts` (server)                                                     |
+| `/ranking/goty`         | `pages/ranking/goty.astro`         | Dedicated GOTY category ranking & podium                                                 | `ranking_categories`, `ranking_items`, `games` via `lib/ranking.ts`                                    |
+| `/ranking/vuela-alto`   | `pages/ranking/vuela-alto.astro`   | Dedicated Vuela Alto category ranking & podium                                           | `ranking_categories`, `ranking_items`, `games` via `lib/ranking.ts`                                    |
+| `/ranking/[slug]`       | `pages/ranking/[slug].astro`       | Dynamic category ranking fallback route                                                  | `ranking_categories`, `ranking_items`, `games` via `lib/ranking.ts`                                    |
 | `/auth/callback`        | `pages/auth/callback.ts`           | OAuth code exchange, redirect                                                            | —                                                                                                      |
 | `/auth/auth-code-error` | `pages/auth/auth-code-error.astro` | Auth failure page                                                                        | —                                                                                                      |
 | `/api/auth/signin`      | `pages/api/auth/signin.ts`         | `POST` → Twitch OAuth redirect                                                           | —                                                                                                      |
 | `/api/auth/signout`     | `pages/api/auth/signout.ts`        | `POST` → sign out, redirect `/`                                                          | —                                                                                                      |
 | `/api/games/search`     | `pages/api/games/search.astro`     | `GET` → name search + status filtering + pagination (HTML fragments + OOB counter swaps) | `q`, `inc`, `exc`, `offset`, `limit` query params                                                      |
 | `/api/games/vote`       | `pages/api/games/vote.astro`       | `POST` → submit/clear game vote, return server-rendered `GameCard` (HTMX outerHTML swap) | `game_id`, `vote` form data                                                                            |
+| `/api/ranking/search`   | `pages/api/ranking/search.astro`   | `GET` → paginated game search for ranking assignments                                    | `q`, `category_id`, `year`, `offset`, `limit`                                                          |
+| `/api/ranking/podium`   | `pages/api/ranking/podium.ts`      | `POST` → assign/swap/remove podium ranks (returns HTML partial for seamless swap)        | `action`, `categoryId`, `gameId`, `rank`, `year`                                                       |
 
 Referenced but **not present**: `/posts/[id]` (linked from home feed). Add when posts detail is built.
 
@@ -29,8 +34,8 @@ Referenced but **not present**: `/posts/[id]` (linked from home feed). Add when 
 
 ### `Layout.astro`
 
-Sticky header (logo, nav `Juegos`/`GOTY`, mobile dropdown menu with hamburger toggle, Twitch/Discord CTAs), active-nav
-via `Astro.url.pathname`,
+Sticky header (logo, nav `Juegos`/`Rankings`, mobile dropdown menu with hamburger toggle, Twitch/Discord CTAs), active-nav
+via `Astro.url.pathname.startsWith(...)`,
 session via SSR client `getUser()`, renders `UserMenu` or `LoginButton`. Fonts: Space Grotesk (display) + Inter (body),
 self-hosted from `public/fonts/` (see `src/styles/fonts.css`).
 Responsive mobile menu is powered by Alpine.js (`x-data="{ mobileMenuOpen: false }"`). `<main>` and `<footer>` reside

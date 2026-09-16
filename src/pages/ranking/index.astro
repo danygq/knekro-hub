@@ -1,0 +1,21 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import RankingHub from "@/components/ranking/RankingHub.astro";
+import { loadRankingCategories } from "@/lib/ranking";
+import { userHasRole } from "@/lib/roles";
+import "@/styles/pages/ranking.css";
+
+const dbClient = Astro.locals.supabase;
+const user = Astro.locals.user;
+
+// Authorization: Owner-role only. Redirect unauthorized requests to "/"
+if (!user || !(await userHasRole(dbClient, user.id, "owner"))) {
+  return Astro.redirect("/");
+}
+
+const categories = await loadRankingCategories(dbClient);
+---
+
+<Layout user={user}>
+  <RankingHub categories={categories} />
+</Layout>

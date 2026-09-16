@@ -4,12 +4,14 @@ import "@/styles/global.css";
 import type { User } from "@supabase/supabase-js";
 import LoginButton from "@/components/LoginButton.astro";
 import UserMenu from "@/components/UserMenu.astro";
+import { userHasRole } from "@/lib/roles.ts";
 
 interface Props {
   user?: User | null;
 }
 
 let { user = Astro.locals.user } = Astro.props;
+const dbClient = Astro.locals.supabase;
 const currentPath = Astro.url.pathname;
 ---
 
@@ -89,16 +91,18 @@ const currentPath = Astro.url.pathname;
               >
                 Juegos
               </a>
-              <a
-                href="/goty"
-                class={`text-sm font-medium pb-0.75 border-b-2 transition-colors ${
-                  currentPath.startsWith("/goty")
-                    ? "border-(--knk-primary) text-(--knk-text)"
-                    : "border-transparent text-(--knk-text-muted) hover:text-(--knk-text) hover:border-(--knk-line-strong)"
-                }`}
-              >
-                GOTY
-              </a>
+              {user && (await userHasRole(dbClient, user?.id, "owner")) && (
+                <a
+                  href="/ranking"
+                  class={`text-sm font-medium pb-0.75 border-b-2 transition-colors ${
+                    currentPath.startsWith("/ranking")
+                      ? "border-(--knk-primary) text-(--knk-text)"
+                      : "border-transparent text-(--knk-text-muted) hover:text-(--knk-text) hover:border-(--knk-line-strong)"
+                  }`}
+                >
+                  Rankings
+                </a>
+              )}
             </nav>
           </div>
           <div class="flex items-center gap-3">
@@ -154,15 +158,15 @@ const currentPath = Astro.url.pathname;
             <span>Juegos</span>
           </a>
           <a
-            href="/goty"
+            href="/ranking"
             @click="mobileMenuOpen = false"
             class={`flex items-center justify-between px-3 py-2 text-sm font-medium transition-colors ${
-              currentPath.startsWith("/goty")
+              currentPath.startsWith("/ranking")
                 ? "bg-(--knk-surface) text-(--knk-primary) border-l-2 border-(--knk-primary)"
                 : "text-(--knk-text-muted) hover:text-(--knk-text) hover:bg-(--knk-surface)"
             }`}
           >
-            <span>GOTY</span>
+            <span>Rankings</span>
           </a>
         </nav>
 
@@ -196,8 +200,11 @@ const currentPath = Astro.url.pathname;
             <a href="/games" class="hover:text-(--knk-text) transition-colors">
               Juegos
             </a>
-            <a href="/goty" class="hover:text-(--knk-text) transition-colors">
-              GOTY
+            <a
+              href="/ranking"
+              class="hover:text-(--knk-text) transition-colors"
+            >
+              Rankings
             </a>
           </div>
         </div>

@@ -8,8 +8,8 @@ depends_on: [AGENTS.md, docs/INDEX.md]
 # Architecture
 
 Knekro Hub is a server-rendered Astro site for Twitch streamer Knekro. It surfaces a live Twitch embed + posts feed
-(`/`), a browsable library of games played on stream (`/games`) with community voting, and a separate awards section
-(`/goty`) covering Game of the Year, "Ojeadita of the Year", and per-genre picks. Supabase provides Postgres + Twitch
+(`/`), a browsable library of games played on stream (`/games`) with community voting, and a separate rankings and awards section
+(`/ranking`) covering Game of the Year (`/ranking/goty`) and custom yearly category tracks. Supabase provides Postgres + Twitch
 OAuth; Vercel hosts the SSR output. Core constraints: small dependency surface, all data reads server-side, Postgres
 queries must be column-scoped and index-aware, and the schema is meant to stay maintainable and extensible.
 
@@ -19,15 +19,16 @@ queries must be column-scoped and index-aware, and the schema is meant to stay m
 flowchart TD
     U[Visitor] -->|HTTP| V["Vercel SSR / Astro"]
     V --> M["middleware.ts: supabase + getUser"]
+    V --> PgRank["pages/ranking/index.astro + [slug].astro"]
+    PgRank -->|" locals.supabase: ranking_categories + ranking_items "| SB[(Supabase)]
     M --> L["Layout.astro"]
-    M --> Pi["index.astro"] -->|" locals.supabase: select posts "| SB[(Supabase)]
+    M --> Pi["index.astro"] -->|" locals.supabase: select posts "| SB
     M --> Pg["pages/games.astro"]
     Pg -->|" locals.supabase: loadGameStatuses + loadGames + loadTotalGamesCount "| SB
     Pg --> GL["GamesLayout.astro"]
     GL --> GFM["GamesFilterMenu.astro"]
     GL --> GS["GameSearch.astro"]
     GL --> GC["GameCard.astro"]
-    V --> Pgo["goty.astro - static"]
     U -->|Login| AS["POST /api/auth/signin"] -->|" signInWithOAuth twitch "| SB
     SB -->|" redirect w/ code "| CB["GET /auth/callback"] -->|exchangeCodeForSession| SB
     U -->|Logout| AO["POST /api/auth/signout"] --> SB
@@ -39,23 +40,25 @@ flowchart TD
 
 ## Modules
 
-| Module                         | Responsibility                                                                                                                                                                          | Depends on                                         | Depended on by                                                 |
-| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- | -------------------------------------------------------------- |
-| `src/middleware.ts`            | Request interceptor: initializes `createSupabaseServerClient`, validates session via `getUser`, clears expired tokens via local signout, exposes `locals.user` & `locals.supabase`      | `createSupabaseServerClient`                       | all pages, layouts                                             |
-| `layouts/Layout.astro`         | Shell: head, nav, footer, auth UI switch (reads `Astro.locals.user`)                                                                                                                    | `LoginButton`, `UserMenu`, `styles/`               | all pages                                                      |
-| `pages/index.astro`            | Home: Twitch player+chat embeds, posts feed                                                                                                                                             | `Astro.locals.supabase`, Layout                    | —                                                              |
-| `pages/games.astro`            | Games library page: SSR loaders (`loadGameStatuses`, `loadGames`, `loadTotalGamesCount`), Alpine store init (`games.layout`, `search`), renders `GamesLayout`                           | `Astro.locals`, `lib/games`, `GamesLayout`, Layout | —                                                              |
-| `pages/goty.astro`             | GOTY awards (static placeholder)                                                                                                                                                        | Layout                                             | —                                                              |
-| `pages/api/auth/*`             | `signin` (Twitch OAuth), `signout`                                                                                                                                                      | `lib/db-client`                                    | LoginButton/UserMenu forms                                     |
-| `pages/auth/callback.ts`       | OAuth PKCE code→session exchange                                                                                                                                                        | `lib/db-client`                                    | Supabase redirect                                              |
-| `pages/api/games/vote.astro`   | POST a game vote (or clear on re-click): upsert `games_user_votes`, re-SELECT game by id, return server-rendered `GameCard` (HTMX outerHTML swap)                                       | `Astro.locals`, `lib/games`, `GameCard`            | `GameCard` vote buttons (HTMX)                                 |
-| `lib/db-client.ts`             | Per-request SSR database client with placeholder fallback. Browser client retained for non-vote direct reads.                                                                           | `@supabase/ssr`, `@supabase/supabase-js`           | all pages, client scripts                                      |
-| `lib/games.ts`                 | Server-side `/games` loader: `loadGameStatuses`, `loadGames`, `loadGameById` (single game, same projection), `loadTotalGamesCount`; `formatAvg` helper                                  | `types`, `@supabase/supabase-js`                   | `pages/games.astro`, `api/games/*`                             |
-| `pages/api/games/search.astro` | GET paginated name search + status filtering (`q`, `inc`, `exc`): SELECT matching games (+ `user_vote` when logged in) + count, return rendered cards + OOB counter/no-results swaps    | `Astro.locals`, `GameCard`                         | search input (HTMX)                                            |
-| `types/*`                      | Domain types (`games.ts`, `categories.ts`, `streams.ts`, `goty.ts`, `db.ts`), Alpine stores (`store.ts`), barrel `index.ts`                                                             | —                                                  | `games` via `lib/games.ts`, Alpine store consumers             |
-| `components/*`                 | Global shell UI: `LoginButton`, `UserMenu`, `TwitchLogo`                                                                                                                                | —                                                  | Layout                                                         |
-| `components/games/*`           | Games UI suite: `GamesLayout`, `GamesFilterMenu`, `GameSearch`, `GameCard`, `GameCover`, `GameStatusBadge`, `GameCommunityVotesBadge`, `GameUserVoteBadge`, `VoteOverlay`, `VoteButton` | `types`, `lib/games`                               | `pages/games.astro`, `api/games/*`                             |
-| `styles/*`                     | `global.css` entry → `tokens.css` (design tokens), `base.css` (incl. `[x-cloak]`), `utilities.css`; per-page `pages/games.css`                                                          | Tailwind v4                                        | Layout (`global.css`); `pages/games.astro` (`pages/games.css`) |
+| Module                         | Responsibility                                                                                                                                                                                      | Depends on                                         | Depended on by                                     |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- | -------------------------------------------------- |
+| `src/middleware.ts`            | Request interceptor: initializes `createSupabaseServerClient`, validates session via `getUser`, clears expired tokens via local signout, exposes `locals.user` & `locals.supabase`                  | `createSupabaseServerClient`                       | all pages, layouts                                 |
+| `layouts/Layout.astro`         | Shell: head, nav, footer, auth UI switch (reads `Astro.locals.user`)                                                                                                                                | `LoginButton`, `UserMenu`, `styles/`               | all pages                                          |
+| `pages/index.astro`            | Home: Twitch player+chat embeds, posts feed                                                                                                                                                         | `Astro.locals.supabase`, Layout                    | —                                                  |
+| `pages/games.astro`            | Games library page: SSR loaders (`loadGameStatuses`, `loadGames`, `loadTotalGamesCount`), Alpine store init (`games.layout`, `search`), renders `GamesLayout`                                       | `Astro.locals`, `lib/games`, `GamesLayout`, Layout | —                                                  |
+| `pages/ranking/*`              | Rankings hub (`/ranking`) & standalone category pages (`goty.astro`, `vuela-alto.astro`, fallback `[slug].astro`)                                                                                   | Layout, `components/ranking/*`, `lib/ranking`      | —                                                  |
+| `pages/api/auth/*`             | `signin` (Twitch OAuth), `signout`                                                                                                                                                                  | `lib/db-client`                                    | LoginButton/UserMenu forms                         |
+| `pages/auth/callback.ts`       | OAuth PKCE code→session exchange                                                                                                                                                                    | `lib/db-client`                                    | Supabase redirect                                  |
+| `pages/api/games/vote.astro`   | POST a game vote (or clear on re-click): upsert `games_user_votes`, re-SELECT game by id, return server-rendered `GameCard` (HTMX outerHTML swap)                                                   | `Astro.locals`, `lib/games`, `GameCard`            | `GameCard` vote buttons (HTMX)                     |
+| `lib/db-client.ts`             | Per-request SSR database client with placeholder fallback. Browser client retained for non-vote direct reads.                                                                                       | `@supabase/ssr`, `@supabase/supabase-js`           | all pages, client scripts                          |
+| `lib/games.ts`                 | Server-side `/games` loader: `loadGameStatuses`, `loadGames`, `loadGameById` (single game, same projection), `loadTotalGamesCount`; `formatAvg` helper                                              | `types`, `@supabase/supabase-js`                   | `pages/games.astro`, `api/games/*`                 |
+| `lib/ranking.ts`               | Server-side `/ranking` helpers: `loadRankingCategories`, `loadRankingCategoryBySlug`, `loadPodiumGames`, `assignPodiumGame`, `removePodiumGame`                                                     | `types`, `@supabase/supabase-js`                   | `pages/ranking/*`, `api/ranking/*`                 |
+| `pages/api/games/search.astro` | GET paginated name search + status filtering (`q`, `inc`, `exc`): SELECT matching games (+ `user_vote` when logged in) + count, return rendered cards + OOB counter/no-results swaps                | `Astro.locals`, `GameCard`                         | search input (HTMX)                                |
+| `types/*`                      | Domain types (`games.ts`, `categories.ts`, `streams.ts`, `ranking.ts`, `db.ts`), Alpine stores (`store.ts`), barrel `index.ts`                                                                      | —                                                  | `games` via `lib/games.ts`, Alpine store consumers |
+| `components/*`                 | Global shell UI: `LoginButton`, `UserMenu`, `TwitchLogo`                                                                                                                                            | —                                                  | Layout                                             |
+| `components/games/*`           | Games UI suite: `GamesLayout`, `GamesFilterMenu`, `GameSearch`, `GameCard`, `GameCover`, `GameStatusBadge`, `GameCommunityVotesBadge`, `GameUserVoteBadge`, `VoteOverlay`, `VoteButton`             | `types`, `lib/games`                               | `pages/games.astro`, `api/games/*`                 |
+| `components/ranking/*`         | Rankings UI suite: `RankingHub`, `RankingCategoryPanel`, `RankingSectionLayout`, `RankingPodium`, `RankingPodiumSlot`, `RankingGameCard`, `RankingSearch`, `RankingSentinel`, `RankingPodiumScript` | `types`, `lib/ranking`                             | `pages/ranking/*`, `api/ranking/*`                 |
+| `styles/*`                     | `global.css` entry → `tokens.css` (design tokens), `base.css` (incl. `[x-cloak]`), `utilities.css`; per-page `pages/games.css`, `pages/ranking.css`                                                 | Tailwind v4                                        | Layout (`global.css`); pages                       |
 
 ## Key decisions (inferred)
 

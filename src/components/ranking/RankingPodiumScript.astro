@@ -1,0 +1,167 @@
+<script>
+  import htmx from "htmx.org";
+  import Alpine from "alpinejs";
+  import Sortable from "sortablejs";
+
+  (window as any).Alpine = Alpine;
+  (window as any).htmx = htmx;
+  (window as any).Sortable = Sortable;
+
+  function initPodiumSortables() {
+    const gamesGrid = document.getElementById("ranking-games-grid");
+    if (gamesGrid) {
+      const existingGridSortable = Sortable.get(gamesGrid);
+      if (existingGridSortable) existingGridSortable.destroy();
+
+      new Sortable(gamesGrid, {
+        group: {
+          name: "ranking-podium-group",
+          pull: "clone",
+          put: false,
+        },
+        sort: false,
+        draggable: ".knk-ranking-card",
+        animation: 150,
+        ghostClass: "sortable-ghost",
+        chosenClass: "sortable-chosen",
+        dragClass: "sortable-drag",
+      });
+    }
+
+    const dropzones = document.querySelectorAll(".knk-podium-dropzone");
+    dropzones.forEach((dropzone) => {
+      const dropzoneEl = dropzone as HTMLElement;
+      const existing = Sortable.get(dropzoneEl);
+      if (existing) existing.destroy();
+
+      new Sortable(dropzoneEl, {
+        group: {
+          name: "ranking-podium-group",
+          pull: true,
+          put: true,
+        },
+        animation: 150,
+        draggable: ".knk-podium-item, .knk-ranking-card",
+        ghostClass: "sortable-ghost",
+        chosenClass: "sortable-chosen",
+        dragClass: "sortable-drag",
+        onAdd: function (evt) {
+          const itemEl = evt.item;
+          const gameId = itemEl.dataset.gameId;
+          const targetRank = dropzoneEl.dataset.rank;
+          const categoryId = dropzoneEl.dataset.categoryId;
+          const year = dropzoneEl.dataset.year;
+
+          // Hide any previous card or placeholder so the newly dropped card takes its place immediately
+          Array.from(dropzoneEl.children).forEach((child) => {
+            if (child !== itemEl) {
+              (child as HTMLElement).style.display = "none";
+            }
+          });
+
+          if (gameId && targetRank && categoryId && year) {
+            (window as any).handlePodiumDrop(
+              Number(gameId),
+              Number(targetRank),
+              Number(categoryId),
+              Number(year),
+            );
+          }
+        },
+      });
+    });
+  }
+
+  document.addEventListener("alpine:init", () => {
+    Alpine.store("rankingSearch", {
+      query: "",
+      offset: 0,
+      limit: 24,
+      resetOffset() {
+        this.offset = 0;
+      },
+    });
+  });
+
+  // Re-init SortableJS after HTMX swaps new games into the grid
+  document.body.addEventListener("htmx:afterSwap", () => {
+    setTimeout(initPodiumSortables, 30);
+  });
+
+  document.addEventListener("DOMContentLoaded", () => {
+    setTimeout(initPodiumSortables, 50);
+  });
+
+  // Global Podium Handlers
+  (window as any).handlePodiumDrop = async (
+    gameId: number,
+    rank: number,
+    categoryId: number,
+    year: number,
+  ) => {
+    try {
+      const res = await fetch("/api/ranking/podium", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "assign",
+          gameId,
+          rank,
+          categoryId,
+          year,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alert(err.error ?? "Error al actualizar el podio");
+        return;
+      }
+
+      const html = await res.text();
+      const wrapper = document.getElementById("ranking-podium-wrapper");
+      if (wrapper) {
+        wrapper.innerHTML = html;
+        initPodiumSortables();
+      }
+    } catch (e) {
+      console.error("Error updating podium:", e);
+    }
+  };
+
+  (window as any).removePodiumGame = async (
+    rank: number,
+    categoryId: number,
+    year: number,
+  ) => {
+    if (!confirm("¿Seguro que deseas quitar este juego del podio?")) return;
+
+    try {
+      const res = await fetch("/api/ranking/podium", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "remove",
+          rank,
+          categoryId,
+          year,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alert(err.error ?? "Error al quitar el juego del podio");
+        return;
+      }
+
+      const html = await res.text();
+      const wrapper = document.getElementById("ranking-podium-wrapper");
+      if (wrapper) {
+        wrapper.innerHTML = html;
+        initPodiumSortables();
+      }
+    } catch (e) {
+      console.error("Error removing game from podium:", e);
+    }
+  };
+</script>

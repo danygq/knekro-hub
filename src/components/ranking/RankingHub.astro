@@ -1,0 +1,27 @@
+---
+import type { RankingCategory } from "@/types";
+import RankingCategoryPanel from "./RankingCategoryPanel.astro";
+
+interface Props {
+  categories: RankingCategory[];
+}
+
+const { categories } = Astro.props;
+---
+
+<div class="mb-10">
+  <p class="knk-eyebrow mb-2">Premios y Clasificaciones</p>
+  <h1 class="font-(--font-display) text-3xl sm:text-4xl tracking-tight text-balance">
+    Rankings del Canal
+  </h1>
+  <p class="mt-2 text-sm text-(--knk-text-muted) max-w-xl leading-relaxed">
+    Selecciona una sección para gestionar o consultar el podio (Oro, Plata y
+    Bronce) del año 2026.
+  </p>
+</div>
+
+<div class="knk-ranking-hub-grid">
+  {categories.map((category) => (
+    <RankingCategoryPanel category={category} />
+  ))}
+</div>
