@@ -1,0 +1,65 @@
+---
+interface Props {
+  gameId: number;
+  categoryId: number;
+  year: number;
+  currentRank?: 1 | 2 | 3;
+}
+
+const { gameId, categoryId, year, currentRank } = Astro.props;
+const isPodium = currentRank !== undefined;
+---
+
+<div class="knk-card-medal-overlay absolute inset-0 bg-black/80 flex flex-col items-center justify-center gap-2 p-2.5 z-20">
+  <span class="text-[10px] font-semibold text-white/90 uppercase tracking-wider text-center">
+    {isPodium ? "Mover a:" : "Asignar medalla:"}
+  </span>
+
+  <div class="flex flex-wrap items-center justify-center gap-1.5">
+    {currentRank !== 1 && (
+      <button
+        type="button"
+        class="knk-notch-sm px-2.5 py-1 text-xs font-medium border border-amber-400/50 bg-amber-400/20 hover:bg-amber-400/40 text-amber-300 transition-colors cursor-pointer"
+        title={isPodium ? "Mover a Oro" : "Asignar a Oro"}
+        onclick={`window.handlePodiumDrop(${gameId}, 1, ${categoryId}, ${year})`}
+      >
+        🥇 Oro
+      </button>
+    )}
+    {currentRank !== 2 && (
+      <button
+        type="button"
+        class="knk-notch-sm px-2.5 py-1 text-xs font-medium border border-slate-300/50 bg-slate-300/20 hover:bg-slate-300/40 text-slate-200 transition-colors cursor-pointer"
+        title={isPodium ? "Mover a Plata" : "Asignar a Plata"}
+        onclick={`window.handlePodiumDrop(${gameId}, 2, ${categoryId}, ${year})`}
+      >
+        🥈 Plata
+      </button>
+    )}
+    {currentRank !== 3 && (
+      <button
+        type="button"
+        class="knk-notch-sm px-2.5 py-1 text-xs font-medium border border-amber-700/50 bg-amber-700/20 hover:bg-amber-700/40 text-amber-500 transition-colors cursor-pointer"
+        title={isPodium ? "Mover a Bronce" : "Asignar a Bronce"}
+        onclick={`window.handlePodiumDrop(${gameId}, 3, ${categoryId}, ${year})`}
+      >
+        🥉 Bronce
+      </button>
+    )}
+  </div>
+
+  {isPodium ? (
+    <button
+      type="button"
+      class="knk-notch-sm mt-1 px-2.5 py-1 text-xs font-medium border border-red-500/40 bg-red-950/40 hover:bg-red-900/60 text-red-300 transition-colors cursor-pointer"
+      title="Quitar del podio"
+      onclick={`window.removePodiumGame(${currentRank}, ${categoryId}, ${year})`}
+    >
+      ✕ Quitar
+    </button>
+  ) : (
+    <span class="text-[9px] text-(--knk-text-muted) text-center mt-0.5">
+      o arrastra al podio
+    </span>
+  )}
+</div>

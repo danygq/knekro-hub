@@ -1,0 +1,101 @@
+---
+import type { RankingGameItem } from "@/lib/ranking";
+import GameCover from "@/components/games/GameCover.astro";
+import GameStatusBadge from "@/components/games/GameStatusBadge.astro";
+import RankingMedalOverlay from "./RankingMedalOverlay.astro";
+
+interface Props {
+  rank: 1 | 2 | 3;
+  item?: RankingGameItem | null;
+  categoryId: number;
+  year: number;
+}
+
+const { rank, item = null, categoryId, year } = Astro.props;
+
+const rankMetadata: Record<
+  number,
+  { label: string; emoji: string; badgeClass: string }
+> = {
+  1: { label: "Oro", emoji: "🥇", badgeClass: "knk-medal-gold" },
+  2: { label: "Plata", emoji: "🥈", badgeClass: "knk-medal-silver" },
+  3: { label: "Bronce", emoji: "🥉", badgeClass: "knk-medal-bronze" },
+};
+
+const meta = rankMetadata[rank];
+const game = item?.game;
+---
+
+<div class={`knk-podium-slot knk-podium-slot-${rank} w-full max-w-65`}>
+  <div class="flex items-center justify-between gap-2 mb-4 w-full">
+    <div class="flex items-center gap-2">
+      <span class="text-2xl" aria-hidden="true">
+        {meta.emoji}
+      </span>
+      <div>
+        <span class="text-[10px] font-semibold tracking-wider uppercase text-(--knk-text-muted)">
+          Puesto #{rank}
+        </span>
+        <h4 class="font-(--font-display) text-sm text-white tracking-tight leading-none">
+          {meta.label}
+        </h4>
+      </div>
+    </div>
+
+    {game && (
+      <button
+        type="button"
+        title="Quitar del podio"
+        class="knk-notch-sm text-[11px] px-2 py-0.5 text-red-400 hover:text-red-300 border border-red-900/40 hover:border-red-500/50 bg-red-950/30 transition-all cursor-pointer"
+        onclick={`window.removePodiumGame(${rank}, ${categoryId}, ${year})`}
+      >
+        Quitar
+      </button>
+    )}
+  </div>
+
+  <div
+    class="knk-podium-dropzone w-full"
+    data-rank={rank}
+    data-category-id={categoryId}
+    data-year={year}
+  >
+    {game ? (
+      <article
+        class="knk-podium-item knk-ranking-card knk-game-card group relative w-full border border-(--knk-line) bg-(--knk-surface) hover:border-(--knk-line-strong) transition-colors select-none cursor-grab active:cursor-grabbing"
+        data-game-id={game.id}
+        data-rank={rank}
+      >
+        <div class="relative bg-(--knk-surface-2) knk-grid-bg overflow-hidden aspect-2/3">
+          <GameCover coverUrl={game.cover_url} name={game.name} />
+          <GameStatusBadge status={game.status} />
+          <RankingMedalOverlay
+            gameId={game.id}
+            categoryId={categoryId}
+            year={year}
+            currentRank={rank}
+          />
+        </div>
+
+        <div class="p-4 max-h-fit overflow-hidden text-ellipsis">
+          <h3
+            class="font-(--font-display) text-base overflow-hidden text-ellipsis tracking-tight group-hover:text-(--knk-primary) transition-colors text-center"
+            title={game.name}
+          >
+            {game.name}
+          </h3>
+        </div>
+      </article>
+    ) : (
+      <div class="knk-podium-empty w-full aspect-2/3 border-2 border-dashed border-(--knk-line-strong) bg-(--knk-surface-2)/30 flex flex-col items-center justify-center p-6 text-center pointer-events-none select-none">
+        <span class="text-4xl mb-3 opacity-50" aria-hidden="true">
+          {meta.emoji}
+        </span>
+        <span class="text-sm font-semibold text-white">{meta.label}</span>
+        <span class="text-xs text-(--knk-text-muted) mt-1.5 leading-tight">
+          Arrastra un juego aquí
+        </span>
+      </div>
+    )}
+  </div>
+</div>

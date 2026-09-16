@@ -1,12 +1,23 @@
 ---
 import Spinner from "@/components/Spinner.astro";
+
+interface Props {
+  categoryId: number;
+  year: number;
+}
+
+const { categoryId, year } = Astro.props;
 ---
 
-<div class="flex-1" role="search" x-data>
-  <label for="games-search" class="sr-only">
+<div
+  class="relative w-full sm:w-80 md:w-96"
+  role="search"
+  x-data="{ query: '' }"
+>
+  <label for="ranking-search" class="sr-only">
     Buscar juegos por nombre
   </label>
-  <div class="relative w-full max-w-md">
+  <div class="relative w-full">
     <!-- Default Search Icon (fades out while loading) -->
     <svg
       class="z-1 pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 shrink-0 text-(--knk-text-faint) transition-opacity duration-150 in-[.htmx-request]:opacity-0"
@@ -31,33 +42,33 @@ import Spinner from "@/components/Spinner.astro";
     <!-- Search Input -->
     <input
       x-ref="searchInput"
-      id="games-search"
+      id="ranking-search"
       name="q"
       type="search"
       placeholder="Buscar por nombre…"
       autocomplete="off"
       spellcheck="false"
-      x-model="$store.search.query"
-      @input="$store.search?.resetOffset?.()"
-      hx-get="/api/games/search"
-      hx-trigger="input changed delay:300ms, search, refreshSearch from:body, filter-changed from:body"
-      hx-vals="js:{ q: Alpine.store('search').query, inc: Array.from(Alpine.store('search').filters.status.included).join(','), exc: Array.from(Alpine.store('search').filters.status.excluded).join(','), offset: 0, limit: 24 }"
-      hx-target="#games-grid"
+      x-model="query"
+      @input="$store.rankingSearch?.resetOffset?.()"
+      hx-get="/api/ranking/search"
+      hx-trigger="input changed delay:300ms, search"
+      hx-target="#ranking-games-grid"
       hx-swap="innerHTML"
       hx-sync="this:replace"
       hx-indicator="closest .relative"
+      hx-vals={`js:{ category_id: ${categoryId}, year: ${year}, offset: 0, limit: 24 }`}
       class="knk-notch w-full pl-10 pr-10 py-2 text-sm bg-(--knk-surface) text-(--knk-text) border border-(--knk-line) hover:border-(--knk-line-strong) transition-colors [&::-webkit-search-decoration]:appearance-none"
     />
 
     <!-- Clear Button -->
     <button
-      id="games-search-clear"
+      id="ranking-search-clear"
       type="button"
-      x-show="$store.search.query"
+      x-show="query"
       x-cloak
-      @click="$store.search.query = ''; $store.search?.resetOffset?.(); $nextTick(() => $refs.searchInput.dispatchEvent(new Event('input', { bubbles: true })));"
+      @click="query = ''; $store.rankingSearch?.resetOffset?.(); $nextTick(() => $refs.searchInput.dispatchEvent(new Event('input', { bubbles: true })));"
       aria-label="Limpiar búsqueda"
-      class="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center justify-center w-6 h-6 text-(--knk-text-muted) hover:text-(--knk-primary) transition-colors"
+      class="knk-notch-sm absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center justify-center w-6 h-6 text-(--knk-text-muted) hover:text-(--knk-primary) transition-colors cursor-pointer"
     >
       <svg
         width="12"

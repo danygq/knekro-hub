@@ -1,0 +1,105 @@
+---
+import type { GameDetails, RankingCategory } from "@/types";
+import type { RankingGameItem } from "@/lib/ranking";
+import RankingBackButton from "./RankingBackButton.astro";
+import RankingPodium from "./RankingPodium.astro";
+import RankingSearch from "./RankingSearch.astro";
+import RankingGameCard from "./RankingGameCard.astro";
+import RankingSentinel from "./RankingSentinel.astro";
+
+interface Props {
+  category: RankingCategory;
+  year: number;
+  podiumItems: RankingGameItem[];
+  initialGames: GameDetails[];
+  totalGames: number;
+}
+
+const { category, year, podiumItems, initialGames, totalGames } = Astro.props;
+
+const visibleCount = Math.min(totalGames, initialGames.length);
+const hasMore = initialGames.length < totalGames;
+---
+
+<div class="ranking-section-content">
+  <!-- Top Navigation & Header -->
+  <div class="mb-8">
+    <div class="mb-4">
+      <RankingBackButton href="/ranking" label="Volver a rankings" />
+    </div>
+
+    <div class="flex flex-wrap items-start justify-between gap-4">
+      <div>
+        <p class="knk-eyebrow mb-1">Premios {year}</p>
+        <h1 class="font-(--font-display) text-3xl sm:text-4xl tracking-tight text-balance text-white">
+          {category.name}
+        </h1>
+        {category.description && (
+          <p class="mt-2 text-sm text-(--knk-text-muted) max-w-xl leading-relaxed">
+            {category.description}
+          </p>
+        )}
+      </div>
+    </div>
+  </div>
+
+  <!-- Podium -->
+  <div id="ranking-podium-wrapper">
+    <RankingPodium
+      categoryId={category.id}
+      year={year}
+      podiumItems={podiumItems}
+    />
+  </div>
+
+  <!-- Divider -->
+  <hr class="border-(--knk-line) my-10" />
+
+  <!-- Search & Game Pool Section -->
+  <section class="mb-12">
+    <div class="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
+      <div>
+        <h3 class="font-(--font-display) text-lg sm:text-xl tracking-tight text-white">
+          Selección de Juegos
+        </h3>
+        <p class="text-xs text-(--knk-text-muted) mt-0.5">
+          Mostrando{" "}
+          <span id="ranking-visible-count" class="font-mono text-white">
+            {visibleCount}
+          </span>{" "}
+          de{" "}
+          <span id="ranking-total-count" class="font-mono text-white">
+            {totalGames}
+          </span>{" "}
+          juegos
+        </p>
+      </div>
+
+      <RankingSearch categoryId={category.id} year={year} />
+    </div>
+
+    <!-- Games Grid -->
+    <div id="ranking-games-grid" class="flex flex-wrap gap-5">
+      <p
+        id="ranking-no-results"
+        hidden={initialGames.length > 0}
+        class="w-full text-sm text-(--knk-text-muted) py-8 text-center"
+      >
+        No hay juegos que coincidan con la búsqueda.
+      </p>
+
+      {initialGames.map((game) => (
+        <RankingGameCard game={game} categoryId={category.id} year={year} />
+      ))}
+
+      {hasMore && (
+        <RankingSentinel
+          offset={24}
+          categoryId={category.id}
+          year={year}
+          limit={24}
+        />
+      )}
+    </div>
+  </section>
+</div>

@@ -1,0 +1,31 @@
+---
+import Spinner from "@/components/Spinner.astro";
+
+interface Props {
+  offset: number;
+  categoryId: number;
+  year: number;
+  limit?: number;
+}
+
+const { offset, categoryId, year, limit = 24 } = Astro.props;
+---
+
+<div
+  id="ranking-sentinel"
+  class="w-full flex flex-col items-center justify-center py-6 text-sm text-(--knk-text-muted)"
+  hx-get="/api/ranking/search"
+  hx-trigger="intersect once"
+  hx-swap="outerHTML"
+  hx-indicator="#ranking-infinite-spinner"
+  hx-include="[name='q']"
+  hx-vals={`js:{ category_id: ${categoryId}, year: ${year}, offset: ${offset}, limit: ${limit} }`}
+>
+  <div
+    id="ranking-infinite-spinner"
+    class="htmx-indicator flex items-center gap-2"
+  >
+    <Spinner class="h-5 w-5 text-(--knk-primary)" />
+    <span>Cargando más juegos...</span>
+  </div>
+</div>

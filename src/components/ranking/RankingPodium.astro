@@ -1,0 +1,39 @@
+---
+import type { RankingGameItem } from "@/lib/ranking";
+import RankingPodiumSlot from "./RankingPodiumSlot.astro";
+
+interface Props {
+  categoryId: number;
+  year: number;
+  podiumItems: RankingGameItem[];
+}
+
+const { categoryId, year, podiumItems } = Astro.props;
+
+const gold = podiumItems.find((i) => i.rank === 1) ?? null;
+const silver = podiumItems.find((i) => i.rank === 2) ?? null;
+const bronze = podiumItems.find((i) => i.rank === 3) ?? null;
+---
+
+<section id="ranking-podium" class="mb-12">
+  <div class="knk-podium-container">
+    <RankingPodiumSlot
+      rank={1}
+      item={gold}
+      categoryId={categoryId}
+      year={year}
+    />
+    <RankingPodiumSlot
+      rank={2}
+      item={silver}
+      categoryId={categoryId}
+      year={year}
+    />
+    <RankingPodiumSlot
+      rank={3}
+      item={bronze}
+      categoryId={categoryId}
+      year={year}
+    />
+  </div>
+</section>

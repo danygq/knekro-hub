@@ -1,7 +1,7 @@
 ---
 module: routing-ui
 owner_area: frontend
-last_verified_against_commit: fc4b86e
+last_verified_against_commit: 2839a5c
 depends_on: [data-layer, auth]
 ---
 
@@ -15,13 +15,18 @@ File-based routing (Astro). All pages wrap `layouts/Layout.astro`.
 | ----------------------- | ---------------------------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
 | `/`                     | `pages/index.astro`                | Twitch player + chat embeds, live broadcast status & timer, YouTube slot, posts feed     | `posts`, `streams` (server)                                                                            |
 | `/games`                | `pages/games.astro`                | Status filter drawer (`GamesFilterMenu`) + name search (`GameSearch`) + games grid       | `game_status` + `games` via `lib/games.ts` (server); search & status filtering via `/api/games/search` |
-| `/goty`                 | `pages/goty.astro`                 | Awards intro + "coming soon" tier list                                                   | none (static)                                                                                          |
+| `/ranking`              | `pages/ranking/index.astro`        | Rankings hub — category track panels (`ranking_categories`)                              | `ranking_categories` via `lib/ranking.ts` (server)                                                     |
+| `/ranking/goty`         | `pages/ranking/goty.astro`         | Dedicated GOTY category ranking & podium                                                 | `ranking_categories`, `ranking_items`, `games` via `lib/ranking.ts`                                    |
+| `/ranking/vuela-alto`   | `pages/ranking/vuela-alto.astro`   | Dedicated Vuela Alto category ranking & podium                                           | `ranking_categories`, `ranking_items`, `games` via `lib/ranking.ts`                                    |
+| `/ranking/[slug]`       | `pages/ranking/[slug].astro`       | Dynamic category ranking fallback route                                                  | `ranking_categories`, `ranking_items`, `games` via `lib/ranking.ts`                                    |
 | `/auth/callback`        | `pages/auth/callback.ts`           | OAuth code exchange, redirect                                                            | —                                                                                                      |
 | `/auth/auth-code-error` | `pages/auth/auth-code-error.astro` | Auth failure page                                                                        | —                                                                                                      |
 | `/api/auth/signin`      | `pages/api/auth/signin.ts`         | `POST` → Twitch OAuth redirect                                                           | —                                                                                                      |
 | `/api/auth/signout`     | `pages/api/auth/signout.ts`        | `POST` → sign out, redirect `/`                                                          | —                                                                                                      |
 | `/api/games/search`     | `pages/api/games/search.astro`     | `GET` → name search + status filtering + pagination (HTML fragments + OOB counter swaps) | `q`, `inc`, `exc`, `offset`, `limit` query params                                                      |
 | `/api/games/vote`       | `pages/api/games/vote.astro`       | `POST` → submit/clear game vote, return server-rendered `GameCard` (HTMX outerHTML swap) | `game_id`, `vote` form data                                                                            |
+| `/api/ranking/search`   | `pages/api/ranking/search.astro`   | `GET` → paginated game search for ranking assignments                                    | `q`, `category_id`, `year`, `offset`, `limit`                                                          |
+| `/api/ranking/podium`   | `pages/api/ranking/podium.ts`      | `POST` → assign/swap/remove podium ranks (renders `RankingPodium.astro` via container for seamless swap) | `action`, `categoryId`, `gameId`, `rank`, `year`                                                       |
 
 Referenced but **not present**: `/posts/[id]` (linked from home feed). Add when posts detail is built.
 
@@ -29,8 +34,8 @@ Referenced but **not present**: `/posts/[id]` (linked from home feed). Add when 
 
 ### `Layout.astro`
 
-Sticky header (logo, nav `Juegos`/`GOTY`, mobile dropdown menu with hamburger toggle, Twitch/Discord CTAs), active-nav
-via `Astro.url.pathname`,
+Sticky header (logo, nav `Juegos`/`Rankings`, mobile dropdown menu with hamburger toggle, Twitch/Discord CTAs), active-nav
+via `Astro.url.pathname.startsWith(...)`,
 session via SSR client `getUser()`, renders `UserMenu` or `LoginButton`. Fonts: Space Grotesk (display) + Inter (body),
 self-hosted from `public/fonts/` (see `src/styles/fonts.css`).
 Responsive mobile menu is powered by Alpine.js (`x-data="{ mobileMenuOpen: false }"`). `<main>` and `<footer>` reside
@@ -60,6 +65,7 @@ Renders `GamesLayout.astro` with fetched data.
 | `LoginButton.astro` | Form `POST /api/auth/signin`, Twitch-branded                       |
 | `UserMenu.astro`    | Avatar + display name (`user_metadata`) + `POST /api/auth/signout` |
 | `TwitchLogo.astro`  | Inline SVG mark                                                    |
+| `Spinner.astro`     | Reusable SVG loading spinner with `animate-spin`                   |
 
 ### Games Library (`src/components/games/`)
 
@@ -70,12 +76,26 @@ Renders `GamesLayout.astro` with fetched data.
 | `GameSearch.astro`              | Search input field with 300ms debounce, loading spinner (`.htmx-request`), and clear button. Triggers HTMX `GET /api/games/search` on input and `filter-changed` from body, serializing Alpine store values (`q`, `inc`, `exc`, `offset: 0`, `limit: 24`). |
 | `GameCard.astro`                | 2:3 card displaying cover, status, community votes, and personal vote. Owns Alpine local state (`x-data="{ open: false }"`) for toggling `VoteOverlay`.                                                                                                    |
 | `GameCover.astro`               | Cover image handler with fallback placeholder SVG when `cover_url` is missing.                                                                                                                                                                             |
-| `GameStatusBadge.astro`         | Status badge pinned to top-left of the card cover.                                                                                                                                                                                                         |
+| `GameStatusBadge.astro`         | Status badge pinned to top-left of the card cover. Reused across `GameCard`, `RankingGameCard`, and `RankingPodiumSlot`.                                                                                                                                    |
 | `GameCommunityVotesBadge.astro` | Displays community vote average (formatted via `formatAvg`) and total vote count on the card.                                                                                                                                                              |
 | `GameUserVoteBadge.astro`       | Highlights the current logged-in user's vote on the card.                                                                                                                                                                                                  |
 | `VoteOverlay.astro`             | Interactive popover overlay with 1–10 rating buttons for authenticated users.                                                                                                                                                                              |
 | `VoteButton.astro`              | HTMX vote button posting to `/api/games/vote`. Replaces card with updated server response via `outerHTML`.                                                                                                                                                 |
 | `InfiniteScrollSentinel.astro`  | Infinite scroll sentinel trigger rendered at grid bottom when more games exist. Triggers HTMX `GET /api/games/search` on `revealed` and swaps `outerHTML` with next batch of cards + next sentinel.                                                        |
+
+### Rankings (`src/components/ranking/`)
+
+| Component                  | Role                                                                                                               |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `RankingGameCard.astro`    | 2:3 card in the selection pool with `GameCover`, `GameStatusBadge`, and `RankingMedalOverlay`.                     |
+| `RankingPodium.astro`      | Podium container wrapping 3 `RankingPodiumSlot` slots (Gold, Silver, Bronze).                                      |
+| `RankingPodiumSlot.astro`  | Podium slot dropzone and ranked card display with `RankingMedalOverlay` (mover/quitar actions).                    |
+| `RankingMedalOverlay.astro`| Hover overlay for ranking cards with Oro/Plata/Bronce quick assignment/move buttons and Quitar action.             |
+| `RankingSearch.astro`      | Search input field for ranking game pool with HTMX search and `Spinner`.                                           |
+| `RankingSentinel.astro`    | Infinite scroll sentinel trigger for ranking search games with `Spinner`.                                          |
+| `RankingSectionLayout.astro`| Section wrapper for dedicated ranking category views (header, podium wrapper, and selection pool).               |
+| `RankingPodiumScript.astro`| Client-side SortableJS drag & drop logic and handlers for podium assignment/swaps.                                 |
+
 
 ## Progressive Interactivity & State Architecture
 

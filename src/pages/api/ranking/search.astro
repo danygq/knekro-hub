@@ -1,0 +1,62 @@
+---
+import RankingGameCard from "@/components/ranking/RankingGameCard.astro";
+import RankingSentinel from "@/components/ranking/RankingSentinel.astro";
+import { loadRankingSearchGames } from "@/lib/ranking";
+import { userHasRole } from "@/lib/roles";
+
+const dbClient = Astro.locals.supabase;
+const user = Astro.locals.user;
+
+// Verify Owner access
+if (!user || !(await userHasRole(dbClient, user.id, "owner"))) {
+  return new Response("Unauthorized", { status: 403 });
+}
+
+const q = (Astro.url.searchParams.get("q") ?? "").trim();
+const categoryId = Number(Astro.url.searchParams.get("category_id") ?? "1");
+const year = Number(Astro.url.searchParams.get("year") ?? "2026");
+const offset = Math.max(0, Number(Astro.url.searchParams.get("offset") ?? "0"));
+const limit = Math.min(
+  48,
+  Math.max(1, Number(Astro.url.searchParams.get("limit") ?? "24")),
+);
+
+const { games, total } = await loadRankingSearchGames(dbClient, {
+  query: q,
+  offset,
+  limit,
+});
+
+const visibleCount = Math.min(total, offset + games.length);
+const noResults = q !== "" && total === 0;
+const hasMore = offset + limit < total;
+const nextOffset = offset + limit;
+---
+
+<span id="ranking-visible-count" hx-swap-oob="innerHTML">
+  {visibleCount}
+</span>
+<span id="ranking-total-count" hx-swap-oob="innerHTML">
+  {total}
+</span>
+<p
+  id="ranking-no-results"
+  hx-swap-oob="true"
+  hidden={!noResults}
+  class="w-full text-sm text-(--knk-text-muted) py-8 text-center"
+>
+  No hay juegos que coincidan con la búsqueda.
+</p>
+
+{games.map((game) => (
+  <RankingGameCard game={game} categoryId={categoryId} year={year} />
+))}
+
+{hasMore && (
+  <RankingSentinel
+    offset={nextOffset}
+    categoryId={categoryId}
+    year={year}
+    limit={limit}
+  />
+)}

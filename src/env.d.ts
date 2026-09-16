@@ -10,3 +10,9 @@ declare namespace App {
     user: import("@supabase/supabase-js").User | null;
   }
 }
+
+declare module "*.astro" {
+  const component: any;
+  export default component;
+}
+

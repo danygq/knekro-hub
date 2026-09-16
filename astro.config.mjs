@@ -9,6 +9,10 @@ export default defineConfig({
   output: "server",
   adapter: vercel(),
   site: "https://knekro.vercel.app/",
+  redirects: {
+    "/rankings": "/ranking",
+    "/rankings/[...slug]": "/ranking/[...slug]",
+  },
 
   vite: {
     plugins: [tailwindcss()],

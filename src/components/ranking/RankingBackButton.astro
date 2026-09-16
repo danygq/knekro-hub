@@ -1,0 +1,27 @@
+---
+interface Props {
+  href?: string;
+  label?: string;
+}
+
+const { href = "/ranking", label = "Volver a rankings" } = Astro.props;
+---
+
+<a
+  href={href}
+  class="knk-notch-sm inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium border border-(--knk-line) bg-(--knk-surface) text-(--knk-text-muted) hover:text-white hover:border-(--knk-primary) transition-colors no-underline"
+>
+  <svg
+    width="14"
+    height="14"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <path d="m15 18-6-6 6-6"></path>
+  </svg>
+  <span>{label}</span>
+</a>
