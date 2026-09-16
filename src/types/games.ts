@@ -10,6 +10,14 @@ export interface GameStatus {
   games_with_this_status: number;
 }
 
+export type GameSortOption =
+  | "name_asc"
+  | "name_desc"
+  | "community_desc"
+  | "community_asc"
+  | "user_vote_desc"
+  | "user_vote_asc";
+
 /**
  * One row of the games grid: exactly the columns `/games` selects from
  * `games` (id, name, cover_url, vote_count, avg_vote) plus the embedded

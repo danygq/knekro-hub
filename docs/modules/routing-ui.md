@@ -1,7 +1,7 @@
 ---
 module: routing-ui
 owner_area: frontend
-last_verified_against_commit: 2839a5c
+last_verified_against_commit: fee8c71
 depends_on: [data-layer, auth]
 ---
 
@@ -73,7 +73,8 @@ Renders `GamesLayout.astro` with fetched data.
 | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `GamesLayout.astro`             | Main layout container. Manages drawer toggle button (with active filter count badge) and responsive classes (`filters-off`). Contains filter menu, search, and grid.                                                                                       |
 | `GamesFilterMenu.astro`         | Off-canvas/sidebar filter panel. Provides 3-state status filtering (include `+`, exclude `-`, neutral) per status plus "Todas" reset. Binds to `$store.search.filters.status` and dispatches `filter-changed` event.                                       |
-| `GameSearch.astro`              | Search input field with 300ms debounce, loading spinner (`.htmx-request`), and clear button. Triggers HTMX `GET /api/games/search` on input and `filter-changed` from body, serializing Alpine store values (`q`, `inc`, `exc`, `offset: 0`, `limit: 24`). |
+| `GameSearch.astro`              | Search input field with 300ms debounce, loading spinner (`.htmx-request`), and clear button. Triggers HTMX `GET /api/games/search` on input and `filter-changed` from body, serializing Alpine store values (`q`, `inc`, `exc`, `sort`, `offset: 0`, `limit: 24`). |
+| `GameSortDropdown.astro`        | Sort dropdown popover for ordering games (alphabetical, community vote avg, and personal user votes). Updates `$store.search.sort` and dispatches `filter-changed`.                                                                                       |
 | `GameCard.astro`                | 2:3 card displaying cover, status, community votes, and personal vote. Owns Alpine local state (`x-data="{ open: false }"`) for toggling `VoteOverlay`.                                                                                                    |
 | `GameCover.astro`               | Cover image handler with fallback placeholder SVG when `cover_url` is missing.                                                                                                                                                                             |
 | `GameStatusBadge.astro`         | Status badge pinned to top-left of the card cover. Reused across `GameCard`, `RankingGameCard`, and `RankingPodiumSlot`.                                                                                                                                    |

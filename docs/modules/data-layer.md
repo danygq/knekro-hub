@@ -1,7 +1,7 @@
 ---
 module: data-layer
 owner_area: backend
-last_verified_against_commit: bedcc3c
+last_verified_against_commit: fee8c71
 depends_on: []
 ---
 
@@ -108,6 +108,7 @@ create table public.games
 - `game_status_id` is nullable and set to NULL on parent delete (orphaned games are preserved).
 - `twitch_game_id` stores Twitch's category ID for unique resolution and deduplication against live stream categories.
 - `last_played_at` records the timestamp normalized into Europe/Madrid wall-clock time (`toMadridDateTimeString`) when the game was last played on stream via Twitch EventSub `channel.update`.
+- `idx_games_name_trgm` GIN index (`gin (name gin_trgm_ops)`) accelerates substring `ILIKE` searches via `pg_trgm`.
 
 ### `games_user_votes`
 
@@ -210,6 +211,8 @@ update on games_user_votes
 ### Functions / RPC
 
 ```sql
+create extension if not exists pg_trgm;
+
 create or replace function get_user_games(
   p_user_id uuid default null,
   p_search text default '',
@@ -245,29 +248,39 @@ returns table (
     left join game_status gs 
       on gs.id = g.game_status_id
     left join games_user_votes v 
-      on v.game_id = g.id and (p_user_id is not null and v.user_id = p_user_id)
-    where (coalesce(trim(p_search), '') = '' or g.name ilike '%' || trim(p_search) || '%')
-      and (cardinality(p_inc_status) = 0 or g.game_status_id = any(p_inc_status))
+      on v.game_id = g.id 
+      and p_user_id is not null 
+      and v.user_id = p_user_id
+    where 
+      -- Search matching (safe against NULL, empty, or whitespace)
+      (coalesce(trim(p_search), '') = '' or g.name ilike '%' || trim(p_search) || '%')
+      -- Included status filter (safe against NULL and empty arrays)
       and (
-        cardinality(p_exc_status) = 0 
+        coalesce(cardinality(p_inc_status), 0) = 0 
+        or g.game_status_id = any(p_inc_status)
+      )
+      -- Excluded status filter (safe against NULL array, empty array, and NULL game_status_id)
+      and (
+        coalesce(cardinality(p_exc_status), 0) = 0 
         or g.game_status_id is null 
         or not (g.game_status_id = any(p_exc_status))
       )
   )
   select * from filtered
   order by
-    case when p_sort = 'name_asc' then name end asc,
-    case when p_sort = 'name_desc' then name end desc,
+    case when p_sort = 'name_asc' then lower(name) end asc,
+    case when p_sort = 'name_desc' then lower(name) end desc,
     case when p_sort = 'community_desc' then avg_vote end desc nulls last,
     case when p_sort = 'community_asc' then avg_vote end asc nulls last,
     case when p_sort = 'user_vote_desc' then user_vote end desc nulls last,
     case when p_sort = 'user_vote_asc' then user_vote end asc nulls last,
     id asc
-  limit p_limit offset p_offset;
+  limit least(coalesce(p_limit, 24), 100)
+  offset greatest(coalesce(p_offset, 0), 0);
 $$;
 ```
 
-- `get_user_games`: Powers `/games` library catalog searches, status filters, multi-column sorting (including personal user votes with `NULLS LAST`), and DB-level pagination in a single query via `fetchGames()` in `src/lib/games.ts`.
+- `get_user_games`: Powers `/games` library catalog searches (accelerated by `idx_games_name_trgm`), status filters (safe against NULL/empty arrays), multi-column sorting (case-insensitive `lower(name)` and personal user votes with `NULLS LAST`), and bounded DB-level pagination in a single query via `fetchGames()` in `src/lib/games.ts`.
 
 ## Clients
 

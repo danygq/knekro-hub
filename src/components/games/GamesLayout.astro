@@ -4,6 +4,7 @@ import type { GameDetails, GameStatus } from "@/types";
 import GameCard from "./GameCard.astro";
 import { type User } from "@supabase/auth-js";
 import GameSearch from "./GameSearch.astro";
+import GameSortDropdown from "./GameSortDropdown.astro";
 import InfiniteScrollSentinel from "./InfiniteScrollSentinel.astro";
 
 interface Props {
@@ -34,9 +35,10 @@ const { gameStatuses, games, totalGames, user } = Astro.props;
       </p>
     ) : (
       <>
-        <div class="mb-6 flex justify-between gap-3">
+        <div class="mb-6 flex flex-wrap sm:flex-nowrap items-center justify-between gap-3">
           <GameSearch />
-          <div class="flex-0">
+          <div class="flex items-center gap-2 shrink-0">
+            <GameSortDropdown loggedIn={!!user} />
             <button
               type="button"
               id="toggle-filters"
