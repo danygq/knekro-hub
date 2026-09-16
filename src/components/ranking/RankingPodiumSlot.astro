@@ -1,5 +1,8 @@
 ---
 import type { RankingGameItem } from "@/lib/ranking";
+import GameCover from "@/components/games/GameCover.astro";
+import GameStatusBadge from "@/components/games/GameStatusBadge.astro";
+import RankingMedalOverlay from "./RankingMedalOverlay.astro";
 
 interface Props {
   rank: 1 | 2 | 3;
@@ -59,85 +62,19 @@ const game = item?.game;
   >
     {game ? (
       <article
-        class="knk-podium-item knk-ranking-card knk-game-card group relative w-full border border-(--knk-line) bg-(--knk-surface) hover:border-(--knk-line-strong) transition-colors select-none cursor-grab"
+        class="knk-podium-item knk-ranking-card knk-game-card group relative w-full border border-(--knk-line) bg-(--knk-surface) hover:border-(--knk-line-strong) transition-colors select-none cursor-grab active:cursor-grabbing"
         data-game-id={game.id}
         data-rank={rank}
       >
         <div class="relative bg-(--knk-surface-2) knk-grid-bg overflow-hidden aspect-2/3">
-          {game.cover_url ? (
-            <img
-              src={game.cover_url}
-              alt={game.name}
-              class="w-full h-full object-cover"
-              loading="lazy"
-            />
-          ) : (
-            <div class="w-full h-full flex items-center justify-center text-(--knk-text-faint)">
-              <svg
-                width="32"
-                height="32"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.5"
-              >
-                <rect width="20" height="12" x="2" y="6" rx="2" />
-                <path d="M6 12h4m-2-2v4m7-2h.01m2.99 0h.01" />
-              </svg>
-            </div>
-          )}
-          {game.status?.name && (
-            <span class="absolute top-3 right-3 z-10 knk-notch-sm px-2.5 py-1 text-xs font-medium bg-(--knk-bg)/80 text-(--knk-text-muted) border border-(--knk-line)">
-              {game.status.name}
-            </span>
-          )}
-
-          <!-- Hover overlay with medal actions & remove -->
-          <div class="knk-card-medal-overlay absolute inset-0 bg-black/80 flex flex-col items-center justify-center gap-2 p-2.5 z-20">
-            <span class="text-[10px] font-semibold text-white/90 uppercase tracking-wider text-center">
-              Mover a:
-            </span>
-            <div class="flex flex-wrap items-center justify-center gap-1.5">
-              {rank !== 1 && (
-                <button
-                  type="button"
-                  class="knk-notch-sm px-2 py-1 text-xs font-medium border border-amber-400/50 bg-amber-400/20 hover:bg-amber-400/40 text-amber-300 transition-colors cursor-pointer"
-                  title="Mover a Oro"
-                  onclick={`window.handlePodiumDrop(${game.id}, 1, ${categoryId}, ${year})`}
-                >
-                  🥇 Oro
-                </button>
-              )}
-              {rank !== 2 && (
-                <button
-                  type="button"
-                  class="knk-notch-sm px-2 py-1 text-xs font-medium border border-slate-300/50 bg-slate-300/20 hover:bg-slate-300/40 text-slate-200 transition-colors cursor-pointer"
-                  title="Mover a Plata"
-                  onclick={`window.handlePodiumDrop(${game.id}, 2, ${categoryId}, ${year})`}
-                >
-                  🥈 Plata
-                </button>
-              )}
-              {rank !== 3 && (
-                <button
-                  type="button"
-                  class="knk-notch-sm px-2 py-1 text-xs font-medium border border-amber-700/50 bg-amber-700/20 hover:bg-amber-700/40 text-amber-500 transition-colors cursor-pointer"
-                  title="Mover a Bronce"
-                  onclick={`window.handlePodiumDrop(${game.id}, 3, ${categoryId}, ${year})`}
-                >
-                  🥉 Bronce
-                </button>
-              )}
-            </div>
-            <button
-              type="button"
-              class="knk-notch-sm mt-1 px-2.5 py-1 text-xs font-medium border border-red-500/40 bg-red-950/40 hover:bg-red-900/60 text-red-300 transition-colors cursor-pointer"
-              title="Quitar del podio"
-              onclick={`window.removePodiumGame(${rank}, ${categoryId}, ${year})`}
-            >
-              ✕ Quitar
-            </button>
-          </div>
+          <GameCover coverUrl={game.cover_url} name={game.name} />
+          <GameStatusBadge status={game.status} />
+          <RankingMedalOverlay
+            gameId={game.id}
+            categoryId={categoryId}
+            year={year}
+            currentRank={rank}
+          />
         </div>
 
         <div class="p-4 max-h-fit overflow-hidden text-ellipsis">

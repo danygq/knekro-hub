@@ -134,8 +134,6 @@
     categoryId: number,
     year: number,
   ) => {
-    if (!confirm("¿Seguro que deseas quitar este juego del podio?")) return;
-
     try {
       const res = await fetch("/api/ranking/podium", {
         method: "POST",

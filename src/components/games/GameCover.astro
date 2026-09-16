@@ -2,11 +2,17 @@
 import Image from "astro/components/Image.astro";
 
 interface Props {
-  coverUrl: string | null;
+  coverUrl?: string | null;
   name: string;
+  loading?: "lazy" | "eager";
+  class?: string;
 }
 
-const { coverUrl, name } = Astro.props;
+const {
+  coverUrl = null,
+  name,
+  class: className = "w-full h-full object-cover",
+} = Astro.props;
 ---
 
 {coverUrl ? (
@@ -20,24 +26,18 @@ const { coverUrl, name } = Astro.props;
     class="absolute inset-0 h-full w-full object-fill"
   />
 ) : (
-  <div class="absolute inset-0 flex items-center justify-center">
+  <div class="w-full h-full flex items-center justify-center text-(--knk-text-faint)">
     <svg
       width="32"
       height="32"
       viewBox="0 0 24 24"
       fill="none"
-      class="text-(--knk-text-faint)"
+      stroke="currentColor"
+      stroke-width="1.5"
+      aria-hidden="true"
     >
-      <path
-        d="M7 7h10a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-1l-1.5-2h-5L8 17H7a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Z"
-        stroke="currentColor"
-        stroke-width="1.5"
-      />
-      <path
-        d="M9.5 11.5v2M8.5 12.5h2M16 11h.01M14.5 12.5h.01"
-        stroke="currentColor"
-        stroke-width="1.5"
-      />
+      <rect width="20" height="12" x="2" y="6" rx="2" />
+      <path d="M6 12h4m-2-2v4m7-2h.01m2.99 0h.01" />
     </svg>
   </div>
 )}
