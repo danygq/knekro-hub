@@ -7,6 +7,56 @@
   (window as any).htmx = htmx;
   (window as any).Sortable = Sortable;
 
+  // --- Auto-scroll to Podium Logic ---
+  let isScrollingToPodium = false;
+
+  function handleAutoScrollCheck(e: MouseEvent | TouchEvent | DragEvent) {
+    const clientY =
+      "touches" in e && e.touches.length > 0
+        ? e.touches[0].clientY
+        : (e as MouseEvent).clientY;
+
+    if (clientY === undefined || clientY === null) return;
+
+    // 13vh threshold from the top
+    const threshold = window.innerHeight * 0.13;
+
+    if (clientY <= threshold && !isScrollingToPodium) {
+      const podium = document.getElementById("ranking-podium-wrapper");
+
+      // Only scroll if podium exists and is currently above the visible viewport
+      if (podium && podium.getBoundingClientRect().top < -10) {
+        isScrollingToPodium = true;
+        podium.scrollIntoView({ behavior: "smooth", block: "start" });
+
+        // Cooldown prevents jittery repeated calls during smooth scroll animation
+        setTimeout(() => {
+          isScrollingToPodium = false;
+        }, 600);
+      }
+    }
+  }
+
+  function startDragScrollMonitor() {
+    window.addEventListener("dragover", handleAutoScrollCheck, {
+      passive: true,
+    });
+    window.addEventListener("touchmove", handleAutoScrollCheck, {
+      passive: true,
+    });
+    window.addEventListener("pointermove", handleAutoScrollCheck, {
+      passive: true,
+    });
+  }
+
+  function stopDragScrollMonitor() {
+    window.removeEventListener("dragover", handleAutoScrollCheck);
+    window.removeEventListener("touchmove", handleAutoScrollCheck);
+    window.removeEventListener("pointermove", handleAutoScrollCheck);
+    isScrollingToPodium = false;
+  }
+
+  // --- Sortable Initialization ---
   function initPodiumSortables() {
     const gamesGrid = document.getElementById("ranking-games-grid");
     if (gamesGrid) {
@@ -25,6 +75,12 @@
         ghostClass: "sortable-ghost",
         chosenClass: "sortable-chosen",
         dragClass: "sortable-drag",
+        onStart: function () {
+          startDragScrollMonitor();
+        },
+        onEnd: function () {
+          stopDragScrollMonitor();
+        },
       });
     }
 
@@ -46,14 +102,16 @@
         chosenClass: "sortable-chosen",
         dragClass: "sortable-drag",
         onStart: function (evt) {
-          // Mark the source dropzone so CSS can show a "drop back here" indicator
+          startDragScrollMonitor();
+
           const fromDropzone = evt.from as HTMLElement;
           if (fromDropzone.classList.contains("knk-podium-dropzone")) {
             fromDropzone.classList.add("is-dragging-out");
           }
         },
         onEnd: function (evt) {
-          // Always clean up the indicator, regardless of where the item landed
+          stopDragScrollMonitor();
+
           const fromDropzone = evt.from as HTMLElement;
           fromDropzone.classList.remove("is-dragging-out");
         },
@@ -64,7 +122,6 @@
           const categoryId = dropzoneEl.dataset.categoryId;
           const year = dropzoneEl.dataset.year;
 
-          // Hide any previous card or placeholder so the newly dropped card takes its place immediately
           Array.from(dropzoneEl.children).forEach((child) => {
             if (child !== itemEl) {
               (child as HTMLElement).style.display = "none";
@@ -95,7 +152,6 @@
     });
   });
 
-  // Re-init SortableJS after HTMX swaps new games into the grid
   document.body.addEventListener("htmx:afterSwap", () => {
     setTimeout(initPodiumSortables, 30);
   });
