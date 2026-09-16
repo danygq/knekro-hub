@@ -1,7 +1,7 @@
 ---
 import GamesLayout from "@/components/games/GamesLayout.astro";
 import Layout from "@/layouts/Layout.astro";
-import { loadGameStatuses, loadGames, loadTotalGamesCount } from "@/lib/games";
+import { loadGameStatuses, fetchGames } from "@/lib/games";
 import "@/styles/pages/games.css";
 import type { User } from "@supabase/auth-js";
 
@@ -9,8 +9,11 @@ const dbClient = Astro.locals.supabase;
 const user = Astro.locals.user;
 
 const gameStatuses = await loadGameStatuses(dbClient);
-const games = await loadGames(dbClient, user?.id);
-const totalGames = await loadTotalGamesCount(dbClient);
+const { games, total: totalGames } = await fetchGames(dbClient, {
+  userId: user?.id,
+  limit: 24,
+  sort: "name_asc",
+});
 ---
 
 <Layout user={user}>
@@ -37,6 +40,12 @@ const totalGames = await loadTotalGamesCount(dbClient);
 <script>
   import htmx from "htmx.org";
   import Alpine from "alpinejs";
+  import type {
+    FiltersStore,
+    GameSortOption,
+    SearchStore,
+    StatusFilterStore,
+  } from "@/types";
   (window as any).Alpine = Alpine;
   (window as any).htmx = htmx;
 
@@ -61,7 +70,6 @@ const totalGames = await loadTotalGamesCount(dbClient);
           target.delete(key);
         } else {
           target.add(key);
-          opposite.delete(key);
         }
         // Re-assign sets so Alpine triggers reactivity
         this.included = new Set(this.included);
@@ -96,7 +104,14 @@ const totalGames = await loadTotalGamesCount(dbClient);
       query: "",
       offset: 0,
       limit: 24,
+      sort: "name_asc",
       filters: filtersStore,
+      setSort(option: GameSortOption) {
+        if (this.sort === option) return;
+        this.sort = option;
+        this.resetOffset();
+        window.document.body.dispatchEvent(new CustomEvent("filter-changed"));
+      },
       resetOffset() {
         this.offset = 0;
       },

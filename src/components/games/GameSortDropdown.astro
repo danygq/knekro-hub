@@ -1,0 +1,174 @@
+---
+import type { GameSortOption } from "@/types/store";
+
+interface Props {
+  loggedIn?: boolean;
+}
+
+const { loggedIn = false } = Astro.props;
+
+const generalSortOptions: { id: GameSortOption; label: string }[] = [
+  { id: "name_asc", label: "Nombre (A - Z)" },
+  { id: "name_desc", label: "Nombre (Z - A)" },
+  { id: "community_desc", label: "Media comunidad (mejor a peor)" },
+  { id: "community_asc", label: "Media comunidad (peor a mejor)" },
+];
+
+const userVoteSortOptions: { id: GameSortOption; label: string }[] = [
+  { id: "user_vote_desc", label: "Mi voto (mejor a peor)" },
+  { id: "user_vote_asc", label: "Mi voto (peor a mejor)" },
+];
+---
+
+<div
+  class="relative inline-block text-left"
+  x-data="{ open: false }"
+  @click.outside="open = false"
+  @keydown.escape.window="open = false"
+>
+  <button
+    type="button"
+    id="game-sort-button"
+    @click="open = !open"
+    aria-haspopup="listbox"
+    :aria-expanded="open.toString()"
+    class="knk-notch inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium shrink-0 bg-(--knk-surface) text-(--knk-text) border border-(--knk-line) hover:text-(--knk-primary) hover:border-(--knk-line-strong) transition-colors cursor-pointer"
+    :class="{ 'border-(--knk-line-strong) text-(--knk-primary)': open }"
+  >
+    <!-- Sort icon (Lucide ArrowUpDown) -->
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.75"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      class="text-(--knk-text-muted) shrink-0"
+      aria-hidden="true"
+    >
+      <path d="m21 16-4 4-4-4"></path>
+      <path d="M17 20V4"></path>
+      <path d="m3 8 4-4 4 4"></path>
+      <path d="M7 4v16"></path>
+    </svg>
+
+    <span
+      class="truncate max-w-32.5 sm:max-w-45"
+      x-text="{
+        name_asc: 'Nombre (A - Z)',
+        name_desc: 'Nombre (Z - A)',
+        community_desc: 'Media comunidad (mejor a peor)',
+        community_asc: 'Media comunidad (peor a mejor)',
+        user_vote_desc: 'Mi voto (mejor a peor)',
+        user_vote_asc: 'Mi voto (peor a mejor)',
+        default: 'Nombre (A - Z)'
+      }[$store?.search?.sort] || 'Nombre (A - Z)'"
+    >
+      Nombre (A - Z)
+    </span>
+
+    <!-- Chevron down -->
+    <svg
+      width="12"
+      height="12"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      class="text-(--knk-text-muted) transition-transform duration-150 shrink-0"
+      :class="{ 'rotate-180': open }"
+      aria-hidden="true"
+    >
+      <path d="m6 9 6 6 6-6"></path>
+    </svg>
+  </button>
+
+  <div
+    x-show="open"
+    x-cloak
+    x-transition:enter="transition ease-out duration-150"
+    x-transition:enter-start="opacity-0 scale-95 -translate-y-1"
+    x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+    x-transition:leave="transition ease-in duration-100"
+    x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+    x-transition:leave-end="opacity-0 scale-95 -translate-y-1"
+    role="listbox"
+    aria-label="Opciones de ordenación"
+    class="absolute left-0 sm:left-auto sm:right-0 top-full mt-1.5 z-50 min-w-60 max-w-70 border border-(--knk-line) bg-(--knk-surface) shadow-xl knk-notch p-1.5 flex flex-col gap-0.5"
+  >
+    {generalSortOptions.map((opt) => (
+      <button
+        type="button"
+        role="option"
+        :aria-selected={`$store?.search?.sort === '${opt.id}'`}
+        @click={`$store?.search?.setSort?.('${opt.id}'); open = false;`}
+        class="w-full text-left px-3 py-2 text-xs sm:text-sm knk-notch-sm flex items-center justify-between gap-2 transition-colors cursor-pointer hover:bg-(--knk-surface-2) hover:text-(--knk-primary)"
+        :class={`$store?.search?.sort === '${opt.id}' ? 'bg-(--knk-surface-2) text-(--knk-primary) font-semibold' : 'text-(--knk-text)'`}
+      >
+        <span class="truncate">{opt.label}</span>
+        <svg
+          x-show={`$store?.search?.sort === '${opt.id}'`}
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="shrink-0 text-(--knk-primary)"
+          aria-hidden="true"
+        >
+          <path d="M20 6 9 17l-5-5"></path>
+        </svg>
+      </button>
+    ))}
+
+    {loggedIn ? (
+      <>
+        <div class="my-1 border-t border-(--knk-line)"></div>
+        {userVoteSortOptions.map((opt) => (
+          <button
+            type="button"
+            role="option"
+            :aria-selected={`$store?.search?.sort === '${opt.id}'`}
+            @click={`$store?.search?.setSort?.('${opt.id}'); open = false;`}
+            class="w-full text-left px-3 py-2 text-xs sm:text-sm knk-notch-sm flex items-center justify-between gap-2 transition-colors cursor-pointer hover:bg-(--knk-surface-2) hover:text-(--knk-primary)"
+            :class={`$store?.search?.sort === '${opt.id}' ? 'bg-(--knk-surface-2) text-(--knk-primary) font-semibold' : 'text-(--knk-text)'`}
+          >
+            <span class="truncate">{opt.label}</span>
+            <svg
+              x-show={`$store?.search?.sort === '${opt.id}'`}
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="shrink-0 text-(--knk-primary)"
+              aria-hidden="true"
+            >
+              <path d="M20 6 9 17l-5-5"></path>
+            </svg>
+          </button>
+        ))}
+      </>
+    ) : (
+      <>
+        <div class="my-1 border-t border-(--knk-line)"></div>
+        <div
+          class="w-full text-left px-3 py-1.5 text-xs text-(--knk-text-faint) opacity-60 cursor-not-allowed select-none"
+          title="Inicia sesión para ordenar por tus votos"
+        >
+          Mi voto (requiere iniciar sesión)
+        </div>
+      </>
+    )}
+  </div>
+</div>

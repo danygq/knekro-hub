@@ -1,96 +1,72 @@
 ---
 import GameCard from "@/components/games/GameCard.astro";
 import InfiniteScrollSentinel from "@/components/games/InfiniteScrollSentinel.astro";
-import type { GameDetails } from "@/types";
+import { fetchGames } from "@/lib/games";
+import type { GameSortOption } from "@/types/store";
 
 const dbClient = Astro.locals.supabase;
 const user = Astro.locals.user;
 
-// Extract search query and status filters
+const parseIds = (raw: string | null) =>
+  (raw ?? "")
+    .split(",")
+    .map(Number)
+    .filter((n) => Number.isInteger(n) && n > 0);
+
 const q = (Astro.url.searchParams.get("q") ?? "").trim();
-const incParam = Astro.url.searchParams.get("inc") ?? "";
-const excParam = Astro.url.searchParams.get("exc") ?? "";
-
-const includedIds = incParam ? incParam.split(",").filter(Boolean) : [];
-const excludedIds = excParam ? excParam.split(",").filter(Boolean) : [];
-
+const includedStatusIds = parseIds(Astro.url.searchParams.get("inc"));
+const excludedStatusIds = parseIds(Astro.url.searchParams.get("exc"));
+const sort = (Astro.url.searchParams.get("sort") ?? "name_asc") as GameSortOption;
 const offset = Math.max(0, Number(Astro.url.searchParams.get("offset") ?? "0"));
 const limit = Math.min(
   48,
   Math.max(1, Number(Astro.url.searchParams.get("limit") ?? "24")),
 );
 
-const userVoteSelect = user?.id ? ", user_vote:games_user_votes(vote)" : "";
-const gameFields =
-  "id, name, cover_url, vote_count, avg_vote, status:game_status!game_status_id(id, name), game_status_id" +
-  userVoteSelect;
+const { games, total } = await fetchGames(dbClient, {
+  query: q,
+  includedStatusIds,
+  excludedStatusIds,
+  sort,
+  offset,
+  limit,
+  userId: user?.id,
+});
 
-// Helper to apply search & filter parameters to queries
-function applyFilters(builder: any) {
-  let queryBuilder = builder;
-  if (q !== "") {
-    queryBuilder = queryBuilder.ilike("name", `%${q}%`);
-  }
-  if (includedIds.length > 0) {
-    queryBuilder = queryBuilder.in("game_status_id", includedIds);
-  }
-  if (excludedIds.length > 0) {
-    queryBuilder = queryBuilder.not(
-      "game_status_id",
-      "in",
-      `(${excludedIds.join(",")})`,
-    );
-  }
-  return queryBuilder;
-}
-
-// 1. Total matching count query
-let countQuery = dbClient
-  .from("games")
-  .select("id", { count: "exact", head: true });
-countQuery = applyFilters(countQuery);
-const { count: matchingCount } = await countQuery;
-
-// 2. Paginated result set query
-let query = dbClient
-  .from("games")
-  .select(gameFields)
-  .order("id", { ascending: true })
-  .range(offset, offset + limit - 1);
-
-if (user?.id) query = query.eq("games_user_votes.user_id", user.id);
-query = applyFilters(query);
-
-const { data, error } = await query;
-if (error) {
-  console.error("Error searching games:", error);
-}
-
-const rows = (data as GameDetails[] | null) ?? [];
-const total = matchingCount ?? 0;
-const visibleCount = Math.min(total, offset + rows.length);
+const visibleCount = Math.min(total, offset + games.length);
 const hasActiveFilters =
-  q !== "" || includedIds.length > 0 || excludedIds.length > 0;
+  q !== "" || includedStatusIds.length > 0 || excludedStatusIds.length > 0;
 const noResults = hasActiveFilters && total === 0;
 const hasMore = offset + limit < total;
 const nextOffset = offset + limit;
 ---
 
-<span id="visible-count" hx-swap-oob="innerHTML">
-  {visibleCount}
-</span>
-<span id="total-count" hx-swap-oob="innerHTML">
-  {total}
-</span>
-<p
-  id="filter-no-results"
-  hx-swap-oob="true"
-  hidden={!noResults}
-  class="text-sm text-(--knk-text-muted) mt-4"
->
-  No hay juegos que coincidan con la búsqueda o los filtros.
-</p>
-{rows.map((game) => (
+{offset === 0 ? (
+  <>
+    <span id="visible-count" hx-swap-oob="innerHTML">
+      {visibleCount}
+    </span>
+    <span id="total-count" hx-swap-oob="innerHTML">
+      {total}
+    </span>
+    <p
+      id="filter-no-results"
+      hx-swap-oob="true"
+      hidden={!noResults}
+      class="text-sm text-(--knk-text-muted) mt-4"
+    >
+      No hay juegos que coincidan con la búsqueda o los filtros.
+    </p>
+  </>
+) : (
+  games.length > 0 && (
+    <span id="visible-count" hx-swap-oob="innerHTML">
+      {visibleCount}
+    </span>
+  )
+)}
+
+{games.map((game) => (
   <GameCard game={game} loggedIn={!!user} />
 ))}
 {hasMore && <InfiniteScrollSentinel offset={nextOffset} limit={limit} />}
