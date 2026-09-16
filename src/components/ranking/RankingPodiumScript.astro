@@ -45,6 +45,18 @@
         ghostClass: "sortable-ghost",
         chosenClass: "sortable-chosen",
         dragClass: "sortable-drag",
+        onStart: function (evt) {
+          // Mark the source dropzone so CSS can show a "drop back here" indicator
+          const fromDropzone = evt.from as HTMLElement;
+          if (fromDropzone.classList.contains("knk-podium-dropzone")) {
+            fromDropzone.classList.add("is-dragging-out");
+          }
+        },
+        onEnd: function (evt) {
+          // Always clean up the indicator, regardless of where the item landed
+          const fromDropzone = evt.from as HTMLElement;
+          fromDropzone.classList.remove("is-dragging-out");
+        },
         onAdd: function (evt) {
           const itemEl = evt.item;
           const gameId = itemEl.dataset.gameId;
