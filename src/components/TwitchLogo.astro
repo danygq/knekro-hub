@@ -1,10 +1,11 @@
 ---
 interface Props {
-  width: number;
-  height: number;
+  width?: number;
+  height?: number;
+  class?: string;
 }
-const width = Astro.props.width + "px";
-const height = Astro.props.height + "px";
+
+const { width = 20, height = 20, class: className = "" } = Astro.props;
 ---
 
 <svg
@@ -14,7 +15,7 @@ const height = Astro.props.height + "px";
   viewBox="0 0 40 40"
   x="0px"
   y="0px"
-  class="inline-flex fill-(--knk-twitch)"
+  class={`inline-flex shrink-0 fill-(--knk-twitch) ${className}`}
 >
   <g>
     <polygon

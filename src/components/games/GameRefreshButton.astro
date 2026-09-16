@@ -51,8 +51,8 @@ const { gameId } = Astro.props;
   hx-get={`/api/games/card?id=${gameId}`}
   hx-target="closest .knk-game-card"
   hx-swap="outerHTML"
-  class="absolute top-3 left-3 z-10 knk-notch-sm px-2 py-1 inline-flex items-center gap-1 text-xs font-medium border bg-(--knk-bg)/80 backdrop-blur-xs text-(--knk-text-muted) border-(--knk-line) hover:text-(--knk-primary) hover:border-(--knk-line-strong) transition-all duration-200 disabled:text-(--knk-text-faint)"
-  :class="{ 'opacity-0 group-hover:opacity-100 focus-visible:opacity-100 cursor-pointer': timeLeft === 0, 'opacity-90 !cursor-not-allowed pointer-events-auto': timeLeft > 0 }"
+  class="absolute top-3 left-3 z-10 knk-notch-sm px-2 py-1 inline-flex items-center gap-1 text-xs font-medium border bg-(--knk-bg)/80 backdrop-blur-xs text-(--knk-text-muted) border-(--knk-line) hover:text-(--knk-primary) hover:border-(--knk-line-strong) transition-all duration-200 disabled:text-(--knk-text-faint) opacity-0 group-hover:opacity-100 focus-visible:opacity-100 cursor-pointer"
+  :class="{ '!opacity-90 !cursor-not-allowed pointer-events-auto': timeLeft > 0 }"
 >
   <svg
     width="13"

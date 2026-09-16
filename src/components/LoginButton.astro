@@ -14,12 +14,12 @@ const { next = defaultNext } = Astro.props;
   <input type="hidden" name="next" value={next} data-login-next />
   <button
     type="submit"
-    class="knk-notch inline-flex items-center gap-2 px-4 py-2 text-sm font-medium
-        bg-(--knk-twitch) text-[white] hover:bg-(--knk-twitch-hover) transition-colors"
+    aria-label="Iniciar sesión con Twitch"
+    class="knk-notch inline-flex items-center justify-center gap-2 p-1.5 sm:px-4 sm:py-2 text-sm font-medium
+        bg-(--knk-twitch) text-[white] hover:bg-(--knk-twitch-hover) transition-colors cursor-pointer"
   >
-    <TwitchLogo width={20} height={20} />
+    <TwitchLogo width={20} height={20} class="w-8 h-8 sm:w-5 sm:h-5" />
     <span class="hidden sm:inline">Iniciar sesión con Twitch</span>
-    <span class="sm:hidden">Iniciar sesión</span>
   </button>
 </form>
 
