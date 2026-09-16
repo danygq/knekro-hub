@@ -92,7 +92,7 @@ create table public.games
     name           text null,
     game_status_id bigint null default '11'::bigint,
     cover_url      text null,
-    avg_vote       numeric(4, 2) null default 0,
+    avg_vote       numeric(4, 2) null default null,
     vote_count     integer null default 0,
     twitch_game_id text null,
     last_played_at timestamp without time zone             null default ((now() AT TIME ZONE 'Europe/Madrid'::text))::timestamp without time zone,
@@ -132,8 +132,6 @@ create table public.games_user_votes
         )
 ) TABLESPACE pg_default;
 
-create index IF not exists games_user_votes_game_id_idx
-    on public.games_user_votes using btree (game_id) TABLESPACE pg_default;
 ```
 
 - `vote` is `smallint` — range 1–10, or `null` (cleared).
@@ -176,12 +174,6 @@ create table public.user_roles
     constraint user_roles_role_id_fkey foreign key (role_id)
         references public.roles (id) on update cascade on delete cascade
 ) TABLESPACE pg_default;
-
-create index if not exists user_roles_user_id_idx
-    on public.user_roles using btree (user_id) TABLESPACE pg_default;
-
-create index if not exists user_roles_role_id_idx
-    on public.user_roles using btree (role_id) TABLESPACE pg_default;
 ```
 
 - Composite primary key on `(user_id, role_id)` prevents duplicate role assignments.
@@ -215,6 +207,68 @@ update on games_user_votes
 - `on_vote_change` → `update_game_vote_stats()`: recomputes `games.avg_vote` and `games.vote_count` after any vote
   change.
 
+### Functions / RPC
+
+```sql
+create or replace function get_user_games(
+  p_user_id uuid default null,
+  p_search text default '',
+  p_inc_status bigint[] default '{}',
+  p_exc_status bigint[] default '{}',
+  p_sort text default 'name_asc',
+  p_limit int default 24,
+  p_offset int default 0
+)
+returns table (
+  id bigint,
+  name text,
+  cover_url text,
+  vote_count int,
+  avg_vote numeric,
+  game_status_id bigint,
+  status_name text,
+  user_vote smallint,
+  total_count bigint
+) language sql stable as $$
+  with filtered as (
+    select 
+      g.id,
+      g.name,
+      g.cover_url,
+      g.vote_count,
+      g.avg_vote,
+      g.game_status_id,
+      gs.name as status_name,
+      v.vote as user_vote,
+      count(*) over() as total_count
+    from games g
+    left join game_status gs 
+      on gs.id = g.game_status_id
+    left join games_user_votes v 
+      on v.game_id = g.id and (p_user_id is not null and v.user_id = p_user_id)
+    where (coalesce(trim(p_search), '') = '' or g.name ilike '%' || trim(p_search) || '%')
+      and (cardinality(p_inc_status) = 0 or g.game_status_id = any(p_inc_status))
+      and (
+        cardinality(p_exc_status) = 0 
+        or g.game_status_id is null 
+        or not (g.game_status_id = any(p_exc_status))
+      )
+  )
+  select * from filtered
+  order by
+    case when p_sort = 'name_asc' then name end asc,
+    case when p_sort = 'name_desc' then name end desc,
+    case when p_sort = 'community_desc' then avg_vote end desc nulls last,
+    case when p_sort = 'community_asc' then avg_vote end asc nulls last,
+    case when p_sort = 'user_vote_desc' then user_vote end desc nulls last,
+    case when p_sort = 'user_vote_asc' then user_vote end asc nulls last,
+    id asc
+  limit p_limit offset p_offset;
+$$;
+```
+
+- `get_user_games`: Powers `/games` library catalog searches, status filters, multi-column sorting (including personal user votes with `NULLS LAST`), and DB-level pagination in a single query via `fetchGames()` in `src/lib/games.ts`.
+
 ## Clients
 
 | Client                 | File                    | Key                               | Use                                                                |
@@ -238,15 +292,15 @@ Referenced in `src/` (confirmed):
 
 ## Tables — CONFIRMED (schema above)
 
-| Table                   | Columns                                                                                                 | Where                                                                                                                                                                |
-| ----------------------- | ------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `streams`               | `id, created_at, started_at, ended_at, twitch_id`                                                       | `pages/index.astro` (select latest) · `pages/api/webhooks/twitch.ts` (insert/update)                                                                                 |
-| `twitch_channel_update` | `id, created_at, event_timestamp, category_id, category_name`                                           | `pages/api/webhooks/twitch.ts` (insert)                                                                                                                              |
-| `game_status`           | `id, name, created_at, games_with_this_status`                                                          | `lib/games.ts` → `pages/games.astro` (order `id`) → `GamesFilterMenu.astro`                                                                                          |
-| `games`                 | `id, created_at, name, game_status_id, cover_url, avg_vote, vote_count, twitch_game_id, last_played_at` | `lib/games.ts` (`loadGames`, `loadGameById`, `loadTotalGamesCount`) · `api/games/search.astro` · `api/games/vote.astro` · `pages/api/webhooks/twitch.ts` (reconcile) |
-| `games_user_votes`      | `id, created_at, user_id, game_id, vote`                                                                | `lib/games.ts` (user votes) · `api/games/vote.astro` (upsert)                                                                                                        |
-| `roles`                 | `id, name, created_at`                                                                                  | `lib/roles.ts` (`loadAllRoles`, `loadUserRoles`)                                                                                                                     |
-| `user_roles`            | `user_id, role_id, created_at`                                                                          | `lib/roles.ts` (`loadUserRoles`, `loadUserRoleNames`, `userHasRole`)                                                                                                 |
+| Table                   | Columns                                                                                                 | Where                                                                                                                                              |
+| ----------------------- | ------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `streams`               | `id, created_at, started_at, ended_at, twitch_id`                                                       | `pages/index.astro` (select latest) · `pages/api/webhooks/twitch.ts` (insert/update)                                                               |
+| `twitch_channel_update` | `id, created_at, event_timestamp, category_id, category_name`                                           | `pages/api/webhooks/twitch.ts` (insert)                                                                                                            |
+| `game_status`           | `id, name, created_at, games_with_this_status`                                                          | `lib/games.ts` → `pages/games.astro` (order `id`) → `GamesFilterMenu.astro`                                                                        |
+| `games`                 | `id, created_at, name, game_status_id, cover_url, avg_vote, vote_count, twitch_game_id, last_played_at` | `lib/games.ts` (`fetchGames`, `loadGameById`) · `pages/games.astro` · `api/games/search.astro` · `api/games/vote.astro` · `pages/api/webhooks/twitch.ts` (reconcile) |
+| `games_user_votes`      | `id, created_at, user_id, game_id, vote`                                                                | `lib/games.ts` (user votes via `get_user_games` RPC) · `api/games/vote.astro` (upsert)                                                            |
+| `roles`                 | `id, name, created_at`                                                                                  | `lib/roles.ts` (`loadAllRoles`, `loadUserRoles`)                                                                                                   |
+| `user_roles`            | `user_id, role_id, created_at`                                                                          | `lib/roles.ts` (`loadUserRoles`, `loadUserRoleNames`, `userHasRole`)                                                                               |
 
 ## Reads are server-side
 
