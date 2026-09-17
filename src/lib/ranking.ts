@@ -4,6 +4,7 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { GameDetails, RankingCategory } from "@/types";
+import { fetchGames } from "./games";
 
 export interface RankingGameItem {
   id: number;
@@ -99,6 +100,9 @@ export async function loadPodiumGames(
 
 /**
  * Searches and paginates games for the ranking assignable pool.
+ * Delegates to {@link fetchGames} (backed by the `get_user_games` RPC) so that
+ * both the catalog and ranking search surfaces share a single database round
+ * trip instead of the previous two-stage countQuery + gamesQuery waterfall.
  */
 export async function loadRankingSearchGames(
   client: SupabaseClient,
@@ -109,35 +113,7 @@ export async function loadRankingSearchGames(
   } = {},
 ): Promise<{ games: GameDetails[]; total: number }> {
   const { query = "", offset = 0, limit = 24 } = options;
-  const gameFields =
-    "id, name, cover_url, vote_count, avg_vote, status:game_status!game_status_id(id, name), game_status_id";
-
-  let countQuery = client
-    .from("games")
-    .select("id", { count: "exact", head: true });
-  if (query.trim() !== "") {
-    countQuery = countQuery.ilike("name", `%${query.trim()}%`);
-  }
-  const { count } = await countQuery;
-  const total = count ?? 0;
-
-  let gamesQuery = client
-    .from("games")
-    .select(gameFields)
-    .order("id", { ascending: true })
-    .range(offset, offset + limit - 1);
-
-  if (query.trim() !== "") {
-    gamesQuery = gamesQuery.ilike("name", `%${query.trim()}%`);
-  }
-
-  const { data, error } = await gamesQuery;
-  if (error) {
-    console.error("Error loading ranking search games:", error);
-    return { games: [], total: 0 };
-  }
-
-  return { games: (data as unknown as GameDetails[]) ?? [], total };
+  return fetchGames(client, { query, offset, limit, sort: "name_asc" });
 }
 
 /**
