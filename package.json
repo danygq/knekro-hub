@@ -13,27 +13,33 @@
     "stream:update": "node scripts/simulate-stream.ts update",
     "games:sync-twitch-games-ids": "node scripts/sync-twitch-game-ids.ts",
     "games:sync-covers": "node scripts/sync-covers.ts",
-    "format": "prettier --write \"**/*.{js,ts,jsx,tsx,cjs,cts,mjs,mts,json,vue,astro,md,css}\""
+    "format": "prettier --write \"**/*.{js,ts,jsx,tsx,cjs,cts,mjs,mts,json,vue,astro,md,css,yaml,yml}\"",
+    "prepare": "husky"
   },
   "dependencies": {
     "@astrojs/alpinejs": "^1.0.0",
-    "@astrojs/vercel": "11.0.10",
-    "@lucide/astro": "^1.44.0",
-    "@supabase/ssr": "0.12.7",
-    "@supabase/supabase-js": "2.116.0",
+    "@astrojs/vercel": "^11.0.10",
+    "@lucide/astro": "^1.47.0",
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.116.0",
     "@tailwindcss/vite": "^4.3.3",
     "@types/alpinejs": "^3.13.11",
-    "alpinejs": "^3.17.2",
-    "astro": "7.3.1",
+    "alpinejs": "^3.17.3",
+    "astro": "^7.3.3",
     "htmx.org": "^2.0.10",
     "sortablejs": "^1.15.7",
     "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
-    "@types/node": "26.4.1",
+    "@types/node": "^26.6.1",
     "@types/sortablejs": "^1.15.9",
-    "prettier": "3.9.6",
-    "prettier-plugin-astro": "1.0.0",
-    "typescript": "^5.9.3"
+    "husky": "^9.1.7",
+    "lint-staged": "^17.5.1",
+    "prettier": "^3.9.7",
+    "prettier-plugin-astro": "^1.0.1",
+    "typescript": "^7.0.2"
+  },
+  "lint-staged": {
+    "*.{js,ts,jsx,tsx,cjs,cts,mjs,mts,json,vue,astro,md,css}": "prettier --write"
   }
 }
