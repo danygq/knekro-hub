@@ -1,6 +1,6 @@
 ---
 import type { GameStatus } from "@/types";
-import { CircleDot, Minus, Plus, X } from "@lucide/astro";
+import { CircleDot, CircleX, Minus, Plus, X } from "@lucide/astro";
 
 interface Props {
   gameStatuses: GameStatus[];
@@ -32,7 +32,7 @@ const { gameStatuses } = Astro.props;
       class="knk-notch-sm inline-flex items-center justify-center w-7 h-7 text-(--knk-text-muted) hover:text-(--knk-text) transition-colors cursor-pointer"
       aria-label="Cerrar panel de filtros"
     >
-      <X class="size-3 shrink-0" />
+      <CircleX class="size-5 shrink-0" />
     </button>
   </div>
 

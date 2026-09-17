@@ -10,7 +10,7 @@ const { voteCount, avgLabel, communityAvg } = Astro.props;
 
 <span
   class=`ml-auto knk-notch-sm px-2.5 py-1.5 
-  font-medium border tabular-nums text-shadow-[0_0_1px_var(--knk-line)] 
+  font-medium border tabular-nums knk-vote-badge
   transition-colors ${communityAvg ? "knk-vote-" + Math.trunc(communityAvg!) : "knk-vote-muted"}`
   title={
     (voteCount ?? 0 > 0)

@@ -281,6 +281,14 @@
   --vote-c: var(--knk-blue-500);
 }
 
+.knk-vote-badge {
+  text-shadow:
+    -1px -1px 1px var(--tw-text-shadow-color, var(--knk-line)),
+    1px -1px 1px var(--tw-text-shadow-color, var(--knk-line)),
+    -1px 1px 1px var(--tw-text-shadow-color, var(--knk-line)),
+    1px 1px 1px var(--tw-text-shadow-color, var(--knk-line));
+}
+
 /* Name search bar on /games.
    The input gets its own focus ring because base.css only covers links +
    buttons; it matches the site's outline styling. */
