@@ -76,7 +76,11 @@ const game = item?.game;
           data-rank={rank}
         >
           <div class="relative bg-(--knk-surface-2) knk-grid-bg overflow-hidden aspect-2/3">
-            <GameCover coverUrl={game.cover_url} name={game.name} />
+            <GameCover
+              coverUrl={game.cover_url}
+              name={game.name}
+              loading="eager"
+            />
             <GameStatusBadge status={game.status} />
             <RankingMedalOverlay
               gameId={game.id}

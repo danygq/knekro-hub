@@ -1,4 +1,5 @@
 ---
+import Vote from "@lucide/astro/icons/vote";
 import VoteButton from "./VoteButton.astro";
 
 interface Props {
@@ -13,12 +14,12 @@ const { gameId, userVote } = Astro.props;
   <button
     type="button"
     @click.stop="open = true"
-    class="knk-vote-toggle knk-notch-sm w-full px-3 py-2 text-sm font-medium
+    class="flex justify-center-safe gap-3 knk-vote-toggle knk-notch-sm w-full px-3 py-2 text-sm font-medium
         bg-(--knk-bg)/85 text-(--knk-text-muted) border border-(--knk-line)
         opacity-0 group-hover:opacity-100 transition-opacity
         hover:text-(--knk-primary) hover:border-(--knk-line-strong)"
   >
-    Votar
+    Votar <Vote width={18} height={18} />
   </button>
 </div>
 

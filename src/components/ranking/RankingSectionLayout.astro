@@ -100,8 +100,13 @@ const hasMore = initialGames.length < totalGames;
         No hay juegos que coincidan con la búsqueda.
       </p>
 
-      {initialGames.map((game) => (
-        <RankingGameCard game={game} categoryId={category.id} year={year} />
+      {initialGames.map((game, index) => (
+        <RankingGameCard
+          game={game}
+          categoryId={category.id}
+          year={year}
+          loading={"lazy"}
+        />
       ))}
 
       {hasMore && (

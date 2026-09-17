@@ -1,12 +1,12 @@
 ---
 import type { RankingCategory } from "@/types";
+import { MoveRight } from "@lucide/astro";
 
 interface Props {
   category: RankingCategory;
 }
 
 const { category } = Astro.props;
-const isMainCategory = category.id === 1 || category.slug === "goty";
 ---
 
 <a
@@ -32,7 +32,7 @@ const isMainCategory = category.id === 1 || category.slug === "goty";
         </p>
       )}
       <span class="inline-flex items-center gap-1 mt-3 text-xs font-semibold text-(--knk-primary)">
-        Ver ranking &rarr;
+        Ver ranking <MoveRight width={18} height={18} />
       </span>
     </div>
   </div>

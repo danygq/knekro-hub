@@ -12,6 +12,7 @@ interface Props {
 const {
   coverUrl = null,
   name,
+  loading = "lazy",
   class: className = "w-full h-full object-cover",
 } = Astro.props;
 ---
@@ -20,7 +21,7 @@ const {
   <Image
     src={coverUrl}
     alt={name + " cover"}
-    priority
+    loading={loading}
     width="260"
     height="390"
     decoding="async"

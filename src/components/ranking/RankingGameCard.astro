@@ -8,9 +8,10 @@ interface Props {
   game: GameDetails;
   categoryId: number;
   year: number;
+  loading?: "lazy" | "eager";
 }
 
-const { game, categoryId, year } = Astro.props;
+const { game, categoryId, year, loading = "lazy" } = Astro.props;
 ---
 
 <article
@@ -19,7 +20,7 @@ const { game, categoryId, year } = Astro.props;
   data-game-name={game.name}
 >
   <div class="relative bg-(--knk-surface-2) knk-grid-bg overflow-hidden aspect-2/3">
-    <GameCover coverUrl={game.cover_url} name={game.name} />
+    <GameCover coverUrl={game.cover_url} name={game.name} loading={loading} />
     <GameStatusBadge status={game.status} />
     <RankingMedalOverlay gameId={game.id} categoryId={categoryId} year={year} />
   </div>

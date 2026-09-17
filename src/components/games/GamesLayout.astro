@@ -83,8 +83,14 @@ const { gameStatuses, games, totalGames, user } = Astro.props;
           </p>
 
           <div id="games-grid" class="flex flex-wrap gap-5">
-            {games.map((game) => {
-              return <GameCard game={game} loggedIn={!!user} />;
+            {games.map((game, index) => {
+              return (
+                <GameCard
+                  game={game}
+                  loggedIn={!!user}
+                  loading={index < 10 ? "eager" : "lazy"}
+                />
+              );
             })}
             {totalGames > games.length && (
               <InfiniteScrollSentinel offset={games.length} limit={24} />

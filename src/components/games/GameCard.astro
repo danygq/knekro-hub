@@ -11,9 +11,10 @@ import GameCover from "@/components/games/GameCover.astro";
 interface Props {
   game: GameDetails;
   loggedIn: boolean;
+  loading?: "lazy" | "eager";
 }
 
-const { game, loggedIn } = Astro.props;
+const { game, loggedIn, loading = "lazy" } = Astro.props;
 const {
   name,
   cover_url: coverUrl,
@@ -32,7 +33,7 @@ const userVote = game.user_vote?.[0]?.vote;
   @keydown.escape.window="open = false"
 >
   <div class=`relative bg-(--knk-surface-2) knk-grid-bg overflow-hidden`>
-    <GameCover coverUrl={coverUrl} name={name} />
+    <GameCover coverUrl={coverUrl} name={name} loading={loading} />
     <GameRefreshButton gameId={gameId} />
     <GameStatusBadge status={status} />
 

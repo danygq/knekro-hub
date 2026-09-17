@@ -53,8 +53,13 @@ const nextOffset = offset + limit;
   No hay juegos que coincidan con la búsqueda.
 </p>
 
-{games.map((game) => (
-  <RankingGameCard game={game} categoryId={categoryId} year={year} />
+{games.map((game, index) => (
+  <RankingGameCard
+    game={game}
+    categoryId={categoryId}
+    year={year}
+    loading={offset === 0 && index < 10 ? "eager" : "lazy"}
+  />
 ))}
 
 {hasMore && (

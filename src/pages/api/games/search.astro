@@ -67,8 +67,12 @@ const nextOffset = offset + limit;
   )
 )}
 
-{games.map((game) => (
-  <GameCard game={game} loggedIn={!!user} />
+{games.map((game, index) => (
+  <GameCard
+    game={game}
+    loggedIn={!!user}
+    loading={offset === 0 && index < 10 ? "eager" : "lazy"}
+  />
 ))}
 {hasMore && <InfiniteScrollSentinel offset={nextOffset} limit={limit} />}
 {!hasMore && total > 0 && offset > 0 && (

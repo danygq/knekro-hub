@@ -1,6 +1,6 @@
 ---
 import type { GameStatus } from "@/types";
-import { CircleDot, X } from "@lucide/astro";
+import { CircleDot, Minus, Plus, X } from "@lucide/astro";
 
 interface Props {
   gameStatuses: GameStatus[];
@@ -70,7 +70,7 @@ const { gameStatuses } = Astro.props;
               class="knk-filter-minus knk-notch-sm w-7 h-7 inline-flex items-center justify-center shrink-0 text-lg leading-none bg-(--knk-surface) text-(--knk-text-muted) border border-(--knk-line) hover:text-(--knk-danger) hover:border-(--knk-danger) transition-colors"
               :class={`{ 'active': $store.search.filters.status.isActive('${status.id}', 'minus') }`}
             >
-              −
+              <Minus width={18} height={18} />
             </button>
 
             <!-- Name -->
@@ -93,7 +93,7 @@ const { gameStatuses } = Astro.props;
               class="knk-filter-plus knk-notch-sm w-7 h-7 inline-flex items-center justify-center shrink-0 text-lg leading-none bg-(--knk-surface) text-(--knk-text-muted) border border-(--knk-line) hover:text-(--knk-primary) hover:border-(--knk-primary) transition-colors"
               :class={`{ 'active': $store.search.filters.status.isActive('${status.id}', 'plus') }`}
             >
-              +
+              <Plus width={18} height={18} />
             </button>
           </li>
         ))}
