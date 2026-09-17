@@ -80,6 +80,29 @@
 }
 
 /* Podium layouts: vertical stack on mobile, pyramid on desktop */
+.knk-podium-stage {
+  position: relative;
+}
+
+.knk-podium-stage-glow {
+  position: absolute;
+  top: 15%;
+  left: 50%;
+  transform: translate(-50%, -20%);
+  width: 95%;
+  max-width: 620px;
+  height: 380px;
+  background: radial-gradient(
+    ellipse at 50% 30%,
+    rgba(251, 191, 36, 0.09) 0%,
+    rgba(59, 130, 246, 0.04) 45%,
+    transparent 75%
+  );
+  filter: blur(50px);
+  pointer-events: none;
+  z-index: 0;
+}
+
 .knk-podium-container {
   display: flex;
   flex-direction: column;
@@ -122,6 +145,31 @@
   }
 }
 
+/* Rank-specific themes & auras */
+.knk-podium-slot-1 {
+  --slot-color: 251, 191, 36; /* Gold #fbbf24 */
+  --slot-color-hex: #fbbf24;
+  --slot-border: rgba(251, 191, 36, 0.45);
+  --slot-border-strong: rgba(251, 191, 36, 0.85);
+  --slot-border-subtle: rgba(251, 191, 36, 0.22);
+}
+
+.knk-podium-slot-2 {
+  --slot-color: 203, 213, 225; /* Silver #cbd5e1 */
+  --slot-color-hex: #cbd5e1;
+  --slot-border: rgba(203, 213, 225, 0.4);
+  --slot-border-strong: rgba(203, 213, 225, 0.8);
+  --slot-border-subtle: rgba(203, 213, 225, 0.2);
+}
+
+.knk-podium-slot-3 {
+  --slot-color: 217, 119, 6; /* Bronze #d97706 */
+  --slot-color-hex: #d97706;
+  --slot-border: rgba(217, 119, 6, 0.45);
+  --slot-border-strong: rgba(217, 119, 6, 0.85);
+  --slot-border-subtle: rgba(217, 119, 6, 0.22);
+}
+
 /* Medal badges */
 .knk-medal-gold {
   color: #fbbf24;
@@ -139,6 +187,146 @@
   color: #d97706;
   border-color: rgba(217, 119, 6, 0.4);
   background-color: rgba(217, 119, 6, 0.1);
+}
+
+/* Podium card wrapper and reactive aura */
+.knk-podium-card-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.knk-podium-aura {
+  position: absolute;
+  inset: -10px;
+  border-radius: 12px;
+  background: radial-gradient(
+    circle at 50% 45%,
+    rgba(var(--slot-color), 0.4) 0%,
+    rgba(var(--slot-color), 0.16) 45%,
+    transparent 72%
+  );
+  pointer-events: none;
+  z-index: 0;
+  transition:
+    opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    filter 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Empty state aura: dormant and subtle (~18% opacity) */
+.knk-podium-slot[data-has-game="false"] .knk-podium-aura,
+.knk-podium-slot:not(:has(.knk-podium-item)) .knk-podium-aura {
+  opacity: 0.18;
+  filter: blur(24px);
+  transform: scale(0.94);
+}
+
+/* Occupied state aura: radiant bloom (~75% opacity) */
+.knk-podium-slot[data-has-game="true"] .knk-podium-aura,
+.knk-podium-slot:has(.knk-podium-item) .knk-podium-aura {
+  opacity: 0.75;
+  filter: blur(28px);
+  transform: scale(1);
+}
+
+/* Hover on occupied slot: extra bloom */
+.knk-podium-slot:has(.knk-podium-item):hover .knk-podium-aura {
+  opacity: 0.95;
+  filter: blur(34px);
+  transform: scale(1.04);
+}
+
+/* Drag-over flare: responsive feedback when dragging over the slot */
+.knk-podium-slot:has(.sortable-ghost) .knk-podium-aura {
+  opacity: 0.92;
+  filter: blur(32px);
+  transform: scale(1.06);
+}
+
+/* Empty slot frame styling */
+.knk-podium-empty {
+  border: 1.5px dashed var(--slot-border-subtle);
+  background: radial-gradient(
+    circle at 50% 35%,
+    rgba(var(--slot-color), 0.05) 0%,
+    rgba(17, 22, 30, 0.75) 100%
+  );
+  position: relative;
+  overflow: hidden;
+  transition:
+    border-color 0.25s ease,
+    background 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.knk-podium-dropzone:hover .knk-podium-empty,
+.knk-podium-slot:hover .knk-podium-empty {
+  border-color: var(--slot-border);
+  box-shadow: inset 0 0 20px rgba(var(--slot-color), 0.04);
+}
+
+.knk-podium-empty-icon-wrap {
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  border: 1px solid var(--slot-border-subtle);
+  background: rgba(var(--slot-color), 0.06);
+  margin-bottom: 0.75rem;
+  transition: all 0.25s ease;
+}
+
+.knk-podium-slot:hover .knk-podium-empty-icon-wrap {
+  border-color: var(--slot-border);
+  background: rgba(var(--slot-color), 0.12);
+  transform: scale(1.05);
+}
+
+.knk-podium-empty-pill {
+  color: var(--slot-color-hex);
+  background: rgba(var(--slot-color), 0.08);
+  border: 1px solid var(--slot-border-subtle);
+}
+
+/* Occupied card styling */
+.knk-podium-item {
+  border: 1px solid var(--slot-border) !important;
+  box-shadow:
+    0 0 0 1px rgba(var(--slot-color), 0.15),
+    0 10px 25px -5px rgba(0, 0, 0, 0.5),
+    0 0 20px -2px rgba(var(--slot-color), 0.22);
+  transition:
+    transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.25s ease !important;
+}
+
+.knk-podium-item::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(var(--slot-color), 0.85) 50%,
+    transparent 100%
+  );
+  pointer-events: none;
+  z-index: 10;
+}
+
+.knk-podium-item:hover {
+  border-color: var(--slot-border-strong) !important;
+  box-shadow:
+    0 0 0 1px rgba(var(--slot-color), 0.35),
+    0 16px 32px -8px rgba(0, 0, 0, 0.65),
+    0 0 28px 1px rgba(var(--slot-color), 0.38);
+  transform: translateY(-3px);
 }
 
 /* Drag and Drop dropzone: matches 260x390 card dimensions */

@@ -15,8 +15,9 @@ const silver = podiumItems.find((i) => i.rank === 2) ?? null;
 const bronze = podiumItems.find((i) => i.rank === 3) ?? null;
 ---
 
-<section id="ranking-podium" class="mb-12">
-  <div class="knk-podium-container">
+<section id="ranking-podium" class="knk-podium-stage mb-12">
+  <div class="knk-podium-stage-glow" aria-hidden="true" />
+  <div class="knk-podium-container relative z-1">
     <RankingPodiumSlot
       rank={1}
       item={gold}
