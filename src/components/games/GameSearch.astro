@@ -1,5 +1,6 @@
 ---
 import Spinner from "@/components/Spinner.astro";
+import { Search, X } from "@lucide/astro";
 ---
 
 <div class="flex-1" role="search" x-data>
@@ -8,22 +9,7 @@ import Spinner from "@/components/Spinner.astro";
   </label>
   <div class="relative w-full max-w-md">
     <!-- Default Search Icon (fades out while loading) -->
-    <svg
-      class="z-1 pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 shrink-0 text-(--knk-text-faint) transition-opacity duration-150 in-[.htmx-request]:opacity-0"
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      aria-hidden="true"
-    >
-      <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.75" />
-      <path
-        d="m20 20-3.5-3.5"
-        stroke="currentColor"
-        stroke-width="1.75"
-        stroke-linecap="round"
-      />
-    </svg>
+    <Search class="z-1 pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 shrink-0 size-4 text-(--knk-text-faint) transition-opacity duration-150 in-[.htmx-request]:opacity-0" />
 
     <!-- HTMX Loading Spinner (fades in while loading) -->
     <Spinner class="z-1 pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 shrink-0 w-4 h-4 text-(--knk-primary) not-in-[.htmx-request]:opacity-0 transition-opacity duration-150" />
@@ -57,22 +43,9 @@ import Spinner from "@/components/Spinner.astro";
       x-cloak
       @click="$store.search.query = ''; $store.search?.resetOffset?.(); $nextTick(() => $refs.searchInput.dispatchEvent(new Event('input', { bubbles: true })));"
       aria-label="Limpiar búsqueda"
-      class="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center justify-center w-6 h-6 text-(--knk-text-muted) hover:text-(--knk-primary) transition-colors"
+      class="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center justify-center w-6 h-6 text-(--knk-text-muted) hover:text-(--knk-primary) transition-colors cursor-pointer"
     >
-      <svg
-        width="12"
-        height="12"
-        viewBox="0 0 24 24"
-        fill="none"
-        aria-hidden="true"
-      >
-        <path
-          d="M18 6L6 18M6 6L18 18"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-        />
-      </svg>
+      <X class="size-3 shrink-0" />
     </button>
   </div>
 </div>

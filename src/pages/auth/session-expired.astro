@@ -1,6 +1,7 @@
 ---
 import Layout from "@/layouts/Layout.astro";
 import LoginButton from "@/components/LoginButton.astro";
+import { CircleAlert } from "@lucide/astro";
 
 const nextParam = Astro.url.searchParams.get("next") ?? "/";
 const safeNext =
@@ -21,20 +22,7 @@ const safeNext =
       <span class="pointer-events-none absolute -bottom-px -right-px w-4 h-4 border-b-2 border-r-2 border-(--knk-amber)"></span>
 
       <div class="w-12 h-12 mx-auto mb-5 flex items-center justify-center rounded-full bg-(--knk-surface-2) border border-(--knk-line-strong) text-(--knk-amber)">
-        <svg
-          class="w-6 h-6"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          aria-hidden="true"
-        >
-          <circle cx="12" cy="12" r="10"></circle>
-          <line x1="12" y1="8" x2="12" y2="12"></line>
-          <line x1="12" y1="16" x2="12.01" y2="16"></line>
-        </svg>
+        <CircleAlert class="size-6" />
       </div>
 
       <h1 class="font-(--font-display) text-2xl font-bold tracking-tight text-(--knk-text) mb-3">

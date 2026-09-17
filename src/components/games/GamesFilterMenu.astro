@@ -1,5 +1,6 @@
 ---
 import type { GameStatus } from "@/types";
+import { X } from "@lucide/astro";
 
 interface Props {
   gameStatuses: GameStatus[];
@@ -28,23 +29,10 @@ const { gameStatuses } = Astro.props;
       type="button"
       id="close-filters"
       @click="$store.games.layout.gamesFilterMenuOpen = false"
-      class="knk-notch-sm inline-flex items-center justify-center w-7 h-7 text-(--knk-text-muted) hover:text-(--knk-text) transition-colors"
+      class="knk-notch-sm inline-flex items-center justify-center w-7 h-7 text-(--knk-text-muted) hover:text-(--knk-text) transition-colors cursor-pointer"
       aria-label="Cerrar panel de filtros"
     >
-      <svg
-        width="12"
-        height="12"
-        viewBox="0 0 24 24"
-        fill="none"
-        aria-hidden="true"
-      >
-        <path
-          d="M18 6L6 18M6 6L18 18"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-        />
-      </svg>
+      <X class="size-3 shrink-0" />
     </button>
   </div>
 

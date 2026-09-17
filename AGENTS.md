@@ -58,7 +58,7 @@ assessment, while simple fixes can be implemented directly.
 | Imports    | Relative paths (no tsconfig/aliases)                                                                                                                                                                      |
 | Styling    | Tailwind v4 utilities + all CSS in `src/styles/` (single folder: `global.css` entry importing `tokens.css`/`base.css`/`utilities.css`; per-page files in `src/styles/pages/*.css`). No `tailwind.config`. |
 | UI copy    | Spanish (`lang="es"`)                                                                                                                                                                                     |
-| Icons      | `lucide-astro`, or inline SVG matching existing stroke style                                                                                                                                              |
+| Icons      | Prefer `@lucide/astro` components (e.g. `<Search class="size-4" />`); use inline SVG only for brand assets (`TwitchLogo.astro`) or specialized loaders (`Spinner.astro`)                                  |
 | Data reads | Server-side only: `.astro` frontmatter / API routes, or server libs those import (e.g. `lib/games.ts`)                                                                                                    |
 | Auth       | Supabase Twitch OAuth via `@supabase/ssr` cookie clients                                                                                                                                                  |
 

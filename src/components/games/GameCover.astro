@@ -1,5 +1,6 @@
 ---
 import Image from "astro/components/Image.astro";
+import { Gamepad } from "@lucide/astro";
 
 interface Props {
   coverUrl?: string | null;
@@ -27,17 +28,6 @@ const {
   />
 ) : (
   <div class="w-full h-full flex items-center justify-center text-(--knk-text-faint)">
-    <svg
-      width="32"
-      height="32"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="1.5"
-      aria-hidden="true"
-    >
-      <rect width="20" height="12" x="2" y="6" rx="2" />
-      <path d="M6 12h4m-2-2v4m7-2h.01m2.99 0h.01" />
-    </svg>
+    <Gamepad class="size-8 stroke-[1.5]" />
   </div>
 )}

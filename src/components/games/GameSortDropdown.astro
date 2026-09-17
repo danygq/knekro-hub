@@ -1,5 +1,6 @@
 ---
 import type { GameSortOption } from "@/types/store";
+import { ArrowUpDown, ChevronDown, Check } from "@lucide/astro";
 
 interface Props {
   loggedIn?: boolean;
@@ -35,24 +36,8 @@ const userVoteSortOptions: { id: GameSortOption; label: string }[] = [
     class="knk-notch inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium shrink-0 bg-(--knk-surface) text-(--knk-text) border border-(--knk-line) hover:text-(--knk-primary) hover:border-(--knk-line-strong) transition-colors cursor-pointer"
     :class="{ 'border-(--knk-line-strong) text-(--knk-primary)': open }"
   >
-    <!-- Sort icon (Lucide ArrowUpDown) -->
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="1.75"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      class="text-(--knk-text-muted) shrink-0"
-      aria-hidden="true"
-    >
-      <path d="m21 16-4 4-4-4"></path>
-      <path d="M17 20V4"></path>
-      <path d="m3 8 4-4 4 4"></path>
-      <path d="M7 4v16"></path>
-    </svg>
+    <!-- Sort icon -->
+    <ArrowUpDown class="size-3.5 text-(--knk-text-muted) shrink-0" />
 
     <span
       class="truncate max-w-32.5 sm:max-w-45"
@@ -70,21 +55,10 @@ const userVoteSortOptions: { id: GameSortOption; label: string }[] = [
     </span>
 
     <!-- Chevron down -->
-    <svg
-      width="12"
-      height="12"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      class="text-(--knk-text-muted) transition-transform duration-150 shrink-0"
+    <ChevronDown
+      class="size-3 text-(--knk-text-muted) transition-transform duration-150 shrink-0"
       :class="{ 'rotate-180': open }"
-      aria-hidden="true"
-    >
-      <path d="m6 9 6 6 6-6"></path>
-    </svg>
+    />
   </button>
 
   <div
@@ -110,21 +84,10 @@ const userVoteSortOptions: { id: GameSortOption; label: string }[] = [
         :class={`$store?.search?.sort === '${opt.id}' ? 'bg-(--knk-surface-2) text-(--knk-primary) font-semibold' : 'text-(--knk-text)'`}
       >
         <span class="truncate">{opt.label}</span>
-        <svg
+        <Check
           x-show={`$store?.search?.sort === '${opt.id}'`}
-          width="14"
-          height="14"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          class="shrink-0 text-(--knk-primary)"
-          aria-hidden="true"
-        >
-          <path d="M20 6 9 17l-5-5"></path>
-        </svg>
+          class="size-3.5 shrink-0 text-(--knk-primary)"
+        />
       </button>
     ))}
 
@@ -141,21 +104,10 @@ const userVoteSortOptions: { id: GameSortOption; label: string }[] = [
             :class={`$store?.search?.sort === '${opt.id}' ? 'bg-(--knk-surface-2) text-(--knk-primary) font-semibold' : 'text-(--knk-text)'`}
           >
             <span class="truncate">{opt.label}</span>
-            <svg
+            <Check
               x-show={`$store?.search?.sort === '${opt.id}'`}
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="shrink-0 text-(--knk-primary)"
-              aria-hidden="true"
-            >
-              <path d="M20 6 9 17l-5-5"></path>
-            </svg>
+              class="size-3.5 shrink-0 text-(--knk-primary)"
+            />
           </button>
         ))}
       </>

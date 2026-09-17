@@ -5,6 +5,7 @@ import type { User } from "@supabase/supabase-js";
 import LoginButton from "@/components/LoginButton.astro";
 import UserMenu from "@/components/UserMenu.astro";
 import { userHasRole } from "@/lib/roles.ts";
+import { Menu, X } from "@lucide/astro";
 
 interface Props {
   user?: User | null;
@@ -35,41 +36,13 @@ const currentPath = Astro.url.pathname;
             <!-- Mobile Hamburger Toggle (placed to the left of the logo) -->
             <button
               type="button"
-              class="sm:hidden knk-notch-sm inline-flex items-center justify-center w-9 h-9 text-(--knk-text-muted) hover:text-(--knk-text) bg-(--knk-surface) border border-(--knk-line) hover:border-(--knk-line-strong) transition-colors"
+              class="sm:hidden knk-notch-sm inline-flex items-center justify-center w-9 h-9 text-(--knk-text-muted) hover:text-(--knk-text) bg-(--knk-surface) border border-(--knk-line) hover:border-(--knk-line-strong) transition-colors cursor-pointer"
               aria-label="Menú principal"
               :aria-expanded="mobileMenuOpen"
               @click="mobileMenuOpen = !mobileMenuOpen"
             >
-              <svg
-                x-show="!mobileMenuOpen"
-                class="w-5 h-5"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-              >
-                <line x1="4" y1="6" x2="20" y2="6"></line>
-                <line x1="12" y1="12" x2="20" y2="12"></line>
-                <line x1="4" y1="18" x2="20" y2="18"></line>
-              </svg>
-              <svg
-                x-show="mobileMenuOpen"
-                x-cloak
-                class="w-5 h-5"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-              >
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-              </svg>
+              <Menu x-show="!mobileMenuOpen" class="size-5" />
+              <X x-show="mobileMenuOpen" x-cloak class="size-5" />
             </button>
 
             <a href="/" class="flex items-center gap-2.5 shrink-0 font-bold">

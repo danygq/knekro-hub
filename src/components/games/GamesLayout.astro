@@ -6,6 +6,7 @@ import { type User } from "@supabase/auth-js";
 import GameSearch from "./GameSearch.astro";
 import GameSortDropdown from "./GameSortDropdown.astro";
 import InfiniteScrollSentinel from "./InfiniteScrollSentinel.astro";
+import { SlidersHorizontal } from "@lucide/astro";
 
 interface Props {
   gameStatuses: GameStatus[];
@@ -44,34 +45,9 @@ const { gameStatuses, games, totalGames, user } = Astro.props;
               id="toggle-filters"
               :aria-expanded="$store.games.layout.gamesFilterMenuOpen"
               @click="$store.games.layout.gamesFilterMenuOpen = !$store.games.layout.gamesFilterMenuOpen"
-              class="knk-notch inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium shrink-0
-        bg-(--knk-surface) text-(--knk-text) border border-(--knk-line)
-        hover:text-(--knk-primary) hover:border-(--knk-line-strong) transition-colors"
+              class="knk-notch inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium shrink-0 bg-(--knk-surface) text-(--knk-text) border border-(--knk-line) hover:text-(--knk-primary) hover:border-(--knk-line-strong) transition-colors cursor-pointer"
             >
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                aria-hidden="true"
-                class="text-(--knk-text-muted)"
-              >
-                <rect
-                  x="4"
-                  y="3"
-                  width="16"
-                  height="18"
-                  rx="2"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                ></rect>
-                <path
-                  d="M6.5 8.5h11M6.5 12h8M6.5 15.5h11"
-                  stroke="currentColor"
-                  stroke-width="1.75"
-                  stroke-linecap="round"
-                ></path>
-              </svg>
+              <SlidersHorizontal class="size-3.5 text-(--knk-text-muted) shrink-0" />
               <span>Filtros</span>
               <span
                 id="filter-count"

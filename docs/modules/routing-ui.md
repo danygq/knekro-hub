@@ -97,6 +97,15 @@ Renders `GamesLayout.astro` with fetched data.
 | `RankingSectionLayout.astro` | Section wrapper for dedicated ranking category views (header, podium wrapper, and selection pool).     |
 | `RankingPodiumScript.astro`  | Client-side SortableJS drag & drop logic and handlers for podium assignment/swaps.                     |
 
+### Icons & SVGs
+
+Icons across the project are standardized using [`@lucide/astro`](https://lucide.dev/guide/packages/lucide-astro):
+
+- **Zero Client Overhead**: In `.astro` templates, `@lucide/astro` components are server-rendered at build time directly into optimized SVG HTML markup with zero client-side JavaScript bundle cost.
+- **Component Usage**: Import individual icon components directly from `@lucide/astro` (e.g. `import { Search, X, ChevronLeft, ChevronDown, Check, SlidersHorizontal, RefreshCw, Gamepad, Menu, CircleAlert } from "@lucide/astro";`).
+- **Styling**: Pass sizing and stroke classes directly via Tailwind utilities, e.g. `<Search class="size-4 text-(--knk-text-muted)" />`.
+- **Inline SVGs Exception**: Use bespoke inline SVGs only for third-party brand logos (such as `TwitchLogo.astro`) or custom animated components (`Spinner.astro`). Standard UI glyphs and controls must always use `@lucide/astro` rather than hand-inlined SVG paths.
+
 ## Progressive Interactivity & State Architecture
 
 Interactivity on `/games` follows a unified Alpine + HTMX pattern:
