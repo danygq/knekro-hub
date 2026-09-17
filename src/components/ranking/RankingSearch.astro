@@ -10,9 +10,7 @@ interface Props {
 const { categoryId, year, statusIds = [] } = Astro.props;
 
 const statusVals =
-  statusIds.length > 0
-    ? `, status_id: ${JSON.stringify(statusIds)}`
-    : "";
+  statusIds.length > 0 ? `, status_id: ${JSON.stringify(statusIds)}` : "";
 ---
 
 <div

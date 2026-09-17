@@ -116,8 +116,12 @@ export async function loadRankingSearchGames(
     includedStatusIds?: number[];
   } = {},
 ): Promise<{ games: GameDetails[]; total: number }> {
-  const { query = "", offset = 0, limit = 24, includedStatusIds = [] } =
-    options;
+  const {
+    query = "",
+    offset = 0,
+    limit = 24,
+    includedStatusIds = [],
+  } = options;
   return fetchGames(client, {
     query,
     offset,

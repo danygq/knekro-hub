@@ -16,7 +16,8 @@ const parseIds = (raw: string | null) =>
 const q = (Astro.url.searchParams.get("q") ?? "").trim();
 const includedStatusIds = parseIds(Astro.url.searchParams.get("inc"));
 const excludedStatusIds = parseIds(Astro.url.searchParams.get("exc"));
-const sort = (Astro.url.searchParams.get("sort") ?? "name_asc") as GameSortOption;
+const sort = (Astro.url.searchParams.get("sort") ??
+  "name_asc") as GameSortOption;
 const offset = Math.max(0, Number(Astro.url.searchParams.get("offset") ?? "0"));
 const limit = Math.min(
   48,

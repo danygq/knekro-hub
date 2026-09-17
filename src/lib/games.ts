@@ -3,7 +3,7 @@
 // `window`/`document` so it never touches the browser.
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { GameDetails, GameStatus, GameSortOption } from "@/types";
+import type { GameDetails, GameSortOption, GameStatus } from "@/types";
 import type { Order } from "@/types/db.ts";
 
 /** Format an average: whole numbers as integers, otherwise max 1 decimal. */

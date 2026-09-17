@@ -21,11 +21,7 @@ const { game, categoryId, year } = Astro.props;
   <div class="relative bg-(--knk-surface-2) knk-grid-bg overflow-hidden aspect-2/3">
     <GameCover coverUrl={game.cover_url} name={game.name} />
     <GameStatusBadge status={game.status} />
-    <RankingMedalOverlay
-      gameId={game.id}
-      categoryId={categoryId}
-      year={year}
-    />
+    <RankingMedalOverlay gameId={game.id} categoryId={categoryId} year={year} />
   </div>
 
   <div class="p-4 max-h-fit overflow-hidden text-ellipsis">
@@ -37,4 +33,3 @@ const { game, categoryId, year } = Astro.props;
     </h3>
   </div>
 </article>
-

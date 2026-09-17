@@ -42,9 +42,7 @@ const displayName =
         class="w-8 h-8 rounded-full border border-(--knk-line-strong) object-cover transition-transform group-active:scale-95 sm:group-active:scale-100"
       />
     ) : (
-      <div
-        class="w-8 h-8 rounded-full border border-(--knk-line-strong) bg-(--knk-surface-2) flex items-center justify-center text-xs font-semibold text-(--knk-text-muted) transition-transform group-active:scale-95 sm:group-active:scale-100"
-      >
+      <div class="w-8 h-8 rounded-full border border-(--knk-line-strong) bg-(--knk-surface-2) flex items-center justify-center text-xs font-semibold text-(--knk-text-muted) transition-transform group-active:scale-95 sm:group-active:scale-100">
         {displayName.charAt(0).toUpperCase()}
       </div>
     )}
@@ -79,7 +77,10 @@ const displayName =
       <span class="block text-[10px] uppercase font-semibold tracking-wider text-(--knk-text-faint)">
         Conectado
       </span>
-      <span class="block text-xs font-medium text-(--knk-text) truncate" title={displayName}>
+      <span
+        class="block text-xs font-medium text-(--knk-text) truncate"
+        title={displayName}
+      >
         {displayName}
       </span>
     </div>

@@ -13,9 +13,7 @@ const { offset, categoryId, year, limit = 24, statusIds = [] } = Astro.props;
 
 // Build status_id entries for hx-vals: { status_id: [2] } or {}
 const statusVals =
-  statusIds.length > 0
-    ? `, status_id: ${JSON.stringify(statusIds)}`
-    : "";
+  statusIds.length > 0 ? `, status_id: ${JSON.stringify(statusIds)}` : "";
 ---
 
 <div
