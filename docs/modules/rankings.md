@@ -89,3 +89,22 @@ await assignPodiumGame(supabase, {
   userId,
 });
 ```
+
+## Search Query Architecture (unified, Issue #65)
+
+`loadRankingSearchGames` in `src/lib/ranking.ts` delegates to `fetchGames` from
+`src/lib/games.ts`, which executes a single `get_user_games` Postgres RPC call.
+
+This eliminates the previous two-stage waterfall (a `head: true` count query
+followed by a range select) and aligns ranking search with the `/games` catalog
+pattern. Both surfaces now share one database round trip per search keystroke,
+reducing network latency by ~50%.
+
+Parameters passed through:
+
+| Param    | Source in `/api/ranking/search.astro` | Notes                                     |
+| -------- | ------------------------------------- | ----------------------------------------- |
+| `query`  | `?q=` (trimmed)                       | Empty string = no filter                  |
+| `offset` | `?offset=` (`Math.max(0, ...)`)       | Clamped to ≥ 0                            |
+| `limit`  | `?limit=` (1–48)                      | Clamped by `Math.min(48, Math.max(1, …))` |
+| `sort`   | hardcoded `"name_asc"`                | Consistent alphabetical ordering          |

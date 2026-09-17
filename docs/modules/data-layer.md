@@ -1,7 +1,7 @@
 ---
 module: data-layer
 owner_area: backend
-last_verified_against_commit: fee8c71
+last_verified_against_commit: HEAD
 depends_on: []
 ---
 
@@ -280,7 +280,7 @@ returns table (
 $$;
 ```
 
-- `get_user_games`: Powers `/games` library catalog searches (accelerated by `idx_games_name_trgm`), status filters (safe against NULL/empty arrays), multi-column sorting (case-insensitive `lower(name)` and personal user votes with `NULLS LAST`), and bounded DB-level pagination in a single query via `fetchGames()` in `src/lib/games.ts`.
+- `get_user_games`: Powers `/games` library catalog searches and the ranking assignable game pool search (both via `fetchGames()` in `src/lib/games.ts`), accelerated by `idx_games_name_trgm`. Supports status filters (safe against NULL/empty arrays), multi-column sorting (case-insensitive `lower(name)` and personal user votes with `NULLS LAST`), and bounded DB-level pagination — all in a single RPC call. `loadRankingSearchGames` in `src/lib/ranking.ts` delegates to `fetchGames`, eliminating the previous two-stage `countQuery` + `gamesQuery` waterfall.
 
 ## Clients
 

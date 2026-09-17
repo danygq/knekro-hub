@@ -20,11 +20,16 @@ const limit = Math.min(
   48,
   Math.max(1, Number(Astro.url.searchParams.get("limit") ?? "24")),
 );
+const statusIds = Astro.url.searchParams
+  .getAll("status_id")
+  .map(Number)
+  .filter((n) => Number.isFinite(n) && n > 0);
 
 const { games, total } = await loadRankingSearchGames(dbClient, {
   query: q,
   offset,
   limit,
+  includedStatusIds: statusIds,
 });
 
 const visibleCount = Math.min(total, offset + games.length);
@@ -58,5 +63,6 @@ const nextOffset = offset + limit;
     categoryId={categoryId}
     year={year}
     limit={limit}
+    statusIds={statusIds}
   />
 )}

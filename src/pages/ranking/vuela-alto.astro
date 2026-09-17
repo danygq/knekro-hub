@@ -26,6 +26,9 @@ if (!category) {
   return Astro.redirect("/ranking");
 }
 
+// Status ID 2 = "Vuela Alto" — scope game pool to this status only
+const VUELA_ALTO_STATUS_IDS = [2];
+
 const currentYear = 2026;
 const podiumItems = await loadPodiumGames(
   dbClient,
@@ -35,7 +38,7 @@ const podiumItems = await loadPodiumGames(
 );
 const { games: initialGames, total: totalGames } = await loadRankingSearchGames(
   dbClient,
-  { limit: 24 },
+  { limit: 24, includedStatusIds: VUELA_ALTO_STATUS_IDS },
 );
 ---
 
@@ -46,6 +49,7 @@ const { games: initialGames, total: totalGames } = await loadRankingSearchGames(
     podiumItems={podiumItems}
     initialGames={initialGames}
     totalGames={totalGames}
+    statusIds={VUELA_ALTO_STATUS_IDS}
   />
 </Layout>
 

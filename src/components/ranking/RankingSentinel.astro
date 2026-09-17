@@ -6,9 +6,16 @@ interface Props {
   categoryId: number;
   year: number;
   limit?: number;
+  statusIds?: number[];
 }
 
-const { offset, categoryId, year, limit = 24 } = Astro.props;
+const { offset, categoryId, year, limit = 24, statusIds = [] } = Astro.props;
+
+// Build status_id entries for hx-vals: { status_id: [2] } or {}
+const statusVals =
+  statusIds.length > 0
+    ? `, status_id: ${JSON.stringify(statusIds)}`
+    : "";
 ---
 
 <div
@@ -19,7 +26,7 @@ const { offset, categoryId, year, limit = 24 } = Astro.props;
   hx-swap="outerHTML"
   hx-indicator="#ranking-infinite-spinner"
   hx-include="[name='q']"
-  hx-vals={`js:{ category_id: ${categoryId}, year: ${year}, offset: ${offset}, limit: ${limit} }`}
+  hx-vals={`js:{ category_id: ${categoryId}, year: ${year}, offset: ${offset}, limit: ${limit}${statusVals} }`}
 >
   <div
     id="ranking-infinite-spinner"
