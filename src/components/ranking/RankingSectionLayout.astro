@@ -13,9 +13,11 @@ interface Props {
   podiumItems: RankingGameItem[];
   initialGames: GameDetails[];
   totalGames: number;
+  statusIds?: number[];
 }
 
-const { category, year, podiumItems, initialGames, totalGames } = Astro.props;
+const { category, year, podiumItems, initialGames, totalGames, statusIds = [] } =
+  Astro.props;
 
 const visibleCount = Math.min(totalGames, initialGames.length);
 const hasMore = initialGames.length < totalGames;
@@ -75,7 +77,7 @@ const hasMore = initialGames.length < totalGames;
         </p>
       </div>
 
-      <RankingSearch categoryId={category.id} year={year} />
+      <RankingSearch categoryId={category.id} year={year} statusIds={statusIds} />
     </div>
 
     <!-- Games Grid -->
@@ -98,6 +100,7 @@ const hasMore = initialGames.length < totalGames;
           categoryId={category.id}
           year={year}
           limit={24}
+          statusIds={statusIds}
         />
       )}
     </div>

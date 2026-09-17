@@ -103,6 +103,9 @@ export async function loadPodiumGames(
  * Delegates to {@link fetchGames} (backed by the `get_user_games` RPC) so that
  * both the catalog and ranking search surfaces share a single database round
  * trip instead of the previous two-stage countQuery + gamesQuery waterfall.
+ *
+ * Pass `includedStatusIds` to scope the pool to specific game statuses
+ * (e.g. `[2]` for "Vuela Alto"-only pages).
  */
 export async function loadRankingSearchGames(
   client: SupabaseClient,
@@ -110,10 +113,18 @@ export async function loadRankingSearchGames(
     query?: string;
     offset?: number;
     limit?: number;
+    includedStatusIds?: number[];
   } = {},
 ): Promise<{ games: GameDetails[]; total: number }> {
-  const { query = "", offset = 0, limit = 24 } = options;
-  return fetchGames(client, { query, offset, limit, sort: "name_asc" });
+  const { query = "", offset = 0, limit = 24, includedStatusIds = [] } =
+    options;
+  return fetchGames(client, {
+    query,
+    offset,
+    limit,
+    sort: "name_asc",
+    includedStatusIds,
+  });
 }
 
 /**

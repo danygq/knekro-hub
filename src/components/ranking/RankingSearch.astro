@@ -4,9 +4,15 @@ import Spinner from "@/components/Spinner.astro";
 interface Props {
   categoryId: number;
   year: number;
+  statusIds?: number[];
 }
 
-const { categoryId, year } = Astro.props;
+const { categoryId, year, statusIds = [] } = Astro.props;
+
+const statusVals =
+  statusIds.length > 0
+    ? `, status_id: ${JSON.stringify(statusIds)}`
+    : "";
 ---
 
 <div
@@ -56,7 +62,7 @@ const { categoryId, year } = Astro.props;
       hx-swap="innerHTML"
       hx-sync="this:replace"
       hx-indicator="closest .relative"
-      hx-vals={`js:{ category_id: ${categoryId}, year: ${year}, offset: 0, limit: 24 }`}
+      hx-vals={`js:{ category_id: ${categoryId}, year: ${year}, offset: 0, limit: 24${statusVals} }`}
       class="knk-notch w-full pl-10 pr-10 py-2 text-sm bg-(--knk-surface) text-(--knk-text) border border-(--knk-line) hover:border-(--knk-line-strong) transition-colors [&::-webkit-search-decoration]:appearance-none"
     />
 
