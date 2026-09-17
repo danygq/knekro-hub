@@ -69,6 +69,9 @@ const { games, total: totalGames } = await fetchGames(dbClient, {
         if (target.has(key)) {
           target.delete(key);
         } else {
+          if (opposite.has(key)) {
+            opposite.delete(key);
+          }
           target.add(key);
         }
         // Re-assign sets so Alpine triggers reactivity

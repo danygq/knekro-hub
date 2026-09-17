@@ -20,6 +20,7 @@
     "@astrojs/alpinejs": "^1.0.0",
     "@astrojs/vercel": "^11.0.10",
     "@lucide/astro": "^1.47.0",
+    "@supabase/auth-js": "^2.116.0",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.116.0",
     "@tailwindcss/vite": "^4.3.3",

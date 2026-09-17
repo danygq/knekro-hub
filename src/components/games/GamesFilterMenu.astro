@@ -1,6 +1,6 @@
 ---
 import type { GameStatus } from "@/types";
-import { X } from "@lucide/astro";
+import { CircleDot, X } from "@lucide/astro";
 
 interface Props {
   gameStatuses: GameStatus[];
@@ -47,22 +47,7 @@ const { gameStatuses } = Astro.props;
         class="knk-filter-reset knk-notch-sm inline-flex items-center justify-center gap-2 w-full px-3 py-2 text-sm font-medium bg-(--knk-surface) text-(--knk-text-muted) border border-(--knk-line) hover:text-(--knk-text) hover:border-(--knk-line-strong) transition-colors"
         :class="{ 'active': $store.search.filters.status.count === 0 }"
       >
-        <svg
-          width="14"
-          height="14"
-          viewBox="0 0 24 24"
-          fill="none"
-          aria-hidden="true"
-        >
-          <circle
-            cx="12"
-            cy="12"
-            r="8"
-            stroke="currentColor"
-            stroke-width="1.75"
-          ></circle>
-          <circle cx="12" cy="12" r="2.5" fill="currentColor"></circle>
-        </svg>
+        <CircleDot width={14} height={14} color="currentColor" />
         Todas
       </button>
     </div>

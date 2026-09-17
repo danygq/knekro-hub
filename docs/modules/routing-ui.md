@@ -60,12 +60,12 @@ Renders `GamesLayout.astro` with fetched data.
 
 ### Shell (`src/components/`)
 
-| Component           | Role                                                               |
-| ------------------- | ------------------------------------------------------------------ |
-| `LoginButton.astro` | Form `POST /api/auth/signin`, Twitch-branded                       |
-| `UserMenu.astro`    | Avatar + display name (`user_metadata`) + `POST /api/auth/signout` |
-| `TwitchLogo.astro`  | Inline SVG mark                                                    |
-| `Spinner.astro`     | Reusable SVG loading spinner with `animate-spin`                   |
+| Component           | Role                                                                                   |
+| ------------------- | -------------------------------------------------------------------------------------- |
+| `LoginButton.astro` | Form `POST /api/auth/signin`, Twitch-branded                                           |
+| `UserMenu.astro`    | Avatar + display name (`user_metadata`) + `POST /api/auth/signout`                     |
+| `TwitchLogo.astro`  | Inline SVG mark                                                                        |
+| `Spinner.astro`     | Reusable loading spinner wrapping `@lucide/astro`'s `LoaderCircle` with `animate-spin` |
 
 ### Games Library (`src/components/games/`)
 
@@ -104,7 +104,7 @@ Icons across the project are standardized using [`@lucide/astro`](https://lucide
 - **Zero Client Overhead**: In `.astro` templates, `@lucide/astro` components are server-rendered at build time directly into optimized SVG HTML markup with zero client-side JavaScript bundle cost.
 - **Component Usage**: Import individual icon components directly from `@lucide/astro` (e.g. `import { Search, X, ChevronLeft, ChevronDown, Check, SlidersHorizontal, RefreshCw, Gamepad, Menu, CircleAlert } from "@lucide/astro";`).
 - **Styling**: Pass sizing and stroke classes directly via Tailwind utilities, e.g. `<Search class="size-4 text-(--knk-text-muted)" />`.
-- **Inline SVGs Exception**: Use bespoke inline SVGs only for third-party brand logos (such as `TwitchLogo.astro`) or custom animated components (`Spinner.astro`). Standard UI glyphs and controls must always use `@lucide/astro` rather than hand-inlined SVG paths.
+- **Inline SVGs Exception**: Use bespoke inline SVGs only for third-party brand logos (such as `TwitchLogo.astro`). Standard UI glyphs, controls, and loaders (`Spinner.astro` wrapping `LoaderCircle`) use `@lucide/astro` rather than hand-inlined SVG paths.
 
 ## Progressive Interactivity & State Architecture
 
