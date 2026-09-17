@@ -4,3 +4,5 @@ minimumReleaseAgeExclude:
   - prettier-plugin-astro@1.0.1
   - "@lucide/astro@1.47.0"
   - astro@7.3.3
+  - '@astrojs/language-server@2.17.0'
+  - '@astrojs/ts-plugin@1.10.12'
