@@ -66,8 +66,11 @@ const { games, total: totalGames } = await fetchGames(dbClient, {
   (window as any).Alpine = Alpine;
   (window as any).htmx = htmx;
 
-  document.addEventListener("alpine:init", () => {
-    const isDesktopViewport = window.innerWidth >= 1024;
+  function initAlpineGamesStores() {
+    if ((Alpine as any).store("search")) return;
+
+    const isDesktopViewport =
+      typeof window !== "undefined" ? window.innerWidth >= 1024 : true;
 
     Alpine.store("games", {
       layout: {
@@ -121,7 +124,10 @@ const { games, total: totalGames } = await fetchGames(dbClient, {
       status: statusFilterStore,
     };
 
-    const layoutEl = document.getElementById("games-layout");
+    const layoutEl =
+      typeof document !== "undefined"
+        ? document.getElementById("games-layout")
+        : null;
     const isLoggedIn = layoutEl?.dataset?.loggedIn === "true";
     const serverSort = layoutEl?.dataset?.initialSort as
       | GameSortOption
@@ -131,7 +137,11 @@ const { games, total: totalGames } = await fetchGames(dbClient, {
     const clientSort = resolveGameSortOption(initialPrefs.sort, isLoggedIn);
 
     // Sync cookie if client had preferences in localStorage but cookie was missing
-    if (initialPrefs.sort && !document.cookie.includes(GAMES_PREFERENCES_KEY)) {
+    if (
+      initialPrefs.sort &&
+      typeof document !== "undefined" &&
+      !document.cookie.includes(GAMES_PREFERENCES_KEY)
+    ) {
       saveGamesPreferences({ sort: clientSort });
     }
 
@@ -174,5 +184,9 @@ const { games, total: totalGames } = await fetchGames(dbClient, {
         setTimeout(triggerRefresh, 0);
       }
     }
-  });
+  }
+
+  // Register stores immediately upon script evaluation and on alpine:init
+  initAlpineGamesStores();
+  document.addEventListener("alpine:init", initAlpineGamesStores);
 </script>

@@ -52,16 +52,16 @@ const {
             <button
               type="button"
               id="toggle-filters"
-              :aria-expanded="$store.games.layout.gamesFilterMenuOpen"
-              @click="$store.games.layout.gamesFilterMenuOpen = !$store.games.layout.gamesFilterMenuOpen"
+              :aria-expanded="$store?.games?.layout?.gamesFilterMenuOpen"
+              @click="$store?.games?.layout && ($store.games.layout.gamesFilterMenuOpen = !$store.games.layout.gamesFilterMenuOpen)"
               class="knk-notch inline-flex items-center gap-2 px-3.5 py-2 text-sm font-medium shrink-0 bg-(--knk-surface) text-(--knk-text) border border-(--knk-line) hover:text-(--knk-primary) hover:border-(--knk-line-strong) transition-colors cursor-pointer"
             >
               <SlidersHorizontal class="size-3.5 text-(--knk-text-muted) shrink-0" />
               <span>Filtros</span>
               <span
                 id="filter-count"
-                x-text="$store.search.filters.status.count"
-                :hidden="!$store.search.filters.status?.count"
+                x-text="$store?.search?.filters?.status?.count ?? 0"
+                :hidden="!$store?.search?.filters?.status?.count"
                 class="min-w-4.5 h-4.5 px-1 inline-flex items-center justify-center rounded-full bg-(--knk-primary) text-[--knk-blue-50] text-xs font-semibold tabular-nums"
               ></span>
             </button>
