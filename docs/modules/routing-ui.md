@@ -46,15 +46,15 @@ within `<body>`.
 Main games library route. Performs initial SSR fetches:
 
 - `loadGameStatuses(dbClient)`: list of statuses with game counts.
-- `fetchGames(dbClient, { userId, limit: 24, sort: "name_asc" })`: initial set of 24 games with community stats and user vote.
+- `fetchGames(dbClient, { userId, limit: 24, sort: initialSort })`: initial set of 24 games loaded directly with the user's preferred sort, read from `knk_games_preferences` cookie during SSR.
 
 Initializes Alpine stores on `alpine:init`:
 
 - `games.layout`: `{ isDesktop, gamesFilterMenuOpen }`.
-- `search`: `{ query, offset: 0, limit: 24, sort: initialSort, filters: { status: statusFilterStore }, setSort(), resetOffset() }`.
-- Loads stored sorting preference from `localStorage` (`knk_games_preferences` via `src/lib/preferences.ts`); falls back to `name_asc` if unauthenticated and personal vote sort was saved. If the restored sort differs from `name_asc`, dispatches `filter-changed` to re-fetch the grid.
+- `search`: `{ query, offset: 0, limit: 24, sort: effectiveSort, filters: { status: statusFilterStore }, setSort(), resetOffset() }`.
+- Reads stored sorting preference from cookie/localStorage (`knk_games_preferences` via `src/lib/preferences.ts`); falls back to `name_asc` if unauthenticated and personal vote sort was saved. Because SSR renders with the preferred sort on initial load, no secondary client search request is needed on page refresh.
 
-Renders `GamesLayout.astro` with fetched data.
+Renders `GamesLayout.astro` with fetched data and matching initial dropdown label.
 
 ## Components
 

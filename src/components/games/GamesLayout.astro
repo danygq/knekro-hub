@@ -1,6 +1,6 @@
 ---
 import GamesFilterMenu from "./GamesFilterMenu.astro";
-import type { GameDetails, GameStatus } from "@/types";
+import type { GameDetails, GameSortOption, GameStatus } from "@/types";
 import GameCard from "./GameCard.astro";
 import { type User } from "@supabase/auth-js";
 import GameSearch from "./GameSearch.astro";
@@ -13,9 +13,16 @@ interface Props {
   games: GameDetails[];
   totalGames: number;
   user: User | null;
+  initialSort?: GameSortOption;
 }
 
-const { gameStatuses, games, totalGames, user } = Astro.props;
+const {
+  gameStatuses,
+  games,
+  totalGames,
+  user,
+  initialSort = "name_asc",
+} = Astro.props;
 ---
 
 <div
@@ -23,6 +30,7 @@ const { gameStatuses, games, totalGames, user } = Astro.props;
   class="games-layout"
   :class="{ 'filters-off': !$store.games.layout.gamesFilterMenuOpen }"
   data-logged-in={user ? "true" : "false"}
+  data-initial-sort={initialSort}
   x-data
   x-init="
     window.addEventListener('resize', () => { $store.games.layout.isDesktop = window.innerWidth >= 1024 });
@@ -40,7 +48,7 @@ const { gameStatuses, games, totalGames, user } = Astro.props;
         <div class="mb-6 flex flex-wrap sm:flex-nowrap items-center justify-between gap-3">
           <GameSearch />
           <div class="flex items-center gap-2 shrink-0">
-            <GameSortDropdown loggedIn={!!user} />
+            <GameSortDropdown loggedIn={!!user} initialSort={initialSort} />
             <button
               type="button"
               id="toggle-filters"
