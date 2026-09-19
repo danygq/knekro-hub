@@ -2,17 +2,26 @@
 import GamesLayout from "@/components/games/GamesLayout.astro";
 import Layout from "@/layouts/Layout.astro";
 import { loadGameStatuses, fetchGames } from "@/lib/games";
+import {
+  GAMES_PREFERENCES_KEY,
+  parseGamesPreferences,
+  resolveGameSortOption,
+} from "@/lib/preferences";
 import "@/styles/pages/games.css";
 import type { User } from "@supabase/auth-js";
 
 const dbClient = Astro.locals.supabase;
 const user = Astro.locals.user;
 
+const cookieRaw = Astro.cookies.get(GAMES_PREFERENCES_KEY)?.value;
+const serverPrefs = parseGamesPreferences(cookieRaw);
+const initialSort = resolveGameSortOption(serverPrefs.sort, !!user);
+
 const gameStatuses = await loadGameStatuses(dbClient);
 const { games, total: totalGames } = await fetchGames(dbClient, {
   userId: user?.id,
   limit: 24,
-  sort: "name_asc",
+  sort: initialSort,
 });
 ---
 
@@ -34,6 +43,7 @@ const { games, total: totalGames } = await fetchGames(dbClient, {
     games={games}
     totalGames={totalGames}
     user={user as User}
+    initialSort={initialSort}
   />
 </Layout>
 
@@ -46,11 +56,21 @@ const { games, total: totalGames } = await fetchGames(dbClient, {
     SearchStore,
     StatusFilterStore,
   } from "@/types";
+  import {
+    GAMES_PREFERENCES_KEY,
+    isValidGameSortOption,
+    loadGamesPreferences,
+    resolveGameSortOption,
+    saveGamesPreferences,
+  } from "@/lib/preferences";
   (window as any).Alpine = Alpine;
   (window as any).htmx = htmx;
 
-  document.addEventListener("alpine:init", () => {
-    const isDesktopViewport = window.innerWidth >= 1024;
+  function initAlpineGamesStores() {
+    if ((Alpine as any).store("search")) return;
+
+    const isDesktopViewport =
+      typeof window !== "undefined" ? window.innerWidth >= 1024 : true;
 
     Alpine.store("games", {
       layout: {
@@ -103,16 +123,42 @@ const { games, total: totalGames } = await fetchGames(dbClient, {
     const filtersStore: FiltersStore = {
       status: statusFilterStore,
     };
+
+    const layoutEl =
+      typeof document !== "undefined"
+        ? document.getElementById("games-layout")
+        : null;
+    const isLoggedIn = layoutEl?.dataset?.loggedIn === "true";
+    const serverSort = layoutEl?.dataset?.initialSort as
+      | GameSortOption
+      | undefined;
+
+    const initialPrefs = loadGamesPreferences();
+    const clientSort = resolveGameSortOption(initialPrefs.sort, isLoggedIn);
+
+    // Sync cookie if client had preferences in localStorage but cookie was missing
+    if (
+      initialPrefs.sort &&
+      typeof document !== "undefined" &&
+      !document.cookie.includes(GAMES_PREFERENCES_KEY)
+    ) {
+      saveGamesPreferences({ sort: clientSort });
+    }
+
+    const effectiveSort: GameSortOption =
+      serverSort && isValidGameSortOption(serverSort) ? serverSort : clientSort;
+
     const search: SearchStore = {
       query: "",
       offset: 0,
       limit: 24,
-      sort: "name_asc",
+      sort: effectiveSort,
       filters: filtersStore,
       setSort(option: GameSortOption) {
         if (this.sort === option) return;
         this.sort = option;
         this.resetOffset();
+        saveGamesPreferences({ sort: option });
         window.document.body.dispatchEvent(new CustomEvent("filter-changed"));
       },
       resetOffset() {
@@ -120,5 +166,27 @@ const { games, total: totalGames } = await fetchGames(dbClient, {
       },
     };
     Alpine.store("search", search);
-  });
+
+    // Only refresh if client has a different preference than what server rendered
+    // (e.g. migration from localStorage before cookie was set)
+    if (clientSort !== effectiveSort) {
+      search.sort = clientSort;
+      saveGamesPreferences({ sort: clientSort });
+      const triggerRefresh = () => {
+        window.document.body.dispatchEvent(new CustomEvent("filter-changed"));
+      };
+
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", () => {
+          setTimeout(triggerRefresh, 0);
+        });
+      } else {
+        setTimeout(triggerRefresh, 0);
+      }
+    }
+  }
+
+  // Register stores immediately upon script evaluation and on alpine:init
+  initAlpineGamesStores();
+  document.addEventListener("alpine:init", initAlpineGamesStores);
 </script>

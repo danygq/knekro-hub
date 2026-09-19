@@ -39,9 +39,9 @@ import { Search, X } from "@lucide/astro";
     <button
       id="games-search-clear"
       type="button"
-      x-show="$store.search.query"
+      x-show="$store?.search?.query"
       x-cloak
-      @click="$store.search.query = ''; $store.search?.resetOffset?.(); $nextTick(() => $refs.searchInput.dispatchEvent(new Event('input', { bubbles: true })));"
+      @click="$store?.search && ($store.search.query = ''); $store.search?.resetOffset?.(); $nextTick(() => $refs.searchInput.dispatchEvent(new Event('input', { bubbles: true })));"
       aria-label="Limpiar búsqueda"
       class="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center justify-center w-6 h-6 text-(--knk-text-muted) hover:text-(--knk-primary) transition-colors cursor-pointer"
     >
