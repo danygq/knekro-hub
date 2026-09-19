@@ -46,6 +46,11 @@ const { games, total: totalGames } = await fetchGames(dbClient, {
     SearchStore,
     StatusFilterStore,
   } from "@/types";
+  import {
+    isValidGameSortOption,
+    loadGamesPreferences,
+    saveGamesPreferences,
+  } from "@/lib/preferences";
   (window as any).Alpine = Alpine;
   (window as any).htmx = htmx;
 
@@ -103,16 +108,35 @@ const { games, total: totalGames } = await fetchGames(dbClient, {
     const filtersStore: FiltersStore = {
       status: statusFilterStore,
     };
+
+    const initialPrefs = loadGamesPreferences();
+    const isLoggedIn =
+      document.getElementById("games-layout")?.dataset?.loggedIn === "true";
+
+    let initialSort: GameSortOption = "name_asc";
+    if (isValidGameSortOption(initialPrefs.sort)) {
+      if (
+        (initialPrefs.sort === "user_vote_desc" ||
+          initialPrefs.sort === "user_vote_asc") &&
+        !isLoggedIn
+      ) {
+        initialSort = "name_asc";
+      } else {
+        initialSort = initialPrefs.sort;
+      }
+    }
+
     const search: SearchStore = {
       query: "",
       offset: 0,
       limit: 24,
-      sort: "name_asc",
+      sort: initialSort,
       filters: filtersStore,
       setSort(option: GameSortOption) {
         if (this.sort === option) return;
         this.sort = option;
         this.resetOffset();
+        saveGamesPreferences({ sort: option });
         window.document.body.dispatchEvent(new CustomEvent("filter-changed"));
       },
       resetOffset() {
@@ -120,5 +144,19 @@ const { games, total: totalGames } = await fetchGames(dbClient, {
       },
     };
     Alpine.store("search", search);
+
+    if (initialSort !== "name_asc") {
+      const triggerRefresh = () => {
+        window.document.body.dispatchEvent(new CustomEvent("filter-changed"));
+      };
+
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", () => {
+          setTimeout(triggerRefresh, 0);
+        });
+      } else {
+        setTimeout(triggerRefresh, 0);
+      }
+    }
   });
 </script>

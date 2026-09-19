@@ -33,3 +33,15 @@ export interface StatusFilterStore {
   readonly count: number;
   isActive(id: string | number, mode: "plus" | "minus" | string): boolean;
 }
+
+export interface GamesFilterPreferences {
+  status?: {
+    included?: string[];
+    excluded?: string[];
+  };
+}
+
+export interface GamesPreferences {
+  sort?: GameSortOption;
+  filters?: GamesFilterPreferences;
+}

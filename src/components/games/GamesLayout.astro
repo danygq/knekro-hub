@@ -22,6 +22,7 @@ const { gameStatuses, games, totalGames, user } = Astro.props;
   id="games-layout"
   class="games-layout"
   :class="{ 'filters-off': !$store.games.layout.gamesFilterMenuOpen }"
+  data-logged-in={user ? "true" : "false"}
   x-data
   x-init="
     window.addEventListener('resize', () => { $store.games.layout.isDesktop = window.innerWidth >= 1024 });
