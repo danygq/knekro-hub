@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { isIgnoredTwitchCategory } from "./constants.ts";
 import { toMadridDateTimeString } from "../time.ts";
 import { resolveGameCover } from "../covers.ts";
+import { syncGameTags } from "../steam-tags.ts";
 
 export interface ReconcileGameResult {
   action: "matched_by_id" | "updated_by_name" | "created" | "skipped";
@@ -165,6 +166,35 @@ export async function reconcileGame(
         );
       }
 
+      // Attempt Steam tags sync if game has no tags yet
+      const { count: existingTagsCount } = await supabaseAdmin
+        .from("games_tags")
+        .select("tag_id", { count: "exact", head: true })
+        .eq("game_id", updatedGame.id);
+
+      if (!existingTagsCount) {
+        console.log(
+          `[Twitch Reconcile] No tags found for "${updatedGame.name}" (id: ${updatedGame.id}) — attempting Steam tags sync...`,
+        );
+        try {
+          const tagSyncResult = await syncGameTags(
+            supabaseAdmin,
+            updatedGame.id,
+            updatedGame.name ?? "",
+          );
+          if (tagSyncResult.tags.length > 0) {
+            console.log(
+              `[Twitch Reconcile] Synced ${tagSyncResult.tags.length} Steam tags for "${updatedGame.name}" (id: ${updatedGame.id}).`,
+            );
+          }
+        } catch (tagErr) {
+          console.error(
+            `[Twitch Reconcile] Unexpected error during Steam tags sync for "${updatedGame.name}":`,
+            tagErr,
+          );
+        }
+      }
+
       return { action: "updated_by_name", game: updatedGame };
     }
 
@@ -241,6 +271,32 @@ export async function reconcileGame(
     console.error(
       `[Twitch Reconcile] Unexpected error during cover lookup for "${newGame.name}":`,
       coverErr,
+    );
+  }
+
+  // Attempt Steam tags fetch and sync for the newly inserted game
+  console.log(
+    `[Twitch Reconcile] Attempting Steam tags lookup for new game "${newGame.name}" (id: ${newGame.id})...`,
+  );
+  try {
+    const tagSyncResult = await syncGameTags(
+      supabaseAdmin,
+      newGame.id,
+      newGame.name ?? "",
+    );
+    if (tagSyncResult.tags.length > 0) {
+      console.log(
+        `[Twitch Reconcile] Synced ${tagSyncResult.tags.length} Steam tags for "${newGame.name}" (id: ${newGame.id}) from "${tagSyncResult.steamAppName ?? newGame.name}".`,
+      );
+    } else {
+      console.log(
+        `[Twitch Reconcile] No Steam tags found or matched for "${newGame.name}" (id: ${newGame.id}).`,
+      );
+    }
+  } catch (tagErr) {
+    console.error(
+      `[Twitch Reconcile] Unexpected error during Steam tags sync for "${newGame.name}":`,
+      tagErr,
     );
   }
 

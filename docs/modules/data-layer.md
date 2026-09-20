@@ -1,7 +1,7 @@
 ---
 module: data-layer
 owner_area: backend
-last_verified_against_commit: HEAD
+last_verified_against_commit: 034fa6c
 depends_on: []
 ---
 
@@ -226,6 +226,14 @@ create table public.games_tags
 - Row Level Security (RLS) is enabled.
 - Read policy: viewable by all users (`SELECT` for `anon, authenticated`).
 - Mutation policies: `INSERT`, `UPDATE`, `DELETE` strictly restricted to users holding the `owner` role via `public.is_owner()`.
+
+#### Steam Tags Synchronization (`src/lib/steam-tags.ts`)
+
+Steam tags are resolved and synchronized via lightweight HTTP fetch (Store search API + store page parser with Spanish locale cookies):
+
+- **Automated Twitch Ingestion**: In `src/lib/twitch/reconcile-game.ts`, whenever a new game is created (`action: "created"`) or matched by name (`action: "updated_by_name"`), `syncGameTags(supabaseAdmin, gameId, gameName)` is executed.
+- **Tag Upsert & Linking**: Discovered tags are upserted into `public.tags` (`ON CONFLICT (name) DO NOTHING`), then associated in `public.games_tags` (`ON CONFLICT (game_id, tag_id) DO NOTHING`).
+- **CLI Utility**: `scripts/sync-tags.ts` (`pnpm run games:sync-tags`) supports manual syncing (`--missing`, `--force`, `--game <name>`, `--dry-run`).
 
 ### Triggers
 
