@@ -90,3 +90,17 @@ export interface Game {
   twitch_game_id?: string | null;
   last_played_at?: string | null;
 }
+
+/** Row from the `tags` table. */
+export interface Tag {
+  id: number;
+  name: string;
+  created_at: string;
+}
+
+/** Junction row from the `games_tags` table. */
+export interface GameTag {
+  game_id: number;
+  tag_id: number;
+  created_at: string;
+}
