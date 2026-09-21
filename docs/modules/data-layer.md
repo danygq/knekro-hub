@@ -399,14 +399,22 @@ as $$
             'created_at', tcu.created_at,
             'category_name', tcu.category_name
           )
-          order by tcu.id desc
+          order by tcu.event_timestamp desc
         )
         from (
-          select t.id, t.event_timestamp, t.created_at, t.category_name
+          select
+            max(t.id) as id,
+            min(t.event_timestamp) as event_timestamp,
+            max(t.created_at) as created_at,
+            max(t.category_name) as category_name
           from public.twitch_channel_update t
+          left join public.streams s
+            on t.event_timestamp >= s.started_at
+           and (s.ended_at is null or t.event_timestamp <= s.ended_at)
           where t.category_id = g.twitch_game_id
             and g.twitch_game_id is not null
-          order by t.id desc
+          group by coalesce(s.id, -cast(to_char(t.event_timestamp, 'YYYYMMDD') as bigint))
+          order by min(t.event_timestamp) desc
           limit 5
         ) tcu
       ),
@@ -419,7 +427,7 @@ as $$
 $$;
 ```
 
-- `get_game_by_id`: Powers `/games/[id]` detail view via `loadGameById()` in `src/lib/games.ts`. Executes an atomic single-query database fetch returning game metadata, status, tags (aggregated from `games_tags` and `tags`), community vote statistics, personal user vote, and the last 5 stream play sessions from `twitch_channel_update` ordered by `id DESC`. Eliminates waterfall queries.
+- `get_game_by_id`: Powers `/games/[id]` detail view via `loadGameById()` in `src/lib/games.ts`. Executes an atomic single-query database fetch returning game metadata, status, tags (aggregated from `games_tags` and `tags`), community vote statistics, personal user vote, and up to 5 distinct stream play sessions from `twitch_channel_update` correlated against `streams` (or calendar day fallback for offline updates). Eliminates waterfall queries and collapses duplicate `channel.update` events per stream session.
 
 ## Clients
 

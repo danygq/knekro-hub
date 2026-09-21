@@ -97,9 +97,11 @@ if (!game) {
             </h2>
           </div>
           <span class="text-xs text-(--knk-text-faint)">
-            {game.recent_plays.length > 0
-              ? `Últimas ${game.recent_plays.length} emisiones`
-              : "Sin emisiones registradas"}
+            {game.recent_plays.length === 0
+              ? "Sin emisiones registradas"
+              : game.recent_plays.length === 1
+                ? "Última emisión"
+                : `Últimas ${game.recent_plays.length} emisiones`}
           </span>
         </div>
 
