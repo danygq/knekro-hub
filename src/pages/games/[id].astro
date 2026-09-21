@@ -1,0 +1,142 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import GameCover from "@/components/games/GameCover.astro";
+import GameDetailTags from "@/components/games/GameDetailTags.astro";
+import GameDetailVoting from "@/components/games/GameDetailVoting.astro";
+import { loadGameById } from "@/lib/games";
+import { formatStreamDate } from "@/lib/time";
+import { ChevronLeft, Tv } from "@lucide/astro";
+import "@/styles/pages/game-detail.css";
+
+const idParam = Astro.params.id;
+const gameId = Number(idParam);
+
+if (
+  !idParam ||
+  !/^\d+$/.test(idParam) ||
+  !Number.isInteger(gameId) ||
+  gameId <= 0
+) {
+  return new Response("Juego no encontrado", {
+    status: 404,
+    statusText: "Not Found",
+  });
+}
+
+const dbClient = Astro.locals.supabase;
+const user = Astro.locals.user;
+
+const game = await loadGameById(dbClient, gameId, user?.id);
+
+if (!game) {
+  return new Response("Juego no encontrado", {
+    status: 404,
+    statusText: "Not Found",
+  });
+}
+---
+
+<Layout user={user}>
+  <Fragment slot="head">
+    <title>{game.name} — Knekro Hub</title>
+    <meta
+      name="description"
+      content={`Ficha y detalles de ${game.name} en Knekro Hub.`}
+    />
+  </Fragment>
+
+  <div class="mb-6">
+    <a
+      href="/games"
+      class="inline-flex items-center gap-1.5 text-sm font-medium text-(--knk-text-muted) hover:text-(--knk-primary) transition-colors cursor-pointer"
+    >
+      <ChevronLeft class="size-4" />
+      Volver a Juegos
+    </a>
+  </div>
+
+  <div class="knk-game-detail-layout">
+    <!-- Left Column: Cover & Tags -->
+    <aside class="knk-detail-cover-wrapper">
+      <div class="knk-detail-cover knk-grid-bg relative rounded-xs shadow-lg">
+        <GameCover coverUrl={game.cover_url} name={game.name} loading="eager" />
+      </div>
+
+      <!-- Game Tags -->
+      <GameDetailTags tags={game.tags} />
+    </aside>
+
+    <!-- Right Column: Header, Voting, Stream History -->
+    <div class="flex flex-col gap-6 sm:gap-8 min-w-0">
+      <!-- Title & Header -->
+      <div class="border-b border-(--knk-line) pb-6">
+        <p class="knk-eyebrow mb-2">Ficha de juego</p>
+        <h1 class="font-(--font-display) text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-balance">
+          {game.name}
+        </h1>
+        {game.status_name && (
+          <div class="mt-4 flex items-center gap-2 text-sm">
+            <span class="text-(--knk-text-muted)">Estado:</span>
+            <span class="knk-notch-sm px-2.5 py-0.5 text-xs font-semibold bg-(--knk-surface-2) text-(--knk-primary) border border-(--knk-line)">
+              {game.status_name}
+            </span>
+          </div>
+        )}
+      </div>
+
+      <!-- Community Rating & User Voting -->
+      <GameDetailVoting game={game} user={user} />
+
+      <!-- Stream Play History Timeline -->
+      <section class="p-5 sm:p-6 rounded-lg bg-(--knk-surface) border border-(--knk-line)">
+        <div class="flex items-center justify-between gap-4 mb-5 pb-3 border-b border-(--knk-line)">
+          <div class="flex items-center gap-2.5">
+            <Tv class="size-5 text-(--knk-primary)" />
+            <h2 class="font-(--font-display) text-lg sm:text-xl font-bold tracking-tight">
+              Emisiones en directo
+            </h2>
+          </div>
+          <span class="text-xs text-(--knk-text-faint)">
+            {game.recent_plays.length > 0
+              ? `Últimas ${game.recent_plays.length} emisiones`
+              : "Sin emisiones registradas"}
+          </span>
+        </div>
+
+        {game.recent_plays.length > 0 ? (
+          <div class="knk-stream-timeline">
+            {game.recent_plays.map((play) => {
+              const dateFormatted = formatStreamDate(
+                play.event_timestamp || play.created_at,
+              );
+              return (
+                <div class="knk-timeline-item">
+                  <div class="knk-timeline-dot" />
+                  <div class="flex flex-col sm:flex-row sm:items-baseline justify-between gap-1">
+                    <span class="text-sm font-medium text-(--knk-text)">
+                      {play.category_name || game.name}
+                    </span>
+                    <span class="text-xs text-(--knk-text-muted) font-mono">
+                      {dateFormatted}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div class="py-8 text-center">
+            <p class="text-sm text-(--knk-text-muted)">
+              No hay registros de emisiones de este juego.
+            </p>
+          </div>
+        )}
+      </section>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  import htmx from "htmx.org";
+  (window as any).htmx = htmx;
+</script>

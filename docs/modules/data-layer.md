@@ -1,7 +1,7 @@
 ---
 module: data-layer
 owner_area: backend
-last_verified_against_commit: 167a670
+last_verified_against_commit: 6c139c1
 depends_on: []
 ---
 
@@ -346,6 +346,80 @@ $$;
 ```
 
 - `get_user_games`: Powers `/games` library catalog searches and the ranking assignable game pool search (both via `fetchGames()` in `src/lib/games.ts`), accelerated by `idx_games_name_trgm`. Supports status filters (safe against NULL/empty arrays), multi-column sorting (case-insensitive `lower(name)` and personal user votes with `NULLS LAST`), and bounded DB-level pagination — all in a single RPC call. `loadRankingSearchGames` in `src/lib/ranking.ts` delegates to `fetchGames`, eliminating the previous two-stage `countQuery` + `gamesQuery` waterfall.
+
+```sql
+create or replace function public.get_game_by_id(
+  p_game_id bigint,
+  p_user_id uuid default null
+)
+returns table (
+  id bigint,
+  name text,
+  cover_url text,
+  vote_count integer,
+  avg_vote numeric,
+  game_status_id bigint,
+  status_name text,
+  twitch_game_id text,
+  last_played_at timestamp without time zone,
+  user_vote smallint,
+  tags text[],
+  recent_plays json
+)
+language sql
+stable
+security definer
+as $$
+  select
+    g.id,
+    g.name,
+    g.cover_url,
+    g.vote_count,
+    g.avg_vote,
+    g.game_status_id,
+    gs.name as status_name,
+    g.twitch_game_id,
+    g.last_played_at,
+    uv.vote as user_vote,
+    coalesce(
+      (
+        select array_agg(t.name order by t.name asc)
+        from public.games_tags gt
+        join public.tags t on t.id = gt.tag_id
+        where gt.game_id = g.id
+      ),
+      array[]::text[]
+    ) as tags,
+    coalesce(
+      (
+        select json_agg(
+          json_build_object(
+            'id', tcu.id,
+            'event_timestamp', tcu.event_timestamp,
+            'created_at', tcu.created_at,
+            'category_name', tcu.category_name
+          )
+          order by tcu.id desc
+        )
+        from (
+          select t.id, t.event_timestamp, t.created_at, t.category_name
+          from public.twitch_channel_update t
+          where t.category_id = g.twitch_game_id
+            and g.twitch_game_id is not null
+          order by t.id desc
+          limit 5
+        ) tcu
+      ),
+      '[]'::json
+    ) as recent_plays
+  from public.games g
+  left join public.game_status gs on gs.id = g.game_status_id
+  left join public.games_user_votes uv on uv.game_id = g.id and p_user_id is not null and uv.user_id = p_user_id
+  where g.id = p_game_id;
+$$;
+```
+
+- `get_game_by_id`: Powers `/games/[id]` detail view via `loadGameById()` in `src/lib/games.ts`. Executes an atomic single-query database fetch returning game metadata, status, tags (aggregated from `games_tags` and `tags`), community vote statistics, personal user vote, and the last 5 stream play sessions from `twitch_channel_update` ordered by `id DESC`. Eliminates waterfall queries.
 
 ## Clients
 

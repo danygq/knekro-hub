@@ -1,0 +1,41 @@
+---
+interface Props {
+  tags: string[];
+}
+
+const { tags = [] } = Astro.props;
+const initialLimit = 5;
+const hasMore = tags.length > initialLimit;
+---
+
+{tags.length > 0 && (
+  <div class="knk-game-tags mt-3 w-full" x-data="{ expanded: false }">
+    <div class="flex flex-wrap items-center gap-1.5">
+      {tags.map((tag, index) => {
+        const isInitial = index < initialLimit;
+        return (
+          <span
+            class="knk-tag-badge px-2.5 py-1 text-xs font-medium rounded-xs bg-(--knk-surface-2) text-(--knk-text-muted) border border-(--knk-line) transition-colors hover:text-(--knk-text) hover:border-(--knk-line-strong)"
+            x-show={isInitial ? "true" : "expanded"}
+            x-cloak={!isInitial ? true : undefined}
+            style={!isInitial ? "display: none;" : undefined}
+          >
+            {tag}
+          </span>
+        );
+      })}
+      {hasMore && (
+        <button
+          type="button"
+          x-show="!expanded"
+          @click="expanded = true"
+          class="knk-tag-expand-btn px-2.5 py-1 text-xs font-bold rounded-xs bg-(--knk-surface-2) text-(--knk-primary) border border-(--knk-line) hover:border-(--knk-line-strong) hover:bg-(--knk-surface) transition-colors cursor-pointer"
+          aria-label="Ver todas las etiquetas"
+          title="Ver todas las etiquetas"
+        >
+          ...
+        </button>
+      )}
+    </div>
+  </div>
+)}
