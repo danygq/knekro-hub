@@ -1,7 +1,7 @@
 ---
 module: data-layer
 owner_area: backend
-last_verified_against_commit: 43cee5c
+last_verified_against_commit: 167a670
 depends_on: []
 ---
 
@@ -201,7 +201,7 @@ create table public.tags
 ```
 
 - `games_with_this_tag` is maintained by the `trigger_update_game_tag_count` trigger below.
-- Secondary index: `idx_tags_games_with_this_tag` on `(games_with_this_tag)` accelerates filtering (`WHERE games_with_this_tag > 0`) and sorting by popularity (`ORDER BY games_with_this_tag DESC`).
+- Secondary indexes: `idx_tags_games_with_this_tag` on `(games_with_this_tag)` accelerates filtering (`WHERE games_with_this_tag > 0`) and sorting by popularity (`ORDER BY games_with_this_tag DESC`); `tags_created_at_idx` on `(created_at)` accelerates chronological ordering and recent tag queries.
 - Row Level Security (RLS) is enabled.
 - Read policy: viewable by all users (`SELECT` for `anon, authenticated`).
 - Mutation policies: `INSERT`, `UPDATE`, `DELETE` strictly restricted to users holding the `owner` role via `public.is_owner()`.
