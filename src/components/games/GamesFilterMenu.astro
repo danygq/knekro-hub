@@ -69,9 +69,10 @@ const tagNamesLower = tags.map((t) => t.name.toLowerCase());
       <button
         type="button"
         id="reset-filters"
+        aria-pressed="true"
         :aria-pressed="($store?.search?.filters?.totalCount ?? 0) === 0 ? 'true' : 'false'"
         @click="($store?.search?.filters?.totalCount ?? 0) > 0 && ($store?.search?.filters?.resetAll ? $store.search.filters.resetAll() : $store?.search?.filters?.status?.reset())"
-        class="knk-filter-reset knk-notch-sm inline-flex items-center justify-center gap-2 w-full px-3 py-2 text-sm font-medium bg-(--knk-surface) text-(--knk-text-muted) border border-(--knk-line) hover:text-(--knk-text) hover:border-(--knk-line-strong) transition-colors cursor-pointer"
+        class="knk-filter-reset active knk-notch-sm inline-flex items-center justify-center gap-2 w-full px-3 py-2 text-sm font-medium bg-(--knk-surface) text-(--knk-text-muted) border border-(--knk-line) hover:text-(--knk-text) hover:border-(--knk-line-strong) transition-colors cursor-pointer"
         :class="{ 'active': ($store?.search?.filters?.totalCount ?? 0) === 0 }"
       >
         <CircleDot width={14} height={14} color="currentColor" />
@@ -84,7 +85,8 @@ const tagNamesLower = tags.map((t) => t.name.toLowerCase());
       <button
         type="button"
         @click="statusExpanded = !statusExpanded"
-        :aria-expanded="statusExpanded"
+        aria-expanded="false"
+        :aria-expanded="statusExpanded ? 'true' : 'false'"
         class="flex items-center justify-between w-full text-xs font-medium uppercase tracking-wide text-(--knk-text-faint) hover:text-(--knk-text) transition-colors cursor-pointer mb-3"
       >
         <span>Estado</span>
@@ -93,7 +95,12 @@ const tagNamesLower = tags.map((t) => t.name.toLowerCase());
           :class="{ '-rotate-180': statusExpanded }"
         />
       </button>
-      <ul x-show="statusExpanded" class="divide-y divide-(--knk-line)">
+      <ul
+        x-show="statusExpanded"
+        x-cloak
+        style="display: none;"
+        class="divide-y divide-(--knk-line)"
+      >
         {gameStatuses.map((status) => (
           <li class="flex items-center justify-between gap-3 py-2">
             <!-- Exclude (-) -->
@@ -144,7 +151,8 @@ const tagNamesLower = tags.map((t) => t.name.toLowerCase());
       <button
         type="button"
         @click="tagsExpanded = !tagsExpanded"
-        :aria-expanded="tagsExpanded"
+        aria-expanded="false"
+        :aria-expanded="tagsExpanded ? 'true' : 'false'"
         class="flex items-center justify-between w-full text-xs font-medium uppercase tracking-wide text-(--knk-text-faint) hover:text-(--knk-text) transition-colors cursor-pointer mb-3"
       >
         <span>Géneros</span>
@@ -153,7 +161,7 @@ const tagNamesLower = tags.map((t) => t.name.toLowerCase());
           :class="{ '-rotate-180': tagsExpanded }"
         />
       </button>
-      <div x-show="tagsExpanded">
+      <div x-show="tagsExpanded" x-cloak style="display: none;">
         <!-- Genre Search Input -->
         <div class="relative mb-2">
           <Search class="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 shrink-0 size-3.5 text-(--knk-text-faint)" />
