@@ -1,7 +1,7 @@
 ---
 module: data-layer
 owner_area: backend
-last_verified_against_commit: 64cb77c
+last_verified_against_commit: 43cee5c
 depends_on: []
 ---
 
@@ -60,6 +60,7 @@ create table public.twitch_channel_update
 - Writes are performed by server-side webhook handlers using `createSupabaseAdminClient()`.
 - `event_timestamp` tracks the message timestamp sent by Twitch EventSub or stream start time normalized into Europe/Madrid wall-clock time (`toMadridDateTimeString`).
 - `category_id` and `category_name` store the raw Twitch category identifier and display name.
+- Secondary index: `idx_twitch_channel_update_category_id` on `(category_id)` accelerates joins with `games.twitch_game_id` and category resolution queries.
 
 ### `game_status`
 
@@ -200,6 +201,7 @@ create table public.tags
 ```
 
 - `games_with_this_tag` is maintained by the `trigger_update_game_tag_count` trigger below.
+- Secondary index: `idx_tags_games_with_this_tag` on `(games_with_this_tag)` accelerates filtering (`WHERE games_with_this_tag > 0`) and sorting by popularity (`ORDER BY games_with_this_tag DESC`).
 - Row Level Security (RLS) is enabled.
 - Read policy: viewable by all users (`SELECT` for `anon, authenticated`).
 - Mutation policies: `INSERT`, `UPDATE`, `DELETE` strictly restricted to users holding the `owner` role via `public.is_owner()`.
