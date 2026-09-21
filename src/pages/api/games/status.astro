@@ -1,0 +1,60 @@
+---
+import { loadGameStatuses, updateGameStatusWithAudit } from "@/lib/games";
+import { userHasAnyRole } from "@/lib/roles";
+import GameStatusEditor from "@/components/games/GameStatusEditor.astro";
+
+if (Astro.request.method !== "POST") {
+  return new Response(null, { status: 405, headers: { Allow: "POST" } });
+}
+
+const dbClient = Astro.locals.supabase;
+const user = Astro.locals.user;
+
+if (!user) {
+  return new Response("Unauthorized", {
+    status: 401,
+    headers: { "HX-Redirect": "/auth/session-expired" },
+  });
+}
+
+const canEdit = await userHasAnyRole(dbClient, user.id, ["owner", "manager"]);
+if (!canEdit) {
+  return new Response("Forbidden", { status: 403 });
+}
+
+const form = await Astro.request.formData();
+const gameId = Number(form.get("game_id"));
+const statusId = Number(form.get("status_id"));
+
+if (
+  !gameId ||
+  !statusId ||
+  !Number.isInteger(gameId) ||
+  !Number.isInteger(statusId)
+) {
+  return new Response("Parámetros inválidos", { status: 400 });
+}
+
+const result = await updateGameStatusWithAudit(
+  dbClient,
+  user.id,
+  gameId,
+  statusId,
+);
+
+if (!result.success) {
+  return new Response(result.error || "Error al actualizar estado", {
+    status: 500,
+  });
+}
+
+const statuses = await loadGameStatuses(dbClient);
+---
+
+<GameStatusEditor
+  gameId={gameId}
+  currentStatusId={result.statusId}
+  currentStatusName={result.statusName}
+  canEdit={true}
+  statuses={statuses}
+/>

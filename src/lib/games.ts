@@ -147,3 +147,117 @@ export async function fetchGames(
 
   return { games, total };
 }
+
+export interface UpdateGameStatusResult {
+  success: boolean;
+  error?: string;
+  gameId: number;
+  statusId: number;
+  statusName: string;
+}
+
+/**
+ * Updates a game's status and logs an immutable audit entry in `public.audit_logs`.
+ * Strictly executed for website mutations by authorized owners and managers.
+ */
+export async function updateGameStatusWithAudit(
+  client: SupabaseClient,
+  actorId: string,
+  gameId: number,
+  newStatusId: number,
+): Promise<UpdateGameStatusResult> {
+  // 1. Fetch target game info and current status
+  const { data: currentGame, error: fetchGameError } = await client
+    .from("games")
+    .select(
+      "id, name, game_status_id, status:game_status!game_status_id(id, name)",
+    )
+    .eq("id", gameId)
+    .maybeSingle();
+
+  if (fetchGameError || !currentGame) {
+    console.error("Error fetching game for status update:", fetchGameError);
+    return {
+      success: false,
+      error: "Juego no encontrado",
+      gameId,
+      statusId: newStatusId,
+      statusName: "",
+    };
+  }
+
+  // 2. Fetch new status details
+  const { data: newStatus, error: fetchStatusError } = await client
+    .from("game_status")
+    .select("id, name")
+    .eq("id", newStatusId)
+    .maybeSingle();
+
+  if (fetchStatusError || !newStatus) {
+    console.error("Error fetching new game status:", fetchStatusError);
+    return {
+      success: false,
+      error: "Estado no válido",
+      gameId,
+      statusId: newStatusId,
+      statusName: "",
+    };
+  }
+
+  const oldStatusId = currentGame.game_status_id;
+  const oldStatusName =
+    (currentGame.status as unknown as { name?: string } | null)?.name ?? null;
+
+  // If status is already identical, no mutation needed
+  if (oldStatusId === newStatusId) {
+    return {
+      success: true,
+      gameId,
+      statusId: newStatusId,
+      statusName: newStatus.name,
+    };
+  }
+
+  // 3. Update game status
+  const { error: updateError } = await client
+    .from("games")
+    .update({ game_status_id: newStatusId })
+    .eq("id", gameId);
+
+  if (updateError) {
+    console.error("Error updating game status in database:", updateError);
+    return {
+      success: false,
+      error: "Error al actualizar el estado del juego",
+      gameId,
+      statusId: newStatusId,
+      statusName: newStatus.name,
+    };
+  }
+
+  // 4. Insert audit log row
+  const description = oldStatusName
+    ? `Estado de "${currentGame.name}" actualizado de "${oldStatusName}" a "${newStatus.name}"`
+    : `Estado de "${currentGame.name}" establecido a "${newStatus.name}"`;
+
+  const { error: auditError } = await client.from("audit_logs").insert({
+    user_id: actorId,
+    action_type: "UPDATE_GAME_STATUS",
+    entity_type: "games",
+    entity_id: gameId,
+    old_value: { status_id: oldStatusId, status_name: oldStatusName },
+    new_value: { status_id: newStatusId, status_name: newStatus.name },
+    description,
+  });
+
+  if (auditError) {
+    console.error("Error creating audit log entry:", auditError);
+  }
+
+  return {
+    success: true,
+    gameId,
+    statusId: newStatusId,
+    statusName: newStatus.name,
+  };
+}
