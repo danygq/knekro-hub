@@ -428,6 +428,8 @@ $$;
 ```
 
 - `get_game_by_id`: Powers `/games/[id]` detail view via `loadGameById()` in `src/lib/games.ts`. Executes an atomic single-query database fetch returning game metadata, status, tags (aggregated from `games_tags` and `tags`), community vote statistics, personal user vote, and up to 5 distinct stream play sessions from `twitch_channel_update` correlated against `streams` (or calendar day fallback for offline updates). Eliminates waterfall queries and collapses duplicate `channel.update` events per stream session.
+- `get_streams_by_date_range`: Powers the `/streams` calendar view via `loadStreamsForCalendar()` in `src/lib/streams.ts`. Queries all streams within a calendar date range (including month padding days), joins `twitch_channel_update` events within each stream session, joins cataloged `games` (`twitch_game_id`) and `game_status`, and uses `LAG(category_id)` to deduplicate consecutive title-only or tag-only updates while preserving the original category switch timestamp.
+- `get_stream_by_id`: Powers the `/streams/[id]` standalone view via `loadStreamById()` in `src/lib/streams.ts`. Fetches an individual broadcast with its complete, deduplicated activity history and game metadata.
 
 ## Clients
 

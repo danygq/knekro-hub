@@ -1,0 +1,81 @@
+---
+import type { CalendarMonthData } from "@/types/streams";
+import StreamDayBox from "./StreamDayBox.astro";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Calendar as CalendarIcon,
+} from "@lucide/astro";
+
+interface Props {
+  monthData: CalendarMonthData;
+}
+
+const { monthData } = Astro.props;
+
+const weekdays = ["LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB", "DOM"];
+---
+
+<div class="flex flex-col gap-4">
+  <!-- Month Navigation Header -->
+  <div class="flex flex-wrap items-center justify-between gap-4 p-3 sm:p-4 rounded-xs bg-(--knk-surface) border border-(--knk-line)">
+    <div class="flex items-center gap-3">
+      <div class="size-8 rounded-xs bg-(--knk-surface-2) border border-(--knk-line) flex items-center justify-center text-(--knk-primary)">
+        <CalendarIcon class="size-4.5" />
+      </div>
+      <h2 class="font-(--font-display) text-xl sm:text-2xl font-bold tracking-tight">
+        {monthData.monthName}
+      </h2>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <!-- Previous Month -->
+      <a
+        href={`/streams?month=${monthData.prevMonth}`}
+        class="knk-notch-sm size-9 inline-flex items-center justify-center bg-(--knk-surface-2) border border-(--knk-line) text-(--knk-text-muted) hover:text-(--knk-text) hover:border-(--knk-line-strong) transition-colors cursor-pointer"
+        aria-label="Mes anterior"
+        title="Mes anterior"
+      >
+        <ChevronLeft class="size-5" />
+      </a>
+
+      <!-- Today Jump Button -->
+      <a
+        href="/streams"
+        class="knk-notch-sm px-3 h-9 inline-flex items-center justify-center text-xs font-semibold bg-(--knk-surface-2) border border-(--knk-line) text-(--knk-text-muted) hover:text-(--knk-primary) hover:border-(--knk-primary) transition-colors cursor-pointer"
+        title="Ir al mes actual"
+      >
+        Hoy
+      </a>
+
+      <!-- Next Month -->
+      <a
+        href={`/streams?month=${monthData.nextMonth}`}
+        class="knk-notch-sm size-9 inline-flex items-center justify-center bg-(--knk-surface-2) border border-(--knk-line) text-(--knk-text-muted) hover:text-(--knk-text) hover:border-(--knk-line-strong) transition-colors cursor-pointer"
+        aria-label="Mes siguiente"
+        title="Mes siguiente"
+      >
+        <ChevronRight class="size-5" />
+      </a>
+    </div>
+  </div>
+
+  <!-- Calendar Grid Container -->
+  <div class="flex flex-col w-full">
+    <!-- Weekdays Header -->
+    <div class="grid grid-cols-7 gap-1 sm:gap-2 mb-2">
+      {weekdays.map((dayName) => (
+        <div class="py-1.5 text-center text-[11px] sm:text-xs font-bold uppercase tracking-wider text-(--knk-text-muted)">
+          {dayName}
+        </div>
+      ))}
+    </div>
+
+    <!-- Days Grid -->
+    <div class="grid grid-cols-7 gap-1 sm:gap-2">
+      {monthData.days.map((day) => (
+        <StreamDayBox day={day} />
+      ))}
+    </div>
+  </div>
+</div>

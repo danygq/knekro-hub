@@ -1,0 +1,150 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import StreamCalendar from "@/components/streams/StreamCalendar.astro";
+import StreamDetailDrawer from "@/components/streams/StreamDetailDrawer.astro";
+import { loadStreamsForCalendar } from "@/lib/streams";
+import { toMadridDateTimeString } from "@/lib/time";
+import "@/styles/pages/streams.css";
+
+const dbClient = Astro.locals.supabase;
+const user = Astro.locals.user;
+
+const nowMadrid = toMadridDateTimeString();
+const currentYear = Number(nowMadrid.slice(0, 4));
+const currentMonth = Number(nowMadrid.slice(5, 7));
+
+// Parse ?month=YYYY-MM
+const monthParam = Astro.url.searchParams.get("month");
+let selectedYear = currentYear;
+let selectedMonth = currentMonth;
+
+if (monthParam && /^\d{4}-(0[1-9]|1[0-2])$/.test(monthParam)) {
+  const [y, m] = monthParam.split("-").map(Number);
+  if (y >= 2020 && y <= 2035) {
+    selectedYear = y;
+    selectedMonth = m;
+  }
+}
+
+const monthData = await loadStreamsForCalendar(
+  dbClient,
+  selectedYear,
+  selectedMonth,
+);
+
+// Check if deep link ?day=YYYY-MM-DD or ?stream=ID was passed
+const dayParam = Astro.url.searchParams.get("day");
+const streamParam = Astro.url.searchParams.get("stream");
+
+let initialSelectedDay = null;
+if (dayParam) {
+  initialSelectedDay =
+    monthData.days.find((d) => d.dateStr === dayParam) ?? null;
+} else if (streamParam) {
+  const streamIdNum = Number(streamParam);
+  initialSelectedDay =
+    monthData.days.find((d) => d.streams.some((s) => s.id === streamIdNum)) ??
+    null;
+}
+---
+
+<Layout user={user}>
+  <Fragment slot="head">
+    <title>Directos y Calendario — Knekro Hub</title>
+    <meta
+      name="description"
+      content="Calendario de directos de Knekro en Twitch: historial de emisiones, juegos jugados y categorías."
+    />
+  </Fragment>
+
+  <!-- Page Header -->
+  <div class="mb-8 flex flex-wrap items-start justify-between gap-x-6 gap-y-4">
+    <div class="min-w-0">
+      <p class="knk-eyebrow mb-2">Historial de Twitch</p>
+      <h1 class="font-(--font-display) text-3xl sm:text-4xl tracking-tight text-balance">
+        Directos
+      </h1>
+      <p class="mt-2 text-sm text-(--knk-text-muted) max-w-xl leading-relaxed">
+        Días en los que a padre le ha dado por trabajar o ha estado off.
+      </p>
+    </div>
+  </div>
+
+  <!-- Calendar & Interactive Drawer Container -->
+  <div
+    class="relative"
+    x-data={`{
+      selectedStream: null,
+      selectedDateStr: '',
+      formattedDate: '',
+      todayDateStr: '${nowMadrid.slice(0, 10)}',
+      drawerOpen: false,
+      isFutureDate(dateStr) {
+        if (!dateStr) return false;
+        return dateStr > this.todayDateStr;
+      },
+      selectDay(day) {
+        if (!day) return;
+        if (day.streams && day.streams.length > 0) {
+          this.selectedStream = day.streams[0];
+        } else {
+          this.selectedStream = null;
+        }
+        this.selectedDateStr = day.dateStr;
+        this.formattedDate = this.formatDate(day.dateStr);
+        this.drawerOpen = true;
+
+        if (typeof window !== 'undefined') {
+          const url = new URL(window.location.href);
+          url.searchParams.set('day', day.dateStr);
+          url.searchParams.delete('stream');
+          const search = url.searchParams.toString();
+          window.history.replaceState(null, '', url.pathname + (search ? '?' + search : '') + url.hash);
+        }
+      },
+      formatDate(dateStr) {
+        if (!dateStr) return '';
+        const parts = dateStr.split('-');
+        if (parts.length !== 3) return dateStr;
+        const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+        const formatted = d.toLocaleDateString('es-ES', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+        return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+      },
+      close() {
+        this.drawerOpen = false;
+        this.selectedDateStr = '';
+
+        if (typeof window !== 'undefined') {
+          const url = new URL(window.location.href);
+          let changed = false;
+          if (url.searchParams.has('day')) {
+            url.searchParams.delete('day');
+            changed = true;
+          }
+          if (url.searchParams.has('stream')) {
+            url.searchParams.delete('stream');
+            changed = true;
+          }
+          if (changed) {
+            const search = url.searchParams.toString();
+            window.history.replaceState(null, '', url.pathname + (search ? '?' + search : '') + url.hash);
+          }
+        }
+      }
+    }`}
+    x-init={`
+      const initialDay = ${JSON.stringify(initialSelectedDay)};
+      if (initialDay) {
+        selectDay(initialDay);
+      }
+    `}
+  >
+    <StreamCalendar monthData={monthData} />
+    <StreamDetailDrawer />
+  </div>
+</Layout>

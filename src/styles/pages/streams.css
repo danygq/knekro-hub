@@ -1,0 +1,101 @@
+/* /streams Stream Calendar & Detail Drawer.
+   Imported from pages/streams/index.astro and pages/streams/[id].astro frontmatter. */
+
+/* Calendar Day Box styling */
+.knk-calendar-day {
+  min-height: 75px;
+  contain: paint;
+}
+
+@media (min-width: 640px) {
+  .knk-calendar-day {
+    min-height: 115px;
+  }
+}
+
+/* Off-canvas stream detail drawer */
+.knk-stream-aside-panel {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: min(28rem, 92vw);
+  z-index: 70;
+  background: var(--knk-surface);
+  border-left: 1px solid var(--knk-line);
+  box-shadow: -8px 0 24px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition:
+    transform 250ms cubic-bezier(0.16, 1, 0.3, 1),
+    visibility 250ms ease;
+}
+
+.knk-stream-aside-panel:not(.open) {
+  transform: translateX(100%);
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.knk-stream-aside-panel.open {
+  transform: translateX(0);
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/* Backdrop for drawer */
+.knk-stream-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 69;
+  background: color-mix(in srgb, var(--knk-bg) 60%, #000);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 200ms ease,
+    visibility 200ms ease;
+}
+
+.knk-stream-backdrop.open {
+  opacity: 0.65;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/* Stream play timeline */
+.knk-stream-timeline {
+  position: relative;
+  padding-left: 1.5rem;
+}
+
+.knk-stream-timeline::before {
+  content: "";
+  position: absolute;
+  top: 0.5rem;
+  bottom: 0.5rem;
+  left: 0.45rem;
+  width: 2px;
+  background: var(--knk-line);
+}
+
+.knk-timeline-item {
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+
+.knk-timeline-item:last-child {
+  margin-bottom: 0;
+}
+
+.knk-timeline-dot {
+  position: absolute;
+  top: 0.35rem;
+  left: -1.5rem;
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 9999px;
+  background: var(--knk-primary);
+  box-shadow: 0 0 0 3px var(--knk-surface);
+}
