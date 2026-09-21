@@ -1,7 +1,7 @@
 ---
 module: routing-ui
 owner_area: frontend
-last_verified_against_commit: 249b663
+last_verified_against_commit: 9631250
 depends_on: [data-layer, auth]
 ---
 
@@ -22,6 +22,7 @@ File-based routing (Astro). All pages wrap `layouts/Layout.astro`.
 | `/ranking/goty`         | `pages/ranking/goty.astro`         | Dedicated GOTY category ranking & podium                                                                                         | `ranking_categories`, `ranking_items`, `games` via `lib/ranking.ts`                                    |
 | `/ranking/vuela-alto`   | `pages/ranking/vuela-alto.astro`   | Dedicated Vuela Alto category ranking & podium                                                                                   | `ranking_categories`, `ranking_items`, `games` via `lib/ranking.ts`                                    |
 | `/ranking/[slug]`       | `pages/ranking/[slug].astro`       | Dynamic category ranking fallback route                                                                                          | `ranking_categories`, `ranking_items`, `games` via `lib/ranking.ts`                                    |
+| `/404`                  | `pages/404.astro`                  | 404 error page ("¿Cómo salgo de la tetera?") with emote image and return home CTA                                                | —                                                                                                      |
 | `/auth/callback`        | `pages/auth/callback.ts`           | OAuth code exchange, redirect                                                                                                    | —                                                                                                      |
 | `/auth/auth-code-error` | `pages/auth/auth-code-error.astro` | Auth failure page                                                                                                                | —                                                                                                      |
 | `/api/auth/signin`      | `pages/api/auth/signin.ts`         | `POST` → Twitch OAuth redirect                                                                                                   | —                                                                                                      |
@@ -32,7 +33,7 @@ File-based routing (Astro). All pages wrap `layouts/Layout.astro`.
 | `/api/ranking/search`   | `pages/api/ranking/search.astro`   | `GET` → paginated game search for ranking assignments                                                                            | `q`, `category_id`, `year`, `offset`, `limit`                                                          |
 | `/api/ranking/podium`   | `pages/api/ranking/podium.ts`      | `POST` → assign/swap/remove podium ranks (renders `RankingPodium.astro` via container for seamless swap)                         | `action`, `categoryId`, `gameId`, `rank`, `year`                                                       |
 
-Referenced but **not present**: `/posts/[id]` (linked from home feed). Add when posts detail is built.
+Referenced but **not present**: `/posts/[id]` (linked from home feed). Add when posts detail is built. Unmatched routes and non-existent resource IDs (`/games/[id]`, `/streams/[id]`) rewrite or route to `pages/404.astro`.
 
 ## Layout & Page Composition
 

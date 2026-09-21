@@ -19,10 +19,7 @@ if (
   !Number.isInteger(gameId) ||
   gameId <= 0
 ) {
-  return new Response("Juego no encontrado", {
-    status: 404,
-    statusText: "Not Found",
-  });
+  return Astro.rewrite("/404");
 }
 
 const dbClient = Astro.locals.supabase;
@@ -31,10 +28,7 @@ const user = Astro.locals.user;
 const game = await loadGameById(dbClient, gameId, user?.id);
 
 if (!game) {
-  return new Response("Juego no encontrado", {
-    status: 404,
-    statusText: "Not Found",
-  });
+  return Astro.rewrite("/404");
 }
 
 const canEditStatus = user
