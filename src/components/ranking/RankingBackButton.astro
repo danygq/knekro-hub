@@ -11,7 +11,7 @@ const { href = "/ranking", label = "Volver a rankings" } = Astro.props;
 
 <a
   href={href}
-  class="knk-notch-sm inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium border border-(--knk-line) bg-(--knk-surface) text-(--knk-text-muted) hover:text-white hover:border-(--knk-primary) transition-colors no-underline"
+  class="inline-flex items-center gap-1.5 text-sm font-medium text-(--knk-text-muted) hover:text-(--knk-primary) transition-colors cursor-pointer"
 >
   <ChevronLeft class="size-3.5 shrink-0" />
   <span>{label}</span>
