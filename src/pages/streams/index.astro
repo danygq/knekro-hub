@@ -88,6 +88,14 @@ if (dayParam) {
         this.selectedDateStr = day.dateStr;
         this.formattedDate = this.formatDate(day.dateStr);
         this.drawerOpen = true;
+
+        if (typeof window !== 'undefined') {
+          const url = new URL(window.location.href);
+          url.searchParams.set('day', day.dateStr);
+          url.searchParams.delete('stream');
+          const search = url.searchParams.toString();
+          window.history.replaceState(null, '', url.pathname + (search ? '?' + search : '') + url.hash);
+        }
       },
       formatDate(dateStr) {
         if (!dateStr) return '';
@@ -105,6 +113,23 @@ if (dayParam) {
       close() {
         this.drawerOpen = false;
         this.selectedDateStr = '';
+
+        if (typeof window !== 'undefined') {
+          const url = new URL(window.location.href);
+          let changed = false;
+          if (url.searchParams.has('day')) {
+            url.searchParams.delete('day');
+            changed = true;
+          }
+          if (url.searchParams.has('stream')) {
+            url.searchParams.delete('stream');
+            changed = true;
+          }
+          if (changed) {
+            const search = url.searchParams.toString();
+            window.history.replaceState(null, '', url.pathname + (search ? '?' + search : '') + url.hash);
+          }
+        }
       }
     }`}
     x-init={`
