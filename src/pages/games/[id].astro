@@ -1,7 +1,6 @@
 ---
 import Layout from "@/layouts/Layout.astro";
 import GameCover from "@/components/games/GameCover.astro";
-import GameStatusBadge from "@/components/games/GameStatusBadge.astro";
 import GameDetailTags from "@/components/games/GameDetailTags.astro";
 import GameDetailVoting from "@/components/games/GameDetailVoting.astro";
 import { loadGameById } from "@/lib/games";
@@ -61,9 +60,6 @@ if (!game) {
     <aside class="knk-detail-cover-wrapper">
       <div class="knk-detail-cover knk-grid-bg relative rounded-xs shadow-lg">
         <GameCover coverUrl={game.cover_url} name={game.name} loading="eager" />
-        {game.status_name && (
-          <GameStatusBadge status={{ name: game.status_name }} />
-        )}
       </div>
 
       <!-- Game Tags -->
@@ -74,17 +70,18 @@ if (!game) {
     <div class="flex flex-col gap-6 sm:gap-8 min-w-0">
       <!-- Title & Header -->
       <div class="border-b border-(--knk-line) pb-6">
-        <div class="flex flex-wrap items-center gap-2 mb-2">
-          <span class="knk-eyebrow">Ficha de juego</span>
-          {game.status_name && (
-            <span class="text-xs px-2 py-0.5 rounded-xs font-semibold bg-(--knk-surface-2) text-(--knk-primary) border border-(--knk-line)">
-              {game.status_name}
-            </span>
-          )}
-        </div>
+        <p class="knk-eyebrow mb-2">Ficha de juego</p>
         <h1 class="font-(--font-display) text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-balance">
           {game.name}
         </h1>
+        {game.status_name && (
+          <div class="mt-4 flex items-center gap-2 text-sm">
+            <span class="text-(--knk-text-muted)">Estado:</span>
+            <span class="knk-notch-sm px-2.5 py-0.5 text-xs font-semibold bg-(--knk-surface-2) text-(--knk-primary) border border-(--knk-line)">
+              {game.status_name}
+            </span>
+          </div>
+        )}
       </div>
 
       <!-- Community Rating & User Voting -->
