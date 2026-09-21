@@ -187,7 +187,8 @@ import {
 
                             <template x-if="segment.avg_vote != null">
                               <span
-                                class="text-[11px] font-semibold text-(--knk-primary)"
+                                class="inline-flex items-center gap-1 text-[11px] font-semibold px-1.5 py-px rounded-xs border tabular-nums knk-vote-badge"
+                                :class="segment.avg_vote ? 'knk-vote-' + Math.trunc(segment.avg_vote) : 'knk-vote-muted'"
                                 x-text="'★ ' + segment.avg_vote.toFixed(1)"
                               ></span>
                             </template>
