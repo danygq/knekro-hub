@@ -135,14 +135,18 @@ const [gameStatuses, tags, { games, total: totalGames }] = await Promise.all([
       status: statusFilterStore,
       tag: tagFilterStore,
       resetAll() {
+        const search = (Alpine as any).store("search") as
+          SearchStore | undefined;
+        const statusStore = search?.filters?.status ?? this.status;
+        const tagStore = search?.filters?.tag ?? this.tag;
         if ((this.totalCount ?? 0) === 0) return;
-        statusFilterStore.reset(true);
-        tagFilterStore.reset(true);
-        (Alpine.store("search") as SearchStore).resetOffset();
+        statusStore?.reset(true);
+        tagStore?.reset(true);
+        search?.resetOffset();
         window.document.body.dispatchEvent(new CustomEvent("filter-changed"));
       },
       get totalCount() {
-        return statusFilterStore.count + tagFilterStore.count;
+        return (this.status?.count ?? 0) + (this.tag?.count ?? 0);
       },
     };
 

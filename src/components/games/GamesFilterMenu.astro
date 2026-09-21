@@ -49,8 +49,8 @@ const tagNamesLower = tags.map((t) => t.name.toLowerCase());
   <div
     class="p-4 space-y-6"
     x-data={`{
-      statusExpanded: true,
-      tagsExpanded: true,
+      statusExpanded: false,
+      tagsExpanded: false,
       tagSearch: '',
       hasMatch(name) {
         if (!this.tagSearch.trim()) return true;
@@ -69,10 +69,10 @@ const tagNamesLower = tags.map((t) => t.name.toLowerCase());
       <button
         type="button"
         id="reset-filters"
-        :aria-pressed="($store?.search?.filters?.totalCount ?? $store?.search?.filters?.status?.count ?? 0) === 0 ? 'true' : 'false'"
-        @click="($store?.search?.filters?.totalCount ?? $store?.search?.filters?.status?.count ?? 0) > 0 && ($store?.search?.filters?.resetAll ? $store.search.filters.resetAll() : $store?.search?.filters?.status?.reset())"
+        :aria-pressed="($store?.search?.filters?.totalCount ?? 0) === 0 ? 'true' : 'false'"
+        @click="($store?.search?.filters?.totalCount ?? 0) > 0 && ($store?.search?.filters?.resetAll ? $store.search.filters.resetAll() : $store?.search?.filters?.status?.reset())"
         class="knk-filter-reset knk-notch-sm inline-flex items-center justify-center gap-2 w-full px-3 py-2 text-sm font-medium bg-(--knk-surface) text-(--knk-text-muted) border border-(--knk-line) hover:text-(--knk-text) hover:border-(--knk-line-strong) transition-colors cursor-pointer"
-        :class="{ 'active': ($store?.search?.filters?.totalCount ?? $store?.search?.filters?.status?.count ?? 0) === 0 }"
+        :class="{ 'active': ($store?.search?.filters?.totalCount ?? 0) === 0 }"
       >
         <CircleDot width={14} height={14} color="currentColor" />
         Todas
@@ -163,7 +163,7 @@ const tagNamesLower = tags.map((t) => t.name.toLowerCase());
             x-model="tagSearch"
             autocomplete="off"
             spellcheck="false"
-            class="knk-notch-sm w-full pl-8 pr-7 py-1.5 text-xs bg-(--knk-surface-2) text-(--knk-text) border border-(--knk-line) hover:border-(--knk-line-strong) focus:border-(--knk-primary) transition-colors placeholder:text-(--knk-text-faint) [&::-webkit-search-decoration]:appearance-none [&::-webkit-search-cancel-button]:appearance-none"
+            class="knk-notch-sm w-full pl-8 pr-7 py-1.5 text-xs bg-(--knk-surface-2) text-(--knk-text) border border-(--knk-line) hover:border-(--knk-line-strong) transition-colors [&::-webkit-search-decoration]:appearance-none"
           />
           <button
             type="button"
@@ -178,7 +178,7 @@ const tagNamesLower = tags.map((t) => t.name.toLowerCase());
         </div>
 
         <!-- Scrollable Genre List (max 10 items) -->
-        <ul class="knk-tags-scroll-list divide-y divide-(--knk-line) max-h-[450px] overflow-y-auto pr-1">
+        <ul class="knk-tags-scroll-list divide-y divide-(--knk-line) max-h-112.5 overflow-y-auto pr-1">
           {tags.map((tag) => (
             <li
               x-show={`hasMatch(${JSON.stringify(tag.name)})`}
