@@ -96,7 +96,7 @@ import Image from "astro/components/Image.astro";
                   x-show="selectedStream.spans_next_day"
                   class="text-[10px] text-(--knk-text-muted) font-sans"
                 >
-                  (+1 día)
+                  &nbsp;(+1 día)
                 </span>
               </p>
             </div>
@@ -233,11 +233,15 @@ import Image from "astro/components/Image.astro";
           alt="kneSleeper emote"
           src="https://static-cdn.jtvnw.net/emoticons/v2/306570287/static/light/2.0"
         />
-        <p class="text-base font-bold text-(--knk-text)">Día de descanso</p>
+        <p
+          class="text-base font-bold text-(--knk-text)"
+          x-text="isFutureDate(selectedDateStr) ? '¿Se puede venir?' : 'Día de descanso'"
+        ></p>
 
-        <p class="text-xs text-(--knk-text-muted) max-w-60">
-          No hay registros de emisiones en directo de Knekro en esta fecha.
-        </p>
+        <p
+          class="text-xs text-(--knk-text-muted) max-w-60"
+          x-text="isFutureDate(selectedDateStr) ? 'Fecha futura pendiente de emisión. A ver si padre abre directo.' : 'No hay registros de emisiones en directo de Knekro en esta fecha.'"
+        ></p>
       </div>
     </template>
   </div>

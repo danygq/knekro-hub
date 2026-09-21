@@ -209,6 +209,7 @@ export async function loadStreamsForCalendar(
     const dayNumber = currentCursor.getDate();
     const isCurrentMonth = currentCursor.getMonth() === month - 1;
     const isToday = dateStr === todayMadridStr;
+    const isFuture = dateStr > todayMadridStr;
     const streams = streamsByDate.get(dateStr) ?? [];
 
     days.push({
@@ -216,6 +217,7 @@ export async function loadStreamsForCalendar(
       dayNumber,
       isCurrentMonth,
       isToday,
+      isFuture,
       streams,
     });
 

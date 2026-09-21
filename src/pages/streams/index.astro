@@ -77,7 +77,12 @@ if (dayParam) {
       selectedStream: null,
       selectedDateStr: '',
       formattedDate: '',
+      todayDateStr: '${nowMadrid.slice(0, 10)}',
       drawerOpen: false,
+      isFutureDate(dateStr) {
+        if (!dateStr) return false;
+        return dateStr > this.todayDateStr;
+      },
       selectDay(day) {
         if (!day) return;
         if (day.streams && day.streams.length > 0) {

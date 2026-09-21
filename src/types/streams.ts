@@ -54,6 +54,7 @@ export interface CalendarDay {
   dayNumber: number;
   isCurrentMonth: boolean;
   isToday: boolean;
+  isFuture: boolean;
   streams: StreamWithActivities[];
 }
 

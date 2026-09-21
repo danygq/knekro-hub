@@ -108,7 +108,7 @@ const dayPayload = JSON.stringify(day);
     </div>
   ) : (
     <div class="mt-auto hidden sm:flex items-center justify-start text-[11px] text-(--knk-text-faint)/60">
-      Descanso
+      {day.isFuture ? "Se puede venir" : "Descanso"}
     </div>
   )}
 </div>
