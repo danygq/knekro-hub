@@ -15,10 +15,7 @@ if (
   !Number.isInteger(streamId) ||
   streamId <= 0
 ) {
-  return new Response("Directo no encontrado", {
-    status: 404,
-    statusText: "Not Found",
-  });
+  return Astro.rewrite("/404");
 }
 
 const dbClient = Astro.locals.supabase;
@@ -27,10 +24,7 @@ const user = Astro.locals.user;
 const stream = await loadStreamById(dbClient, streamId);
 
 if (!stream) {
-  return new Response("Directo no encontrado", {
-    status: 404,
-    statusText: "Not Found",
-  });
+  return Astro.rewrite("/404");
 }
 
 const formattedDate = formatSpanishFullDate(stream.started_at);
