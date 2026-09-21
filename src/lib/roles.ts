@@ -79,6 +79,35 @@ export async function userHasRole(
 }
 
 /**
+ * Checks if a user has any of the specified roles assigned.
+ */
+export async function userHasAnyRole(
+  client: SupabaseClient,
+  userId: string,
+  roleNames: string[],
+): Promise<boolean> {
+  if (!roleNames.length) return false;
+
+  const { data, error } = await client
+    .from("user_roles")
+    .select("role_id, role:roles!inner(name)")
+    .eq("user_id", userId)
+    .in("role.name", roleNames)
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    console.error(
+      `Error checking roles [${roleNames.join(", ")}] for user ${userId}:`,
+      error,
+    );
+    return false;
+  }
+
+  return Boolean(data);
+}
+
+/**
  * Checks if a user has a specific role ID assigned.
  */
 export async function userHasRoleId(

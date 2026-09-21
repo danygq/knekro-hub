@@ -2,6 +2,7 @@
 // Barrel re-exporting the per-domain type files. Import from "@/types"
 // or reach into a specific domain file (e.g. "@/types/games").
 
+export * from "./audit";
 export * from "./db";
 export * from "./games";
 export * from "./ranking";

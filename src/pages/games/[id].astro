@@ -3,7 +3,9 @@ import Layout from "@/layouts/Layout.astro";
 import GameCover from "@/components/games/GameCover.astro";
 import GameDetailTags from "@/components/games/GameDetailTags.astro";
 import GameDetailVoting from "@/components/games/GameDetailVoting.astro";
-import { loadGameById } from "@/lib/games";
+import GameStatusEditor from "@/components/games/GameStatusEditor.astro";
+import { loadGameById, loadGameStatuses } from "@/lib/games";
+import { userHasAnyRole } from "@/lib/roles";
 import { formatStreamDate } from "@/lib/time";
 import { ChevronLeft, Tv } from "@lucide/astro";
 import "@/styles/pages/game-detail.css";
@@ -34,6 +36,11 @@ if (!game) {
     statusText: "Not Found",
   });
 }
+
+const canEditStatus = user
+  ? await userHasAnyRole(dbClient, user.id, ["owner", "manager"])
+  : false;
+const statuses = canEditStatus ? await loadGameStatuses(dbClient) : [];
 ---
 
 <Layout user={user}>
@@ -74,14 +81,13 @@ if (!game) {
         <h1 class="font-(--font-display) text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-balance">
           {game.name}
         </h1>
-        {game.status_name && (
-          <div class="mt-4 flex items-center gap-2 text-sm">
-            <span class="text-(--knk-text-muted)">Estado:</span>
-            <span class="knk-notch-sm px-2.5 py-0.5 text-xs font-semibold bg-(--knk-surface-2) text-(--knk-primary) border border-(--knk-line)">
-              {game.status_name}
-            </span>
-          </div>
-        )}
+        <GameStatusEditor
+          gameId={game.id}
+          currentStatusId={game.game_status_id}
+          currentStatusName={game.status_name}
+          canEdit={canEditStatus}
+          statuses={statuses}
+        />
       </div>
 
       <!-- Community Rating & User Voting -->

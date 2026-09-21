@@ -1,0 +1,106 @@
+---
+import type { GameStatus } from "@/types";
+import { Check, Pencil } from "@lucide/astro";
+import Spinner from "@/components/Spinner.astro";
+
+interface Props {
+  gameId: number;
+  currentStatusId: number | null;
+  currentStatusName: string | null;
+  canEdit: boolean;
+  statuses?: GameStatus[];
+}
+
+const {
+  gameId,
+  currentStatusId,
+  currentStatusName,
+  canEdit,
+  statuses = [],
+} = Astro.props;
+---
+
+{!canEdit ? (
+  currentStatusName && (
+    <div class="mt-4 flex items-center gap-2 text-sm">
+      <span class="text-(--knk-text-muted)">Estado:</span>
+      <span class="knk-notch-sm px-2.5 py-0.5 text-xs font-semibold bg-(--knk-surface-2) text-(--knk-primary) border border-(--knk-line)">
+        {currentStatusName}
+      </span>
+    </div>
+  )
+) : (
+  <div
+    id="game-status-editor"
+    class="mt-4 flex items-center gap-2 text-sm relative"
+    x-data="{ open: false }"
+  >
+    <span class="text-(--knk-text-muted)">Estado:</span>
+    <span class="knk-notch-sm px-2.5 py-0.5 text-xs font-semibold bg-(--knk-surface-2) text-(--knk-primary) border border-(--knk-line)">
+      {currentStatusName || "Sin estado"}
+    </span>
+
+    <div class="relative inline-flex items-center">
+      <button
+        type="button"
+        @click="open = !open"
+        class="inline-flex items-center justify-center p-1 rounded hover:bg-(--knk-surface-3) text-(--knk-text-muted) hover:text-(--knk-primary) transition-colors cursor-pointer"
+        title="Editar estado del juego"
+        aria-label="Editar estado del juego"
+        :aria-expanded="open"
+      >
+        <Pencil class="size-3.5" />
+      </button>
+
+      <!-- Dropdown Popover -->
+      <div
+        x-show="open"
+        x-cloak
+        @click.outside="open = false"
+        @keydown.escape.window="open = false"
+        x-transition:enter="transition ease-out duration-100"
+        x-transition:enter-start="opacity-0 scale-95"
+        x-transition:enter-end="opacity-100 scale-100"
+        x-transition:leave="transition ease-in duration-75"
+        x-transition:leave-start="opacity-100 scale-100"
+        x-transition:leave-end="opacity-0 scale-95"
+        class="absolute left-0 top-full mt-1.5 z-50 w-56 p-1.5 rounded-md bg-(--knk-surface-2) border border-(--knk-line) shadow-xl max-h-72 overflow-y-auto"
+      >
+        <div class="px-2 py-1 text-xs font-semibold text-(--knk-text-muted) border-b border-(--knk-line) mb-1 flex items-center justify-between">
+          <span>Cambiar estado</span>
+          <span class="htmx-indicator">
+            <Spinner class="size-3 text-(--knk-primary)" />
+          </span>
+        </div>
+
+        <div class="flex flex-col gap-0.5">
+          {statuses.map((status) => {
+            const isCurrent = status.id === currentStatusId;
+            return (
+              <button
+                type="button"
+                class:list={[
+                  "w-full flex items-center justify-between px-2.5 py-1.5 text-xs rounded transition-colors text-left cursor-pointer",
+                  isCurrent
+                    ? "bg-(--knk-surface-3) text-(--knk-primary) font-semibold"
+                    : "text-(--knk-text) hover:bg-(--knk-surface-3) hover:text-(--knk-primary)",
+                ]}
+                hx-post="/api/games/status"
+                hx-vals={`{"game_id": ${gameId}, "status_id": ${status.id}}`}
+                hx-target="#game-status-editor"
+                hx-swap="outerHTML"
+                hx-indicator="#game-status-editor .htmx-indicator"
+                @click="open = false"
+              >
+                <span>{status.name}</span>
+                {isCurrent && (
+                  <Check class="size-3.5 text-(--knk-primary) shrink-0 ml-1.5" />
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  </div>
+)}
