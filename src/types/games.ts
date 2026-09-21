@@ -96,6 +96,7 @@ export interface Tag {
   id: number;
   name: string;
   created_at: string;
+  games_with_this_tag: number;
 }
 
 /** Junction row from the `games_tags` table. */
