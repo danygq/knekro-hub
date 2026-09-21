@@ -79,6 +79,7 @@ if (dayParam) {
       formattedDate: '',
       todayDateStr: '${nowMadrid.slice(0, 10)}',
       drawerOpen: false,
+      isFuture: false,
       isFutureDate(dateStr) {
         if (!dateStr) return false;
         return dateStr > this.todayDateStr;
@@ -92,6 +93,7 @@ if (dayParam) {
         }
         this.selectedDateStr = day.dateStr;
         this.formattedDate = this.formatDate(day.dateStr);
+        this.isFuture = Boolean(day.isFuture ?? this.isFutureDate(day.dateStr));
         this.drawerOpen = true;
 
         if (typeof window !== 'undefined') {
