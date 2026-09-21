@@ -3,7 +3,7 @@
 
 /* Calendar Day Box styling */
 .knk-calendar-day {
-  min-height: 90px;
+  min-height: 75px;
   contain: paint;
 }
 

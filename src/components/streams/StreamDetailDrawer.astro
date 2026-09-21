@@ -180,7 +180,7 @@ import {
                           <div class="mt-1 flex flex-wrap items-center gap-2">
                             <template x-if="segment.status_name">
                               <span
-                                class="text-[10px] font-semibold px-1.5 py-0.25 rounded-xs bg-(--knk-surface) text-(--knk-primary) border border-(--knk-line)"
+                                class="text-[10px] font-semibold px-1.5 py-px rounded-xs bg-(--knk-surface) text-(--knk-primary) border border-(--knk-line)"
                                 x-text="segment.status_name"
                               ></span>
                             </template>
@@ -228,10 +228,8 @@ import {
         <div class="size-12 rounded-full bg-(--knk-surface-2) border border-(--knk-line) flex items-center justify-center text-(--knk-text-muted)">
           <Clock class="size-6" />
         </div>
-        <p class="font-(--font-display) text-base font-bold text-(--knk-text)">
-          Día de descanso
-        </p>
-        <p class="text-xs text-(--knk-text-muted) max-w-[240px]">
+        <p class="text-base font-bold text-(--knk-text)">Día de descanso</p>
+        <p class="text-xs text-(--knk-text-muted) max-w-60">
           No hay registros de emisiones en directo de Knekro en esta fecha.
         </p>
       </div>

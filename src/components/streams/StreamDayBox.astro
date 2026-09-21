@@ -31,7 +31,7 @@ const dayPayload = JSON.stringify(day);
 <div
   role="button"
   tabindex="0"
-  class={`knk-calendar-day group relative flex flex-col p-2 sm:p-2.5 rounded-xs border transition-all text-left w-full h-full min-h-[90px] sm:min-h-[115px] select-none cursor-pointer ${
+  class={`knk-calendar-day group relative flex flex-col p-1.5 sm:p-2.5 rounded-xs border transition-all text-left w-full h-full min-h-[75px] sm:min-h-[115px] select-none cursor-pointer ${
     !day.isCurrentMonth
       ? "bg-(--knk-bg)/30 border-(--knk-line)/40 opacity-45"
       : hasStream && primaryStream?.is_live
@@ -54,7 +54,9 @@ const dayPayload = JSON.stringify(day);
       <span
         class={`text-xs font-semibold ${
           day.isCurrentMonth
-            ? "text-(--knk-text) group-hover:text-(--knk-primary) transition-colors"
+            ? hasStream
+              ? "text-(--knk-primary) font-bold group-hover:text-(--knk-primary) transition-colors"
+              : "text-(--knk-text) group-hover:text-(--knk-primary) transition-colors"
             : "text-(--knk-text-faint)"
         }`}
       >
@@ -63,12 +65,12 @@ const dayPayload = JSON.stringify(day);
     )}
 
     {primaryStream?.is_live ? (
-      <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-xs text-[10px] font-bold tracking-wider uppercase bg-(--knk-danger)/15 text-(--knk-danger) border border-(--knk-danger)/30 shrink-0">
+      <span class="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 rounded-xs text-[10px] font-bold tracking-wider uppercase bg-(--knk-danger)/15 text-(--knk-danger) border border-(--knk-danger)/30 shrink-0">
         <span class="size-1.5 rounded-full bg-(--knk-danger) animate-ping" />
         Live
       </span>
     ) : hasStream && primaryStream ? (
-      <span class="text-[11px] font-mono font-medium text-(--knk-primary) shrink-0">
+      <span class="hidden sm:inline-flex text-[11px] font-mono font-medium text-(--knk-primary) shrink-0">
         {primaryStream.total_duration_text}
       </span>
     ) : null}
@@ -76,10 +78,13 @@ const dayPayload = JSON.stringify(day);
 
   <!-- Content / Glimpse of activities -->
   {hasStream && primaryStream ? (
-    <div class="mt-auto pt-2 flex flex-col gap-1.5 w-full">
-      <div class="flex flex-wrap items-center gap-1.5">
+    <div class="mt-auto pt-1 sm:pt-2 flex flex-col gap-1.5 w-full">
+      <div class="flex flex-wrap items-center gap-1 sm:gap-1.5">
         {uniqueCategories.slice(0, 2).map((cat) => (
-          <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-xs text-[10px] font-medium bg-(--knk-surface-2) text-(--knk-text-muted) border border-(--knk-line) truncate max-w-[85px] sm:max-w-[110px]">
+          <span
+            class="inline-flex items-center gap-1 p-0.5 sm:px-1.5 sm:py-0.5 rounded-xs text-[10px] font-medium bg-(--knk-surface-2) text-(--knk-text-muted) border border-(--knk-line) max-w-full sm:max-w-[110px] shrink-0"
+            title={cat.name}
+          >
             {cat.cover_url ? (
               <img
                 src={cat.cover_url}
@@ -90,12 +95,12 @@ const dayPayload = JSON.stringify(day);
             ) : (
               <Tv class="size-3 text-(--knk-text-faint) shrink-0" />
             )}
-            <span class="truncate">{cat.name}</span>
+            <span class="hidden sm:inline truncate">{cat.name}</span>
           </span>
         ))}
 
         {uniqueCategories.length > 2 && (
-          <span class="text-[10px] font-medium text-(--knk-text-faint) shrink-0">
+          <span class="text-[9px] sm:text-[10px] font-medium text-(--knk-text-faint) shrink-0">
             +{uniqueCategories.length - 2}
           </span>
         )}
