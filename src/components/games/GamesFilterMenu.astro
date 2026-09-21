@@ -47,7 +47,7 @@ const tagNamesLower = tags.map((t) => t.name.toLowerCase());
   </div>
 
   <div
-    class="p-4 space-y-6"
+    class="p-2 space-y-6"
     x-data={`{
       statusExpanded: false,
       tagsExpanded: false,
@@ -118,7 +118,7 @@ const tagNamesLower = tags.map((t) => t.name.toLowerCase());
 
             <!-- Name -->
             <span
-              class="flex-1 min-w-0 text-sm font-medium text-(--knk-text-muted) truncate"
+              class="flex-1 min-w-0 text-xs font-medium text-(--knk-text-muted) text-wrap uppercase"
               title={status.name}
             >
               {status.name}
@@ -207,7 +207,7 @@ const tagNamesLower = tags.map((t) => t.name.toLowerCase());
 
               <!-- Name -->
               <span
-                class="flex-1 min-w-0 text-sm font-medium text-(--knk-text-muted) truncate"
+                class="flex-1 min-w-0 text-xs font-medium text-(--knk-text-muted) text-wrap uppercase"
                 title={tag.name}
               >
                 {tag.name}
