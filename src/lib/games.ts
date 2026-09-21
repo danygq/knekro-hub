@@ -242,8 +242,8 @@ export async function updateGameStatusWithAudit(
 
   const { error: auditError } = await client.from("audit_logs").insert({
     user_id: actorId,
-    action: "UPDATE_GAME_STATUS",
-    entity_type: "game",
+    action_type: "UPDATE_GAME_STATUS",
+    entity_type: "games",
     entity_id: gameId,
     old_value: { status_id: oldStatusId, status_name: oldStatusName },
     new_value: { status_id: newStatusId, status_name: newStatus.name },
