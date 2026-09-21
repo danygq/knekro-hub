@@ -15,6 +15,10 @@ const avgLabel = game.avg_vote != null ? formatAvg(game.avg_vote) : "−";
 const voteCount = game.vote_count ?? 0;
 const userVote = game.user_vote;
 const isAuthenticated = !!user;
+
+const communityAvg = game.avg_vote;
+const voteTier = communityAvg ? Math.trunc(communityAvg) : null;
+const voteClass = voteTier ? `knk-vote-${voteTier}` : "knk-vote-muted";
 ---
 
 <div
@@ -24,9 +28,14 @@ const isAuthenticated = !!user;
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
     <!-- Community Rating Block -->
     <div class="flex items-center gap-4">
-      <div class="size-14 sm:size-16 rounded-lg bg-(--knk-surface-2) border border-(--knk-line) flex flex-col items-center justify-center shrink-0">
-        <Star class="size-5 sm:size-6 text-(--knk-primary) fill-(--knk-primary)/20 mb-0.5" />
-        <span class="font-(--font-display) font-bold text-lg sm:text-xl text-(--knk-primary) leading-none">
+      <div
+        class:list={[
+          "size-14 sm:size-16 rounded-lg border flex flex-col items-center justify-center shrink-0 transition-colors knk-vote-badge",
+          voteClass,
+        ]}
+      >
+        <Star class="size-5 sm:size-6 fill-current/20 mb-0.5" />
+        <span class="font-(--font-display) font-bold text-lg sm:text-xl leading-none">
           {avgLabel}
         </span>
       </div>

@@ -157,3 +157,98 @@
 .knk-vote-num-10 {
   --vote-c: var(--knk-blue-500);
 }
+
+/* Vote score badge color system.
+   Map a numeric vote (1-10) to a color class:
+   1-2.9 red · 3-4.9 orange · 5-6.9 amber · 7-8.9 green · 9-10 blue (primary).
+   Each class sets bg, text, and border-color; !important keeps them on top
+   of structural utility classes. */
+.knk-vote-1,
+.knk-vote-2 {
+  background: color-mix(
+    in srgb,
+    var(--knk-red-600) 15%,
+    transparent
+  ) !important;
+  color: var(--knk-red-500) !important;
+  border-color: color-mix(
+    in srgb,
+    var(--knk-red-600) 30%,
+    transparent
+  ) !important;
+}
+
+.knk-vote-3,
+.knk-vote-4 {
+  background: color-mix(
+    in srgb,
+    var(--knk-orange-600) 15%,
+    transparent
+  ) !important;
+  color: var(--knk-orange-500) !important;
+  border-color: color-mix(
+    in srgb,
+    var(--knk-orange-600) 30%,
+    transparent
+  ) !important;
+}
+
+.knk-vote-5,
+.knk-vote-6 {
+  background: color-mix(
+    in srgb,
+    var(--knk-amber-600) 15%,
+    transparent
+  ) !important;
+  color: var(--knk-amber-500) !important;
+  border-color: color-mix(
+    in srgb,
+    var(--knk-amber-600) 30%,
+    transparent
+  ) !important;
+}
+
+.knk-vote-7,
+.knk-vote-8 {
+  background: color-mix(
+    in srgb,
+    var(--knk-green-600) 15%,
+    transparent
+  ) !important;
+  color: var(--knk-green-500) !important;
+  border-color: color-mix(
+    in srgb,
+    var(--knk-green-600) 30%,
+    transparent
+  ) !important;
+}
+
+.knk-vote-9,
+.knk-vote-10 {
+  background: color-mix(
+    in srgb,
+    var(--knk-blue-600) 15%,
+    transparent
+  ) !important;
+  color: var(--knk-blue-500) !important;
+  border-color: color-mix(
+    in srgb,
+    var(--knk-blue-600) 30%,
+    transparent
+  ) !important;
+}
+
+/* Neutral state for the avg badge when there is no vote data yet. */
+.knk-vote-muted {
+  background: color-mix(in srgb, var(--knk-bg) 80%, transparent) !important;
+  color: var(--knk-text-muted) !important;
+  border-color: var(--knk-line) !important;
+}
+
+.knk-vote-badge {
+  text-shadow:
+    -1px -1px 1px var(--tw-text-shadow-color, var(--knk-line)),
+    1px -1px 1px var(--tw-text-shadow-color, var(--knk-line)),
+    -1px 1px 1px var(--tw-text-shadow-color, var(--knk-line)),
+    1px 1px 1px var(--tw-text-shadow-color, var(--knk-line));
+}
