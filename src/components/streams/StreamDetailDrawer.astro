@@ -235,12 +235,12 @@ import Image from "astro/components/Image.astro";
         />
         <p
           class="text-base font-bold text-(--knk-text)"
-          x-text="isFutureDate(selectedDateStr) ? '¿Se puede venir?' : 'Día de descanso'"
+          x-text="isFutureDate(selectedDateStr) ? 'Se puede venir' : 'Día de descanso'"
         ></p>
 
         <p
           class="text-xs text-(--knk-text-muted) max-w-60"
-          x-text="isFutureDate(selectedDateStr) ? 'Fecha futura pendiente de emisión. A ver si padre abre directo.' : 'No hay registros de emisiones en directo de Knekro en esta fecha.'"
+          x-text="isFutureDate(selectedDateStr) ? 'A ver si padre abre directo.' : 'No hay registros de emisiones en directo de kenkri en esta fecha.'"
         ></p>
       </div>
     </template>
