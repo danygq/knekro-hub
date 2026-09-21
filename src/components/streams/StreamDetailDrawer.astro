@@ -228,14 +228,14 @@ import Image from "astro/components/Image.astro";
     <template x-if="!selectedStream">
       <div class="py-12 flex flex-col items-center justify-center text-center space-y-3">
         <Image
-          x-show="isFutureDate(selectedDateStr)"
+          x-show="isFuture"
           width={56}
           height={56}
           alt="PauseChamp emote"
           src="https://cdn.7tv.app/emote/01FQ4VXQM80005G17242N6NQXY/2x.webp"
         />
         <Image
-          x-show="!isFutureDate(selectedDateStr)"
+          x-show="!isFuture"
           width={56}
           height={56}
           alt="kneSleeper emote"
@@ -243,12 +243,12 @@ import Image from "astro/components/Image.astro";
         />
         <p
           class="text-base font-bold text-(--knk-text)"
-          x-text="isFutureDate(selectedDateStr) ? 'Se puede venir' : 'Día de descanso'"
+          x-text="isFuture ? 'Se puede venir' : 'Día de descanso'"
         ></p>
 
         <p
           class="text-xs text-(--knk-text-muted) max-w-60"
-          x-text="isFutureDate(selectedDateStr) ? 'A ver si padre abre directo.' : 'No hay registros de emisiones en directo de kenkri en esta fecha.'"
+          x-text="isFuture ? 'A ver si padre abre directo.' : 'No hay registros de emisiones en directo de kenkri en esta fecha.'"
         ></p>
       </div>
     </template>
