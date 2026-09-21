@@ -1,12 +1,22 @@
 ---
-import type { GameStatus } from "@/types";
-import { CircleDot, CircleX, Minus, Plus, X } from "@lucide/astro";
+import type { GameStatus, Tag } from "@/types";
+import {
+  ChevronDown,
+  CircleDot,
+  CircleX,
+  Minus,
+  Plus,
+  Search,
+  X,
+} from "@lucide/astro";
 
 interface Props {
   gameStatuses: GameStatus[];
+  tags: Tag[];
 }
 
-const { gameStatuses } = Astro.props;
+const { gameStatuses, tags = [] } = Astro.props;
+const tagNamesLower = tags.map((t) => t.name.toLowerCase());
 ---
 
 <div
@@ -21,7 +31,7 @@ const { gameStatuses } = Astro.props;
   id="filter-panel"
   class="knk-filter-panel"
   :class="{ 'open': $store.games.layout.gamesFilterMenuOpen && !$store.games.layout.isDesktop, 'closed': !$store.games.layout.gamesFilterMenuOpen && $store.games.layout.isDesktop }"
-  aria-label="Filtros por estado"
+  aria-label="Filtros de juegos"
 >
   <div class="sticky top-0 z-10 flex items-center justify-between px-4 py-3 border-b border-(--knk-line) bg-(--knk-surface-2)">
     <span class="font-(--font-display) text-sm tracking-tight">Filtros</span>
@@ -36,16 +46,34 @@ const { gameStatuses } = Astro.props;
     </button>
   </div>
 
-  <div class="p-4 space-y-6">
+  <div
+    class="p-2 space-y-6"
+    x-data={`{
+      statusExpanded: false,
+      tagsExpanded: false,
+      tagSearch: '',
+      hasMatch(name) {
+        if (!this.tagSearch.trim()) return true;
+        return name.toLowerCase().includes(this.tagSearch.trim().toLowerCase());
+      },
+      get hasAnyMatch() {
+        if (!this.tagSearch.trim()) return true;
+        const q = this.tagSearch.trim().toLowerCase();
+        return this.tagNames.some((t) => t.includes(q));
+      },
+      tagNames: ${JSON.stringify(tagNamesLower)}
+    }`}
+  >
     <!-- Reset Filters -->
     <div>
       <button
         type="button"
         id="reset-filters"
-        :aria-pressed="$store?.search?.filters?.status?.count === 0 ? 'true' : 'false'"
-        @click="$store?.search?.filters?.status?.count > 0 && $store?.search?.filters?.status?.reset()"
-        class="knk-filter-reset knk-notch-sm inline-flex items-center justify-center gap-2 w-full px-3 py-2 text-sm font-medium bg-(--knk-surface) text-(--knk-text-muted) border border-(--knk-line) hover:text-(--knk-text) hover:border-(--knk-line-strong) transition-colors"
-        :class="{ 'active': $store?.search?.filters?.status?.count === 0 }"
+        aria-pressed="true"
+        :aria-pressed="($store?.search?.filters?.totalCount ?? 0) === 0 ? 'true' : 'false'"
+        @click="($store?.search?.filters?.totalCount ?? 0) > 0 && ($store?.search?.filters?.resetAll ? $store.search.filters.resetAll() : $store?.search?.filters?.status?.reset())"
+        class="knk-filter-reset active knk-notch-sm inline-flex items-center justify-center gap-2 w-full px-3 py-2 text-sm font-medium bg-(--knk-surface) text-(--knk-text-muted) border border-(--knk-line) hover:text-(--knk-text) hover:border-(--knk-line-strong) transition-colors cursor-pointer"
+        :class="{ 'active': ($store?.search?.filters?.totalCount ?? 0) === 0 }"
       >
         <CircleDot width={14} height={14} color="currentColor" />
         Todas
@@ -54,10 +82,25 @@ const { gameStatuses } = Astro.props;
 
     <!-- Status Filters -->
     <div>
-      <h2 class="text-xs font-medium uppercase tracking-wide text-(--knk-text-faint) mb-3">
-        Estado
-      </h2>
-      <ul class="divide-y divide-(--knk-line)">
+      <button
+        type="button"
+        @click="statusExpanded = !statusExpanded"
+        aria-expanded="false"
+        :aria-expanded="statusExpanded ? 'true' : 'false'"
+        class="flex items-center justify-between w-full text-xs font-medium uppercase tracking-wide text-(--knk-text-faint) hover:text-(--knk-text) transition-colors cursor-pointer mb-3"
+      >
+        <span>Estado</span>
+        <ChevronDown
+          class="size-4 text-(--knk-text-muted) transition-transform duration-200"
+          :class="{ '-rotate-180': statusExpanded }"
+        />
+      </button>
+      <ul
+        x-show="statusExpanded"
+        x-cloak
+        style="display: none;"
+        class="divide-y divide-(--knk-line)"
+      >
         {gameStatuses.map((status) => (
           <li class="flex items-center justify-between gap-3 py-2">
             <!-- Exclude (-) -->
@@ -67,14 +110,17 @@ const { gameStatuses } = Astro.props;
               :aria-pressed={`$store?.search?.filters?.status?.isActive?.('${status.id}', 'minus') ? 'true' : 'false'`}
               aria-label={`Excluir ${status.name} de la selección`}
               @click={`$store?.search?.filters?.status?.toggle?.('${status.id}', 'minus')`}
-              class="knk-filter-minus knk-notch-sm w-7 h-7 inline-flex items-center justify-center shrink-0 text-lg leading-none bg-(--knk-surface) text-(--knk-text-muted) border border-(--knk-line) hover:text-(--knk-danger) hover:border-(--knk-danger) transition-colors"
+              class="knk-filter-minus knk-notch-sm w-7 h-7 inline-flex items-center justify-center shrink-0 text-lg leading-none bg-(--knk-surface) text-(--knk-text-muted) border border-(--knk-line) hover:text-(--knk-danger) hover:border-(--knk-danger) transition-colors cursor-pointer"
               :class={`{ 'active': $store?.search?.filters?.status?.isActive?.('${status.id}', 'minus') }`}
             >
               <Minus width={18} height={18} />
             </button>
 
             <!-- Name -->
-            <span class="flex-1 min-w-0 text-sm font-medium text-(--knk-text-muted)">
+            <span
+              class="flex-1 min-w-0 text-xs font-medium text-(--knk-text-muted) text-wrap uppercase"
+              title={status.name}
+            >
               {status.name}
             </span>
 
@@ -90,7 +136,7 @@ const { gameStatuses } = Astro.props;
               :aria-pressed={`$store?.search?.filters?.status?.isActive?.('${status.id}', 'plus') ? 'true' : 'false'`}
               aria-label={`Incluir ${status.name} en la selección`}
               @click={`$store?.search?.filters?.status?.toggle?.('${status.id}', 'plus')`}
-              class="knk-filter-plus knk-notch-sm w-7 h-7 inline-flex items-center justify-center shrink-0 text-lg leading-none bg-(--knk-surface) text-(--knk-text-muted) border border-(--knk-line) hover:text-(--knk-primary) hover:border-(--knk-primary) transition-colors"
+              class="knk-filter-plus knk-notch-sm w-7 h-7 inline-flex items-center justify-center shrink-0 text-lg leading-none bg-(--knk-surface) text-(--knk-text-muted) border border-(--knk-line) hover:text-(--knk-primary) hover:border-(--knk-primary) transition-colors cursor-pointer"
               :class={`{ 'active': $store?.search?.filters?.status?.isActive?.('${status.id}', 'plus') }`}
             >
               <Plus width={18} height={18} />
@@ -98,6 +144,103 @@ const { gameStatuses } = Astro.props;
           </li>
         ))}
       </ul>
+    </div>
+
+    <!-- Genre Filters -->
+    <div>
+      <button
+        type="button"
+        @click="tagsExpanded = !tagsExpanded"
+        aria-expanded="false"
+        :aria-expanded="tagsExpanded ? 'true' : 'false'"
+        class="flex items-center justify-between w-full text-xs font-medium uppercase tracking-wide text-(--knk-text-faint) hover:text-(--knk-text) transition-colors cursor-pointer mb-3"
+      >
+        <span>Géneros</span>
+        <ChevronDown
+          class="size-4 text-(--knk-text-muted) transition-transform duration-200"
+          :class="{ '-rotate-180': tagsExpanded }"
+        />
+      </button>
+      <div x-show="tagsExpanded" x-cloak style="display: none;">
+        <!-- Genre Search Input -->
+        <div class="relative mb-2">
+          <Search class="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 shrink-0 size-3.5 text-(--knk-text-faint)" />
+          <input
+            type="search"
+            placeholder="Buscar géneros…"
+            x-model="tagSearch"
+            autocomplete="off"
+            spellcheck="false"
+            class="knk-notch-sm w-full pl-8 pr-7 py-1.5 text-xs bg-(--knk-surface-2) text-(--knk-text) border border-(--knk-line) hover:border-(--knk-line-strong) transition-colors [&::-webkit-search-decoration]:appearance-none"
+          />
+          <button
+            type="button"
+            x-show="tagSearch"
+            x-cloak
+            @click="tagSearch = ''"
+            aria-label="Limpiar búsqueda de géneros"
+            class="absolute right-1.5 top-1/2 -translate-y-1/2 inline-flex items-center justify-center w-5 h-5 text-(--knk-text-muted) hover:text-(--knk-text) transition-colors cursor-pointer"
+          >
+            <X class="size-3 shrink-0" />
+          </button>
+        </div>
+
+        <!-- Scrollable Genre List (max 10 items) -->
+        <ul class="knk-tags-scroll-list divide-y divide-(--knk-line) max-h-112.5 overflow-y-auto pr-1">
+          {tags.map((tag) => (
+            <li
+              x-show={`hasMatch(${JSON.stringify(tag.name)})`}
+              class="flex items-center justify-between gap-3 py-2"
+            >
+              <!-- Exclude (-) -->
+              <button
+                type="button"
+                title={`Excluir ${tag.name} de la selección`}
+                :aria-pressed={`$store?.search?.filters?.tag?.isActive?.('${tag.id}', 'minus') ? 'true' : 'false'`}
+                aria-label={`Excluir ${tag.name} de la selección`}
+                @click={`$store?.search?.filters?.tag?.toggle?.('${tag.id}', 'minus')`}
+                class="knk-filter-minus knk-notch-sm w-7 h-7 inline-flex items-center justify-center shrink-0 text-lg leading-none bg-(--knk-surface) text-(--knk-text-muted) border border-(--knk-line) hover:text-(--knk-danger) hover:border-(--knk-danger) transition-colors cursor-pointer"
+                :class={`{ 'active': $store?.search?.filters?.tag?.isActive?.('${tag.id}', 'minus') }`}
+              >
+                <Minus width={18} height={18} />
+              </button>
+
+              <!-- Name -->
+              <span
+                class="flex-1 min-w-0 text-xs font-medium text-(--knk-text-muted) text-wrap uppercase"
+                title={tag.name}
+              >
+                {tag.name}
+              </span>
+
+              <!-- Counter -->
+              <span class="shrink-0 min-w-5 text-right text-xs text-(--knk-text-faint) tabular-nums">
+                {tag.games_with_this_tag}
+              </span>
+
+              <!-- Include (+) -->
+              <button
+                type="button"
+                title={`Incluir ${tag.name} en la selección`}
+                :aria-pressed={`$store?.search?.filters?.tag?.isActive?.('${tag.id}', 'plus') ? 'true' : 'false'`}
+                aria-label={`Incluir ${tag.name} en la selección`}
+                @click={`$store?.search?.filters?.tag?.toggle?.('${tag.id}', 'plus')`}
+                class="knk-filter-plus knk-notch-sm w-7 h-7 inline-flex items-center justify-center shrink-0 text-lg leading-none bg-(--knk-surface) text-(--knk-text-muted) border border-(--knk-line) hover:text-(--knk-primary) hover:border-(--knk-primary) transition-colors cursor-pointer"
+                :class={`{ 'active': $store?.search?.filters?.tag?.isActive?.('${tag.id}', 'plus') }`}
+              >
+                <Plus width={18} height={18} />
+              </button>
+            </li>
+          ))}
+          <li
+            x-show="!hasAnyMatch"
+            x-cloak
+            class="py-4 text-center text-xs text-(--knk-text-muted)"
+          >
+            No se encontraron géneros
+          </li>
+        </ul>
+      </div>
     </div>
   </div>
 </aside>

@@ -1,7 +1,7 @@
 ---
 module: data-layer
 owner_area: backend
-last_verified_against_commit: 249b663
+last_verified_against_commit: ca6bf9a
 depends_on: []
 ---
 
@@ -317,6 +317,8 @@ create or replace function get_user_games(
   p_search text default '',
   p_inc_status bigint[] default '{}',
   p_exc_status bigint[] default '{}',
+  p_inc_tags bigint[] default '{}',
+  p_exc_tags bigint[] default '{}',
   p_sort text default 'name_asc',
   p_limit int default 24,
   p_offset int default 0
@@ -364,6 +366,25 @@ returns table (
         or g.game_status_id is null
         or not (g.game_status_id = any(p_exc_status))
       )
+      -- Included tags filter (AND: game must carry all specified tags)
+      and (
+        coalesce(cardinality(p_inc_tags), 0) = 0
+        or (
+          select count(distinct gt.tag_id)
+          from games_tags gt
+          where gt.game_id = g.id
+            and gt.tag_id = any(p_inc_tags)
+        ) = cardinality(p_inc_tags)
+      )
+      -- Excluded tags filter (Anti-join: game must NOT carry any specified tag)
+      and (
+        coalesce(cardinality(p_exc_tags), 0) = 0
+        or not exists (
+          select 1 from games_tags gt
+          where gt.game_id = g.id
+            and gt.tag_id = any(p_exc_tags)
+        )
+      )
   )
   select * from filtered
   order by
@@ -379,7 +400,7 @@ returns table (
 $$;
 ```
 
-- `get_user_games`: Powers `/games` library catalog searches and the ranking assignable game pool search (both via `fetchGames()` in `src/lib/games.ts`), accelerated by `idx_games_name_trgm`. Supports status filters (safe against NULL/empty arrays), multi-column sorting (case-insensitive `lower(name)` and personal user votes with `NULLS LAST`), and bounded DB-level pagination — all in a single RPC call. `loadRankingSearchGames` in `src/lib/ranking.ts` delegates to `fetchGames`, eliminating the previous two-stage `countQuery` + `gamesQuery` waterfall.
+- `get_user_games`: Powers `/games` library catalog searches and the ranking assignable game pool search (both via `fetchGames()` in `src/lib/games.ts`), accelerated by `idx_games_name_trgm`. Supports status filters, tag/genre filters (AND intersection for inclusion, anti-join for exclusion), multi-column sorting (case-insensitive `lower(name)` and personal user votes with `NULLS LAST`), and bounded DB-level pagination — all in a single RPC call. `loadRankingSearchGames` in `src/lib/ranking.ts` delegates to `fetchGames`, eliminating the previous two-stage `countQuery` + `gamesQuery` waterfall.
 
 ```sql
 create or replace function public.get_game_by_id(

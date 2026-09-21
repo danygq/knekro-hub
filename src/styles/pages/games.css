@@ -38,6 +38,24 @@
   border-radius: 3px;
 }
 
+.knk-tags-scroll-list {
+  scrollbar-width: thin;
+  scrollbar-color: var(--knk-line-strong) transparent;
+}
+
+.knk-tags-scroll-list::-webkit-scrollbar {
+  width: 5px;
+}
+
+.knk-tags-scroll-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.knk-tags-scroll-list::-webkit-scrollbar-thumb {
+  background-color: var(--knk-line-strong);
+  border-radius: 3px;
+}
+
 .knk-filter-panel:not(.open) {
   transform: translateX(-100%);
   visibility: hidden;

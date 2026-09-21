@@ -1,7 +1,7 @@
 ---
 import GamesLayout from "@/components/games/GamesLayout.astro";
 import Layout from "@/layouts/Layout.astro";
-import { loadGameStatuses, fetchGames } from "@/lib/games";
+import { loadGameStatuses, loadTags, fetchGames } from "@/lib/games";
 import {
   GAMES_PREFERENCES_KEY,
   parseGamesPreferences,
@@ -17,12 +17,15 @@ const cookieRaw = Astro.cookies.get(GAMES_PREFERENCES_KEY)?.value;
 const serverPrefs = parseGamesPreferences(cookieRaw);
 const initialSort = resolveGameSortOption(serverPrefs.sort, !!user);
 
-const gameStatuses = await loadGameStatuses(dbClient);
-const { games, total: totalGames } = await fetchGames(dbClient, {
-  userId: user?.id,
-  limit: 24,
-  sort: initialSort,
-});
+const [gameStatuses, tags, { games, total: totalGames }] = await Promise.all([
+  loadGameStatuses(dbClient),
+  loadTags(dbClient),
+  fetchGames(dbClient, {
+    userId: user?.id,
+    limit: 24,
+    sort: initialSort,
+  }),
+]);
 ---
 
 <Layout user={user}>
@@ -40,6 +43,7 @@ const { games, total: totalGames } = await fetchGames(dbClient, {
 
   <GamesLayout
     gameStatuses={gameStatuses}
+    tags={tags}
     games={games}
     totalGames={totalGames}
     user={user as User}
@@ -51,10 +55,10 @@ const { games, total: totalGames } = await fetchGames(dbClient, {
   import htmx from "htmx.org";
   import Alpine from "alpinejs";
   import type {
+    FilterGroupStore,
     FiltersStore,
     GameSortOption,
     SearchStore,
-    StatusFilterStore,
   } from "@/types";
   import {
     GAMES_PREFERENCES_KEY,
@@ -78,10 +82,11 @@ const { games, total: totalGames } = await fetchGames(dbClient, {
         gamesFilterMenuOpen: isDesktopViewport,
       },
     });
-    const statusFilterStore: StatusFilterStore = {
+
+    const createFilterGroupStore = (): FilterGroupStore => ({
       included: new Set<string>(),
       excluded: new Set<string>(),
-      toggle(id: number | string, mode: "plus" | "minus") {
+      toggle(id: number | string, mode: "plus" | "minus" | string) {
         const key = String(id);
         const isPlus = mode === "plus";
         const target = isPlus ? this.included : this.excluded;
@@ -102,26 +107,47 @@ const { games, total: totalGames } = await fetchGames(dbClient, {
         // Notify HTMX to perform a new search request
         window.document.body.dispatchEvent(new CustomEvent("filter-changed"));
       },
-      reset() {
+      reset(skipDispatch = false) {
         if (this.count === 0) return;
         this.included = new Set();
         this.excluded = new Set();
-        // Reset offset on filter reset
-        (Alpine.store("search") as SearchStore).resetOffset();
-        window.document.body.dispatchEvent(new CustomEvent("filter-changed"));
+        if (!skipDispatch) {
+          // Reset offset on filter reset
+          (Alpine.store("search") as SearchStore).resetOffset();
+          window.document.body.dispatchEvent(new CustomEvent("filter-changed"));
+        }
       },
       get count() {
         return this.included.size + this.excluded.size;
       },
-      isActive(id: number | string, mode: "plus" | "minus") {
+      isActive(id: number | string, mode: "plus" | "minus" | string) {
         const key = String(id);
         return mode === "plus"
           ? this.included.has(key)
           : this.excluded.has(key);
       },
-    };
+    });
+
+    const statusFilterStore = createFilterGroupStore();
+    const tagFilterStore = createFilterGroupStore();
+
     const filtersStore: FiltersStore = {
       status: statusFilterStore,
+      tag: tagFilterStore,
+      resetAll() {
+        const search = (Alpine as any).store("search") as
+          SearchStore | undefined;
+        const statusStore = search?.filters?.status ?? this.status;
+        const tagStore = search?.filters?.tag ?? this.tag;
+        if ((this.totalCount ?? 0) === 0) return;
+        statusStore?.reset(true);
+        tagStore?.reset(true);
+        search?.resetOffset();
+        window.document.body.dispatchEvent(new CustomEvent("filter-changed"));
+      },
+      get totalCount() {
+        return (this.status?.count ?? 0) + (this.tag?.count ?? 0);
+      },
     };
 
     const layoutEl =
@@ -130,8 +156,7 @@ const { games, total: totalGames } = await fetchGames(dbClient, {
         : null;
     const isLoggedIn = layoutEl?.dataset?.loggedIn === "true";
     const serverSort = layoutEl?.dataset?.initialSort as
-      | GameSortOption
-      | undefined;
+      GameSortOption | undefined;
 
     const initialPrefs = loadGamesPreferences();
     const clientSort = resolveGameSortOption(initialPrefs.sort, isLoggedIn);
