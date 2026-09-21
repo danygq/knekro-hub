@@ -1,7 +1,7 @@
 ---
 module: routing-ui
 owner_area: frontend
-last_verified_against_commit: 9631250
+last_verified_against_commit: ca6bf9a
 depends_on: [data-layer, auth]
 ---
 
@@ -51,12 +51,13 @@ within `<body>`.
 Main games library route. Performs initial SSR fetches:
 
 - `loadGameStatuses(dbClient)`: list of statuses with game counts.
+- `loadTags(dbClient)`: list of tags/genres with game counts (`games_with_this_tag > 0`).
 - `fetchGames(dbClient, { userId, limit: 24, sort: initialSort })`: initial set of 24 games loaded directly with the user's preferred sort, read from `knk_games_preferences` cookie during SSR.
 
 Initializes Alpine stores on `alpine:init`:
 
 - `games.layout`: `{ isDesktop, gamesFilterMenuOpen }`.
-- `search`: `{ query, offset: 0, limit: 24, sort: effectiveSort, filters: { status: statusFilterStore }, setSort(), resetOffset() }`.
+- `search`: `{ query, offset: 0, limit: 24, sort: effectiveSort, filters: { status, tag, resetAll(), totalCount }, setSort(), resetOffset() }`.
 - Reads stored sorting preference from cookie/localStorage (`knk_games_preferences` via `src/lib/preferences.ts`); falls back to `name_asc` if unauthenticated and personal vote sort was saved. Because SSR renders with the preferred sort on initial load, no secondary client search request is needed on page refresh.
 
 Renders `GamesLayout.astro` with fetched data and matching initial dropdown label.
@@ -74,23 +75,23 @@ Renders `GamesLayout.astro` with fetched data and matching initial dropdown labe
 
 ### Games Library (`src/components/games/`)
 
-| Component                       | Role                                                                                                                                                                                                                                                               |
-| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `GamesLayout.astro`             | Main layout container. Manages drawer toggle button (with active filter count badge) and responsive classes (`filters-off`). Contains filter menu, search, and grid.                                                                                               |
-| `GamesFilterMenu.astro`         | Off-canvas/sidebar filter panel. Provides 3-state status filtering (include `+`, exclude `-`, neutral) per status plus "Todas" reset. Binds to `$store.search.filters.status` and dispatches `filter-changed` event.                                               |
-| `GameSearch.astro`              | Search input field with 300ms debounce, loading spinner (`.htmx-request`), and clear button. Triggers HTMX `GET /api/games/search` on input and `filter-changed` from body, serializing Alpine store values (`q`, `inc`, `exc`, `sort`, `offset: 0`, `limit: 24`). |
-| `GameSortDropdown.astro`        | Sort dropdown popover for ordering games (alphabetical, community vote avg, and personal user votes). Updates `$store.search.sort` and dispatches `filter-changed`.                                                                                                |
-| `GameCard.astro`                | 2:3 card displaying cover, status, community votes, and personal vote. Owns Alpine local state (`x-data="{ open: false }"`) for toggling `VoteOverlay`.                                                                                                            |
-| `GameCover.astro`               | Cover image handler with dynamic lazy/eager loading support and fallback placeholder SVG when `cover_url` is missing.                                                                                                                                              |
-| `GameStatusBadge.astro`         | Status badge pinned to top-left of the card cover. Reused across `GameCard`, `RankingGameCard`, and `RankingPodiumSlot`.                                                                                                                                           |
-| `GameCommunityVotesBadge.astro` | Displays community vote average (formatted via `formatAvg`) and total vote count on the card.                                                                                                                                                                      |
-| `GameUserVoteBadge.astro`       | Highlights the current logged-in user's vote on the card.                                                                                                                                                                                                          |
-| `VoteOverlay.astro`             | Interactive popover overlay with 1–10 rating buttons for authenticated users.                                                                                                                                                                                      |
-| `VoteButton.astro`              | HTMX vote button posting to `/api/games/vote`. Replaces card with updated server response via `outerHTML`.                                                                                                                                                         |
-| `GameDetailTags.astro`          | Renders game tags in a dedicated flex container below the cover art on `/games/[id]`. Displays up to 5 tags with inline `...` button expanding remaining tags in place.                                                                                            |
-| `GameDetailVoting.astro`        | Rating and voting section on `/games/[id]`. Renders community vote average/count and 1–10 rating buttons (`view=detail`) or Twitch login prompt. Replaces itself atomically via HTMX `outerHTML` swap.                                                             |
-| `GameStatusEditor.astro`        | Game status badge and inline editor on `/games/[id]`. Renders read-only badge for regular visitors, and interactive pencil button with Alpine popover status picker for `owner` and `manager` roles, updating via HTMX `POST /api/games/status`.                   |
-| `InfiniteScrollSentinel.astro`  | Infinite scroll sentinel trigger rendered at grid bottom when more games exist. Triggers HTMX `GET /api/games/search` on `revealed` and swaps `outerHTML` with next batch of cards + next sentinel.                                                                |
+| Component                       | Role                                                                                                                                                                                                                                                                                                                                                         |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `GamesLayout.astro`             | Main layout container. Manages drawer toggle button (with active filter count badge summing status and genre filters) and responsive classes (`filters-off`). Contains filter menu, search, and grid.                                                                                                                                                        |
+| `GamesFilterMenu.astro`         | Off-canvas/sidebar filter panel with collapsible Estado and Géneros sections (expanded by default). Provides 3-state filtering (include `+`, exclude `-`, neutral) for statuses and genres, inline genre search, bounded scrollable container (max 10 items), and "Todas" reset all. Binds to `$store.search.filters` and dispatches `filter-changed` event. |
+| `GameSearch.astro`              | Search input field with 300ms debounce, loading spinner (`.htmx-request`), and clear button. Triggers HTMX `GET /api/games/search` on input and `filter-changed` from body, serializing Alpine store values (`q`, `inc`, `exc`, `inc_tags`, `exc_tags`, `sort`, `offset: 0`, `limit: 24`).                                                                   |
+| `GameSortDropdown.astro`        | Sort dropdown popover for ordering games (alphabetical, community vote avg, and personal user votes). Updates `$store.search.sort` and dispatches `filter-changed`.                                                                                                                                                                                          |
+| `GameCard.astro`                | 2:3 card displaying cover, status, community votes, and personal vote. Owns Alpine local state (`x-data="{ open: false }"`) for toggling `VoteOverlay`.                                                                                                                                                                                                      |
+| `GameCover.astro`               | Cover image handler with dynamic lazy/eager loading support and fallback placeholder SVG when `cover_url` is missing.                                                                                                                                                                                                                                        |
+| `GameStatusBadge.astro`         | Status badge pinned to top-left of the card cover. Reused across `GameCard`, `RankingGameCard`, and `RankingPodiumSlot`.                                                                                                                                                                                                                                     |
+| `GameCommunityVotesBadge.astro` | Displays community vote average (formatted via `formatAvg`) and total vote count on the card.                                                                                                                                                                                                                                                                |
+| `GameUserVoteBadge.astro`       | Highlights the current logged-in user's vote on the card.                                                                                                                                                                                                                                                                                                    |
+| `VoteOverlay.astro`             | Interactive popover overlay with 1–10 rating buttons for authenticated users.                                                                                                                                                                                                                                                                                |
+| `VoteButton.astro`              | HTMX vote button posting to `/api/games/vote`. Replaces card with updated server response via `outerHTML`.                                                                                                                                                                                                                                                   |
+| `GameDetailTags.astro`          | Renders game tags in a dedicated flex container below the cover art on `/games/[id]`. Displays up to 5 tags with inline `...` button expanding remaining tags in place.                                                                                                                                                                                      |
+| `GameDetailVoting.astro`        | Rating and voting section on `/games/[id]`. Renders community vote average/count and 1–10 rating buttons (`view=detail`) or Twitch login prompt. Replaces itself atomically via HTMX `outerHTML` swap.                                                                                                                                                       |
+| `GameStatusEditor.astro`        | Game status badge and inline editor on `/games/[id]`. Renders read-only badge for regular visitors, and interactive pencil button with Alpine popover status picker for `owner` and `manager` roles, updating via HTMX `POST /api/games/status`.                                                                                                             |
+| `InfiniteScrollSentinel.astro`  | Infinite scroll sentinel trigger rendered at grid bottom when more games exist. Triggers HTMX `GET /api/games/search` on `revealed` and swaps `outerHTML` with next batch of cards + next sentinel (passing `inc_tags` and `exc_tags`).                                                                                                                      |
 
 ### Rankings (`src/components/ranking/`)
 
@@ -130,7 +131,7 @@ Interactivity on `/games` follows a unified Alpine + HTMX pattern:
 ```
 [GamesFilterMenu]                  [GameSearch]                    [InfiniteScrollSentinel]
        │                                │                                    │
-  toggle status                    type query                           scroll near bottom
+ toggle status/genre               type query                           scroll near bottom
        │                                │                                    │
 resets $store.search.offset = 0    resets $store.search.offset = 0           fires revealed event
        │                                │                                    │

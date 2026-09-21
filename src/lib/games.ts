@@ -9,6 +9,7 @@ import type {
   GameRecentPlay,
   GameSortOption,
   GameStatus,
+  Tag,
 } from "@/types";
 import type { Order } from "@/types/db.ts";
 
@@ -30,6 +31,22 @@ export async function loadGameStatuses(
     return [];
   }
   return data as GameStatus[];
+}
+
+export async function loadTags(
+  client: SupabaseClient,
+  order: Order = { field: "name", options: { ascending: true } },
+): Promise<Tag[]> {
+  const { data, error } = await client
+    .from("tags")
+    .select("id, name, games_with_this_tag")
+    .gt("games_with_this_tag", 0)
+    .order(order.field, order.options);
+  if (error) {
+    console.error("Error fetching tags:", error);
+    return [];
+  }
+  return data as Tag[];
 }
 
 /**
@@ -84,6 +101,8 @@ export interface FetchGamesParams {
   query?: string;
   includedStatusIds?: number[];
   excludedStatusIds?: number[];
+  includedTagIds?: number[];
+  excludedTagIds?: number[];
   sort?: GameSortOption;
   offset?: number;
   limit?: number;
@@ -103,6 +122,8 @@ export async function fetchGames(
     query = "",
     includedStatusIds = [],
     excludedStatusIds = [],
+    includedTagIds = [],
+    excludedTagIds = [],
     sort = "name_asc",
     offset = 0,
     limit = 24,
@@ -114,6 +135,8 @@ export async function fetchGames(
     p_search: query,
     p_inc_status: includedStatusIds,
     p_exc_status: excludedStatusIds,
+    p_inc_tags: includedTagIds,
+    p_exc_tags: excludedTagIds,
     p_sort: sort,
     p_limit: limit,
     p_offset: offset,

@@ -16,6 +16,8 @@ const parseIds = (raw: string | null) =>
 const q = (Astro.url.searchParams.get("q") ?? "").trim();
 const includedStatusIds = parseIds(Astro.url.searchParams.get("inc"));
 const excludedStatusIds = parseIds(Astro.url.searchParams.get("exc"));
+const includedTagIds = parseIds(Astro.url.searchParams.get("inc_tags"));
+const excludedTagIds = parseIds(Astro.url.searchParams.get("exc_tags"));
 const sort = (Astro.url.searchParams.get("sort") ??
   "name_asc") as GameSortOption;
 const offset = Math.max(0, Number(Astro.url.searchParams.get("offset") ?? "0"));
@@ -28,6 +30,8 @@ const { games, total } = await fetchGames(dbClient, {
   query: q,
   includedStatusIds,
   excludedStatusIds,
+  includedTagIds,
+  excludedTagIds,
   sort,
   offset,
   limit,
@@ -36,7 +40,11 @@ const { games, total } = await fetchGames(dbClient, {
 
 const visibleCount = Math.min(total, offset + games.length);
 const hasActiveFilters =
-  q !== "" || includedStatusIds.length > 0 || excludedStatusIds.length > 0;
+  q !== "" ||
+  includedStatusIds.length > 0 ||
+  excludedStatusIds.length > 0 ||
+  includedTagIds.length > 0 ||
+  excludedTagIds.length > 0;
 const noResults = hasActiveFilters && total === 0;
 const hasMore = offset + limit < total;
 const nextOffset = offset + limit;

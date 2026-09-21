@@ -95,7 +95,7 @@ export interface Game {
 export interface Tag {
   id: number;
   name: string;
-  created_at: string;
+  created_at?: string;
   games_with_this_tag: number;
 }
 

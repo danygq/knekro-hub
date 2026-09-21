@@ -1,6 +1,6 @@
 ---
 import GamesFilterMenu from "./GamesFilterMenu.astro";
-import type { GameDetails, GameSortOption, GameStatus } from "@/types";
+import type { GameDetails, GameSortOption, GameStatus, Tag } from "@/types";
 import GameCard from "./GameCard.astro";
 import { type User } from "@supabase/auth-js";
 import GameSearch from "./GameSearch.astro";
@@ -10,6 +10,7 @@ import { SlidersHorizontal } from "@lucide/astro";
 
 interface Props {
   gameStatuses: GameStatus[];
+  tags: Tag[];
   games: GameDetails[];
   totalGames: number;
   user: User | null;
@@ -18,6 +19,7 @@ interface Props {
 
 const {
   gameStatuses,
+  tags = [],
   games,
   totalGames,
   user,
@@ -36,7 +38,7 @@ const {
     window.addEventListener('resize', () => { $store.games.layout.isDesktop = window.innerWidth >= 1024 });
   "
 >
-  <GamesFilterMenu gameStatuses={gameStatuses} />
+  <GamesFilterMenu gameStatuses={gameStatuses} tags={tags} />
 
   <div class="games-content min-w-0">
     {games.length === 0 ? (
@@ -60,8 +62,8 @@ const {
               <span>Filtros</span>
               <span
                 id="filter-count"
-                x-text="$store?.search?.filters?.status?.count ?? 0"
-                :hidden="!$store?.search?.filters?.status?.count"
+                x-text="$store?.search?.filters?.totalCount ?? $store?.search?.filters?.status?.count ?? 0"
+                :hidden="!($store?.search?.filters?.totalCount ?? $store?.search?.filters?.status?.count)"
                 class="min-w-4.5 h-4.5 px-1 inline-flex items-center justify-center rounded-full bg-(--knk-primary) text-[--knk-blue-50] text-xs font-semibold tabular-nums"
               ></span>
             </button>

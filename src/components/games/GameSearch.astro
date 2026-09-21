@@ -27,7 +27,7 @@ import { Search, X } from "@lucide/astro";
       @input="$store.search?.resetOffset?.()"
       hx-get="/api/games/search"
       hx-trigger="input changed delay:300ms, search, refreshSearch from:body, filter-changed from:body"
-      hx-vals="js:{ q: Alpine.store('search').query, inc: Array.from(Alpine.store('search').filters.status.included).join(','), exc: Array.from(Alpine.store('search').filters.status.excluded).join(','), sort: Alpine.store('search').sort || 'name_asc', offset: 0, limit: 24 }"
+      hx-vals="js:{ q: Alpine.store('search').query, inc: Array.from(Alpine.store('search').filters.status.included).join(','), exc: Array.from(Alpine.store('search').filters.status.excluded).join(','), inc_tags: Array.from(Alpine.store('search')?.filters?.tag?.included ?? []).join(','), exc_tags: Array.from(Alpine.store('search')?.filters?.tag?.excluded ?? []).join(','), sort: Alpine.store('search').sort || 'name_asc', offset: 0, limit: 24 }"
       hx-target="#games-grid"
       hx-swap="innerHTML"
       hx-sync="this:replace"
