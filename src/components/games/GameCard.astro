@@ -1,7 +1,7 @@
 ---
 import VoteOverlay from "./VoteOverlay.astro";
 import { formatAvg } from "@/lib/games.ts";
-import type { GameDetails } from "@/types";
+import type { GameDetailPageData, GameDetails } from "@/types";
 import GameStatusBadge from "./GameStatusBadge.astro";
 import GameUserVoteBadge from "./GameUserVoteBadge.astro";
 import GameCommunityVotesBadge from "./GameCommunityVotesBadge.astro";
@@ -9,7 +9,7 @@ import GameRefreshButton from "./GameRefreshButton.astro";
 import GameCover from "@/components/games/GameCover.astro";
 
 interface Props {
-  game: GameDetails;
+  game: GameDetails | GameDetailPageData;
   loggedIn: boolean;
   loading?: "lazy" | "eager";
 }
@@ -18,13 +18,19 @@ const { game, loggedIn, loading = "lazy" } = Astro.props;
 const {
   name,
   cover_url: coverUrl,
-  status,
   id: gameId,
   avg_vote: communityAvg,
   vote_count: voteCount,
 } = game;
+const status =
+  "status" in game && game.status
+    ? game.status
+    : { name: (game as GameDetailPageData).status_name };
+const userVote =
+  typeof game.user_vote === "number"
+    ? game.user_vote
+    : game.user_vote?.[0]?.vote;
 const avgLabel = game.avg_vote ? formatAvg(game.avg_vote) : "−";
-const userVote = game.user_vote?.[0]?.vote;
 ---
 
 <article
@@ -32,8 +38,14 @@ const userVote = game.user_vote?.[0]?.vote;
   x-data="{ open: false }"
   @keydown.escape.window="open = false"
 >
-  <div class=`relative bg-(--knk-surface-2) knk-grid-bg overflow-hidden`>
-    <GameCover coverUrl={coverUrl} name={name} loading={loading} />
+  <div class="relative bg-(--knk-surface-2) knk-grid-bg overflow-hidden">
+    <a
+      href={`/games/${gameId}`}
+      class="block focus:outline-none focus-visible:ring-2 focus-visible:ring-(--knk-primary)"
+      aria-label={`Ver detalles de ${name}`}
+    >
+      <GameCover coverUrl={coverUrl} name={name} loading={loading} />
+    </a>
     <GameRefreshButton gameId={gameId} />
     <GameStatusBadge status={status} />
 
@@ -51,10 +63,15 @@ const userVote = game.user_vote?.[0]?.vote;
 
   <div class="p-4 max-h-fit overflow-hidden text-ellipsis">
     <h3
-      class="font-(--font-display) text-base overflow-hidden text-ellipsis tracking-tight group-hover:text-(--knk-primary) transition-colors cursor-default"
+      class="font-(--font-display) text-base overflow-hidden text-ellipsis tracking-tight"
       title={name}
     >
-      {name}
+      <a
+        href={`/games/${gameId}`}
+        class="block overflow-hidden text-ellipsis group-hover:text-(--knk-primary) transition-colors hover:underline focus:outline-none focus-visible:ring-1 focus-visible:ring-(--knk-primary)"
+      >
+        {name}
+      </a>
     </h3>
   </div>
 </article>

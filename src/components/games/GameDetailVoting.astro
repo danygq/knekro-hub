@@ -1,0 +1,115 @@
+---
+import { formatAvg } from "@/lib/games.ts";
+import type { GameDetailPageData } from "@/types";
+import type { User } from "@supabase/supabase-js";
+import LoginButton from "@/components/LoginButton.astro";
+import { Star, Users, Check } from "@lucide/astro";
+
+interface Props {
+  game: GameDetailPageData;
+  user?: User | null;
+}
+
+const { game, user } = Astro.props;
+const avgLabel = game.avg_vote != null ? formatAvg(game.avg_vote) : "−";
+const voteCount = game.vote_count ?? 0;
+const userVote = game.user_vote;
+const isAuthenticated = !!user;
+---
+
+<div
+  id="game-detail-voting"
+  class="knk-detail-voting-panel p-5 sm:p-6 rounded-lg bg-(--knk-surface) border border-(--knk-line) transition-all"
+>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+    <!-- Community Rating Block -->
+    <div class="flex items-center gap-4">
+      <div class="size-14 sm:size-16 rounded-lg bg-(--knk-surface-2) border border-(--knk-line) flex flex-col items-center justify-center shrink-0">
+        <Star class="size-5 sm:size-6 text-(--knk-primary) fill-(--knk-primary)/20 mb-0.5" />
+        <span class="font-(--font-display) font-bold text-lg sm:text-xl text-(--knk-primary) leading-none">
+          {avgLabel}
+        </span>
+      </div>
+      <div>
+        <p class="text-xs uppercase font-semibold tracking-wider text-(--knk-text-muted)">
+          Puntuación comunidad
+        </p>
+        <div class="flex items-center gap-2 mt-1">
+          <span class="text-xl sm:text-2xl font-bold tracking-tight text-(--knk-text)">
+            {avgLabel !== "−" ? `${avgLabel} / 10` : "Sin puntuación"}
+          </span>
+        </div>
+        <p class="text-xs text-(--knk-text-faint) flex items-center gap-1 mt-0.5">
+          <Users class="size-3.5 inline" />
+          {voteCount}
+          {voteCount === 1 ? " voto" : " votos"} en total
+        </p>
+      </div>
+    </div>
+
+    <!-- User Vote Action Block -->
+    <div class="border-t md:border-t-0 md:border-l border-(--knk-line) pt-4 md:pt-0 md:pl-6">
+      {isAuthenticated ? (
+        <div>
+          <div class="flex items-center justify-between gap-2 mb-2">
+            <span class="text-xs uppercase font-semibold tracking-wider text-(--knk-text-muted)">
+              Tu valoración
+            </span>
+            {userVote != null ? (
+              <span class="inline-flex items-center gap-1 text-xs font-medium text-(--knk-primary)">
+                <Check class="size-3.5" /> Votado ({userVote}/10)
+              </span>
+            ) : (
+              <span class="text-xs text-(--knk-text-faint)">Sin valorar</span>
+            )}
+          </div>
+
+          <div class="grid grid-cols-10 gap-1 sm:gap-1.5" id="detail-vote-grid">
+            {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => {
+              const isActive = n === userVote;
+              return (
+                <button
+                  type="button"
+                  hx-post="/api/games/vote"
+                  hx-vals={`{"game_id": ${game.id}, "vote": ${n}, "view": "detail"}`}
+                  hx-target="#game-detail-voting"
+                  hx-swap="outerHTML"
+                  title={
+                    isActive
+                      ? `Puntuación actual: ${n} (pulsa para cancelar)`
+                      : `Votar con ${n}`
+                  }
+                  aria-label={`Votar ${n}`}
+                  class={`knk-notch-sm py-2 text-xs sm:text-sm font-semibold border transition-all cursor-pointer flex items-center justify-center ${
+                    isActive
+                      ? "bg-(--knk-primary) text-(--knk-bg) border-(--knk-primary) shadow-sm font-bold"
+                      : "bg-(--knk-surface-2) text-(--knk-text) border-(--knk-line) hover:border-(--knk-line-strong) hover:bg-(--knk-surface)"
+                  }`}
+                >
+                  {n}
+                </button>
+              );
+            })}
+          </div>
+          <p class="text-[11px] text-(--knk-text-faint) mt-2 text-right">
+            {userVote != null
+              ? "Pulsa tu nota para retirar tu voto."
+              : "Haz clic en un número para guardar tu puntuación."}
+          </p>
+        </div>
+      ) : (
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <p class="text-sm font-medium text-(--knk-text)">
+              ¿Has jugado a este juego?
+            </p>
+            <p class="text-xs text-(--knk-text-muted) mt-0.5">
+              Inicia sesión con Twitch para dejar tu puntuación.
+            </p>
+          </div>
+          <LoginButton />
+        </div>
+      )}
+    </div>
+  </div>
+</div>

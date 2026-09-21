@@ -105,3 +105,27 @@ export interface GameTag {
   tag_id: number;
   created_at: string;
 }
+
+/** Single stream play history item returned by get_game_by_id RPC */
+export interface GameRecentPlay {
+  id: number;
+  event_timestamp: string | null;
+  created_at: string;
+  category_name: string | null;
+}
+
+/** Composite payload for the game detail page (/games/[id]) */
+export interface GameDetailPageData {
+  id: number;
+  name: string;
+  cover_url: string | null;
+  vote_count: number | null;
+  avg_vote: number | null;
+  game_status_id: number | null;
+  status_name: string | null;
+  twitch_game_id: string | null;
+  last_played_at: string | null;
+  user_vote: number | null;
+  tags: string[];
+  recent_plays: GameRecentPlay[];
+}

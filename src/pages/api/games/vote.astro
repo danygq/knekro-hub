@@ -1,10 +1,11 @@
 ---
 import { loadGameById } from "@/lib/games";
 import GameCard from "@/components/games/GameCard.astro";
+import GameDetailVoting from "@/components/games/GameDetailVoting.astro";
 
 // DB-first vote endpoint: upserts the user's vote (or clears it on a re-click),
-// then re-queries the game by id and returns a server-rendered <GameCard>.
-// HTMX swaps this response into the card via outerHTML.
+// then re-queries the game by id and returns a server-rendered <GameCard> or <GameDetailVoting>.
+// HTMX swaps this response into the target via outerHTML.
 if (Astro.request.method !== "POST") {
   return new Response(null, { status: 405, headers: { Allow: "POST" } });
 }
@@ -22,6 +23,7 @@ if (!user) {
 const form = await Astro.request.formData();
 const gameId = Number(form.get("game_id"));
 const submittedVote = form.get("vote");
+const view = form.get("view");
 const vote =
   submittedVote === null || submittedVote === "null"
     ? null
@@ -67,4 +69,8 @@ if (!game) {
 }
 ---
 
-<GameCard game={game} loggedIn={!!user} loading="eager" />
+{view === "detail" ? (
+  <GameDetailVoting game={game} user={user} />
+) : (
+  <GameCard game={game} loggedIn={!!user} loading="eager" />
+)}

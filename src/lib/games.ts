@@ -3,7 +3,13 @@
 // `window`/`document` so it never touches the browser.
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { GameDetails, GameSortOption, GameStatus } from "@/types";
+import type {
+  GameDetailPageData,
+  GameDetails,
+  GameRecentPlay,
+  GameSortOption,
+  GameStatus,
+} from "@/types";
 import type { Order } from "@/types/db.ts";
 
 /** Format an average: whole numbers as integers, otherwise max 1 decimal. */
@@ -27,39 +33,51 @@ export async function loadGameStatuses(
 }
 
 /**
- * Select string used by {@link loadGameById}:
- * the slim projection the grid renders (DB-maintained avg/count columns +
- * the embedded status join). `game_status_id` is included so the client can
- * filter cards by status without a second query.
+ * Fetch a single game by id with tags, vote stats, user vote, and recent stream plays
+ * using the atomic `get_game_by_id` Postgres RPC.
  */
-function gamesSelectFields(userId?: string): string {
-  let fields =
-    "id, name, cover_url, vote_count, avg_vote, status:game_status!game_status_id(id, name), game_status_id";
-  if (userId) {
-    fields += ", user_vote:games_user_votes(vote)";
-  }
-  return fields;
-}
-
-/** Fetch a single game by id with the standard projection. */
 export async function loadGameById(
   client: SupabaseClient,
   gameId: number,
   userId?: string,
-): Promise<GameDetails | null> {
-  let query = client
-    .from("games")
-    .select(gamesSelectFields(userId))
-    .eq("id", gameId);
-  if (userId) {
-    query = query.eq("games_user_votes.user_id", userId);
-  }
-  const { data, error } = await query.maybeSingle();
+): Promise<GameDetailPageData | null> {
+  const { data, error } = await client
+    .rpc("get_game_by_id", {
+      p_game_id: gameId,
+      p_user_id: userId ?? null,
+    })
+    .maybeSingle();
+
   if (error) {
-    console.error("Error fetching game by id:", error);
+    console.error("Error fetching game by id via RPC:", error);
     return null;
   }
-  return (data as GameDetails | null) ?? null;
+
+  if (!data) return null;
+
+  const raw = data as any;
+  const rawPlays = raw.recent_plays;
+  const recentPlays: GameRecentPlay[] = Array.isArray(rawPlays)
+    ? rawPlays
+    : typeof rawPlays === "string"
+      ? JSON.parse(rawPlays)
+      : [];
+
+  return {
+    id: Number(raw.id),
+    name: raw.name,
+    cover_url: raw.cover_url,
+    vote_count: raw.vote_count != null ? Number(raw.vote_count) : null,
+    avg_vote: raw.avg_vote != null ? Number(raw.avg_vote) : null,
+    game_status_id:
+      raw.game_status_id != null ? Number(raw.game_status_id) : null,
+    status_name: raw.status_name ?? null,
+    twitch_game_id: raw.twitch_game_id ?? null,
+    last_played_at: raw.last_played_at ?? null,
+    user_vote: raw.user_vote != null ? Number(raw.user_vote) : null,
+    tags: Array.isArray(raw.tags) ? raw.tags : [],
+    recent_plays: recentPlays,
+  };
 }
 
 export interface FetchGamesParams {

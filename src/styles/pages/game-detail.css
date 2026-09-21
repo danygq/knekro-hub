@@ -1,0 +1,86 @@
+/* /games/[id] Game Detail Page.
+   Imported from pages/games/[id].astro frontmatter so it only ships with that route. */
+
+.knk-game-detail-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+}
+
+@media (min-width: 1024px) {
+  .knk-game-detail-layout {
+    grid-template-columns: 20rem 1fr;
+    gap: 3rem;
+    align-items: start;
+  }
+}
+
+/* Cover container */
+.knk-detail-cover-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 22rem;
+  margin-inline: auto;
+}
+
+@media (min-width: 1024px) {
+  .knk-detail-cover-wrapper {
+    margin-inline: 0;
+    position: sticky;
+    top: calc(4rem + 2rem);
+  }
+}
+
+.knk-detail-cover {
+  position: relative;
+  aspect-ratio: 2 / 3;
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid var(--knk-line);
+  background: var(--knk-surface-2);
+}
+
+/* Stream play timeline */
+.knk-stream-timeline {
+  position: relative;
+  padding-left: 1.5rem;
+}
+
+.knk-stream-timeline::before {
+  content: "";
+  position: absolute;
+  top: 0.5rem;
+  bottom: 0.5rem;
+  left: 0.45rem;
+  width: 2px;
+  background: var(--knk-line);
+}
+
+.knk-timeline-item {
+  position: relative;
+  margin-bottom: 1.25rem;
+}
+
+.knk-timeline-item:last-child {
+  margin-bottom: 0;
+}
+
+.knk-timeline-dot {
+  position: absolute;
+  top: 0.35rem;
+  left: -1.5rem;
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 9999px;
+  background: var(--knk-primary);
+  box-shadow: 0 0 0 3px var(--knk-surface);
+}
+
+/* Tag badge smooth styling */
+.knk-tag-badge {
+  transition: all 0.15s ease;
+}
+
+.knk-tag-expand-btn {
+  letter-spacing: 0.05em;
+}
