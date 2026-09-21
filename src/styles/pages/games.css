@@ -237,50 +237,6 @@
   border-color: var(--knk-line) !important;
 }
 
-.knk-vote-num {
-  background: var(--knk-surface);
-  color: var(--knk-text-muted);
-  border-color: var(--knk-line);
-}
-
-/* Reveal the tier color on hover (and on the active vote, see .active below). */
-.knk-vote-num:hover {
-  background: color-mix(in srgb, var(--vote-c) 15%, transparent);
-  color: color-mix(in srgb, var(--vote-c) 70%, var(--knk-text));
-  border-color: color-mix(in srgb, var(--vote-c) 30%, transparent);
-}
-
-.knk-vote-num.active {
-  background: var(--vote-c) !important;
-  color: var(--knk-text-inverse) !important;
-  border-color: var(--vote-c) !important;
-}
-
-.knk-vote-num-1,
-.knk-vote-num-2 {
-  --vote-c: var(--knk-red-500);
-}
-
-.knk-vote-num-3,
-.knk-vote-num-4 {
-  --vote-c: var(--knk-orange-500);
-}
-
-.knk-vote-num-5,
-.knk-vote-num-6 {
-  --vote-c: var(--knk-amber-500);
-}
-
-.knk-vote-num-7,
-.knk-vote-num-8 {
-  --vote-c: var(--knk-green-500);
-}
-
-.knk-vote-num-9,
-.knk-vote-num-10 {
-  --vote-c: var(--knk-blue-500);
-}
-
 .knk-vote-badge {
   text-shadow:
     -1px -1px 1px var(--tw-text-shadow-color, var(--knk-line)),

@@ -9,8 +9,8 @@
 
 @media (min-width: 1024px) {
   .knk-game-detail-layout {
-    grid-template-columns: 20rem 1fr;
-    gap: 3rem;
+    grid-template-columns: 260px 1fr;
+    gap: 2.5rem;
     align-items: start;
   }
 }
@@ -18,8 +18,8 @@
 /* Cover container */
 .knk-detail-cover-wrapper {
   position: relative;
-  width: 100%;
-  max-width: 22rem;
+  width: 260px;
+  max-width: 100%;
   margin-inline: auto;
 }
 
@@ -33,8 +33,11 @@
 
 .knk-detail-cover {
   position: relative;
+  width: 260px;
+  max-width: 100%;
+  height: 390px;
+  max-height: 390px;
   aspect-ratio: 2 / 3;
-  width: 100%;
   overflow: hidden;
   border: 1px solid var(--knk-line);
   background: var(--knk-surface-2);

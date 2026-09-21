@@ -64,7 +64,10 @@ const isAuthenticated = !!user;
             )}
           </div>
 
-          <div class="grid grid-cols-10 gap-1 sm:gap-1.5" id="detail-vote-grid">
+          <div
+            class="grid grid-cols-5 sm:grid-cols-10 gap-1.5 sm:gap-2"
+            id="detail-vote-grid"
+          >
             {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => {
               const isActive = n === userVote;
               return (
@@ -80,11 +83,24 @@ const isAuthenticated = !!user;
                       : `Votar con ${n}`
                   }
                   aria-label={`Votar ${n}`}
-                  class={`knk-notch-sm py-2 text-xs sm:text-sm font-semibold border transition-all cursor-pointer flex items-center justify-center ${
-                    isActive
-                      ? "bg-(--knk-primary) text-(--knk-bg) border-(--knk-primary) shadow-sm font-bold"
-                      : "bg-(--knk-surface-2) text-(--knk-text) border-(--knk-line) hover:border-(--knk-line-strong) hover:bg-(--knk-surface)"
-                  }`}
+                  class:list={[
+                    "knk-vote-num",
+                    `knk-vote-num-${n}`,
+                    "knk-notch-sm",
+                    "w-full",
+                    "h-10",
+                    "sm:h-11",
+                    "text-sm",
+                    "sm:text-base",
+                    "font-medium",
+                    "border",
+                    "transition-colors",
+                    "cursor-pointer",
+                    "flex",
+                    "items-center",
+                    "justify-center",
+                    { active: isActive },
+                  ]}
                 >
                   {n}
                 </button>
