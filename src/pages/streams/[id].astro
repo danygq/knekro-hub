@@ -1,0 +1,138 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import StreamActivityTimeline from "@/components/streams/StreamActivityTimeline.astro";
+import { loadStreamById } from "@/lib/streams";
+import { formatSpanishFullDate } from "@/lib/time";
+import { ChevronLeft, Clock, Tv } from "@lucide/astro";
+import "@/styles/pages/streams.css";
+
+const idParam = Astro.params.id;
+const streamId = Number(idParam);
+
+if (
+  !idParam ||
+  !/^\d+$/.test(idParam) ||
+  !Number.isInteger(streamId) ||
+  streamId <= 0
+) {
+  return new Response("Directo no encontrado", {
+    status: 404,
+    statusText: "Not Found",
+  });
+}
+
+const dbClient = Astro.locals.supabase;
+const user = Astro.locals.user;
+
+const stream = await loadStreamById(dbClient, streamId);
+
+if (!stream) {
+  return new Response("Directo no encontrado", {
+    status: 404,
+    statusText: "Not Found",
+  });
+}
+
+const formattedDate = formatSpanishFullDate(stream.started_at);
+const monthParam = stream.started_at.slice(0, 7);
+const dayParam = stream.started_at.slice(0, 10);
+---
+
+<Layout user={user}>
+  <Fragment slot="head">
+    <title>Directo del {formattedDate} — Knekro Hub</title>
+    <meta
+      name="description"
+      content={`Historial y categorías emitidas en el directo del ${formattedDate} en el canal de Knekro.`}
+    />
+  </Fragment>
+
+  <!-- Back Link -->
+  <div class="mb-6">
+    <a
+      href={`/streams?month=${monthParam}&day=${dayParam}`}
+      class="inline-flex items-center gap-1.5 text-sm font-medium text-(--knk-text-muted) hover:text-(--knk-primary) transition-colors cursor-pointer"
+    >
+      <ChevronLeft class="size-4" />
+      Volver al Calendario
+    </a>
+  </div>
+
+  <div class="max-w-4xl mx-auto space-y-8">
+    <!-- Stream Hero / Header -->
+    <div class="p-6 sm:p-8 rounded-xs bg-(--knk-surface) border border-(--knk-line) space-y-6">
+      <div class="flex flex-wrap items-center justify-between gap-4 border-b border-(--knk-line) pb-6">
+        <div>
+          <p class="knk-eyebrow mb-2">Emisión en Twitch</p>
+          <h1 class="font-(--font-display) text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-balance">
+            {formattedDate}
+          </h1>
+        </div>
+
+        {stream.is_live ? (
+          <span class="inline-flex items-center gap-2 px-3 py-1 rounded-xs text-xs font-bold uppercase tracking-wider bg-(--knk-danger)/15 text-(--knk-danger) border border-(--knk-danger)/30">
+            <span class="size-2 rounded-full bg-(--knk-danger) animate-ping" />
+            En directo
+          </span>
+        ) : (
+          <span class="px-3 py-1 rounded-xs text-xs font-semibold bg-(--knk-surface-2) text-(--knk-text-muted) border border-(--knk-line)">
+            Directo finalizado
+          </span>
+        )}
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="p-4 rounded-xs bg-(--knk-surface-2) border border-(--knk-line)">
+          <div class="flex items-center gap-2 text-xs text-(--knk-text-muted) mb-1">
+            <Clock class="size-3.5 text-(--knk-primary)" />
+            <span>Inicio de emisión</span>
+          </div>
+          <p class="text-lg font-mono font-bold text-(--knk-text)">
+            {stream.start_time_text}
+          </p>
+        </div>
+
+        <div class="p-4 rounded-xs bg-(--knk-surface-2) border border-(--knk-line)">
+          <div class="flex items-center gap-2 text-xs text-(--knk-text-muted) mb-1">
+            <Clock class="size-3.5 text-(--knk-primary)" />
+            <span>Fin de emisión</span>
+          </div>
+          <p class="text-lg font-mono font-bold text-(--knk-text)">
+            {stream.end_time_text}
+            {stream.spans_next_day && (
+              <span class="text-xs font-sans text-(--knk-text-muted) ml-1">
+                (+1 día)
+              </span>
+            )}
+          </p>
+        </div>
+
+        <div class="p-4 rounded-xs bg-(--knk-surface-2) border border-(--knk-line)">
+          <div class="flex items-center gap-2 text-xs text-(--knk-text-muted) mb-1">
+            <Tv class="size-3.5 text-(--knk-primary)" />
+            <span>Duración total</span>
+          </div>
+          <p class="text-lg font-mono font-bold text-(--knk-primary)">
+            {stream.total_duration_text}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Timeline of Categories Section -->
+    <div class="p-6 sm:p-8 rounded-xs bg-(--knk-surface) border border-(--knk-line) space-y-6">
+      <div class="flex items-center justify-between border-b border-(--knk-line) pb-4">
+        <h2 class="font-(--font-display) text-lg sm:text-xl font-bold tracking-tight">
+          Línea de tiempo de la emisión
+        </h2>
+        <span class="text-xs text-(--knk-text-faint)">
+          {stream.segments.length}{" "}
+          {stream.segments.length === 1 ? "categoría" : "categorías"}
+        </span>
+      </div>
+
+      <StreamActivityTimeline segments={stream.segments} />
+    </div>
+  </div>
+</Layout>

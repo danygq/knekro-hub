@@ -1,0 +1,96 @@
+---
+import type { StreamActivitySegment } from "@/types/streams";
+import { ChevronRight, Star, Tv } from "@lucide/astro";
+
+interface Props {
+  segments: StreamActivitySegment[];
+}
+
+const { segments } = Astro.props;
+---
+
+<div class="knk-stream-timeline">
+  {segments.map((segment) => (
+    <div class="knk-timeline-item">
+      <div class="knk-timeline-dot" />
+
+      <div class="flex flex-col gap-2">
+        <!-- Interval & Duration Header -->
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-mono text-xs font-semibold text-(--knk-primary)">
+              {segment.start_time} – {segment.end_time}
+            </span>
+            {segment.is_current && (
+              <span class="inline-flex items-center gap-1 px-1.5 py-0.25 text-[10px] font-bold uppercase tracking-wider rounded-xs bg-(--knk-danger)/10 text-(--knk-danger) border border-(--knk-danger)/20">
+                <span class="size-1.5 rounded-full bg-(--knk-danger) animate-ping" />
+                En curso
+              </span>
+            )}
+          </div>
+
+          <span class="text-xs font-mono px-2 py-0.5 rounded-xs bg-(--knk-surface-2) text-(--knk-text-muted) border border-(--knk-line)">
+            {segment.duration_text}
+          </span>
+        </div>
+
+        <!-- Category Title -->
+        <div class="flex items-center gap-2">
+          <Tv class="size-4 text-(--knk-text-muted) shrink-0" />
+          <span class="text-sm font-semibold text-(--knk-text)">
+            {segment.category_name}
+          </span>
+        </div>
+
+        <!-- Joined Game Card (if cataloged) -->
+        {segment.game_id && (
+          <div class="mt-1 flex items-center justify-between gap-3 p-2.5 rounded-xs bg-(--knk-surface-2)/70 border border-(--knk-line) hover:border-(--knk-line-strong) transition-colors">
+            <div class="flex items-center gap-3 min-w-0">
+              {segment.cover_url ? (
+                <img
+                  src={segment.cover_url}
+                  alt={segment.game_name ?? "Carátula del juego"}
+                  class="w-10 h-14 object-cover rounded-xs border border-(--knk-line) shrink-0 bg-(--knk-surface)"
+                  loading="lazy"
+                />
+              ) : (
+                <div class="w-10 h-14 rounded-xs bg-(--knk-surface) border border-(--knk-line) flex items-center justify-center shrink-0">
+                  <Tv class="size-5 text-(--knk-text-faint)" />
+                </div>
+              )}
+
+              <div class="flex flex-col min-w-0">
+                <span class="text-xs font-bold text-(--knk-text) truncate">
+                  {segment.game_name}
+                </span>
+
+                <div class="mt-1 flex flex-wrap items-center gap-2">
+                  {segment.status_name && (
+                    <span class="text-[10px] font-semibold px-1.5 py-0.25 rounded-xs bg-(--knk-surface) text-(--knk-primary) border border-(--knk-line)">
+                      {segment.status_name}
+                    </span>
+                  )}
+
+                  {segment.avg_vote != null && (
+                    <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-(--knk-primary)">
+                      <Star class="size-3 fill-(--knk-primary)" />
+                      {segment.avg_vote.toFixed(1)}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <a
+              href={`/games/${segment.game_id}`}
+              class="inline-flex items-center gap-1 text-xs font-medium text-(--knk-primary) hover:underline shrink-0"
+            >
+              Ficha
+              <ChevronRight class="size-3.5" />
+            </a>
+          </div>
+        )}
+      </div>
+    </div>
+  ))}
+</div>

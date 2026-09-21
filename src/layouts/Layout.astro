@@ -64,6 +64,16 @@ const currentPath = Astro.url.pathname;
               >
                 Juegos
               </a>
+              <a
+                href="/streams"
+                class={`text-sm font-medium pb-0.75 border-b-2 transition-colors ${
+                  currentPath.startsWith("/streams")
+                    ? "border-(--knk-primary) text-(--knk-text)"
+                    : "border-transparent text-(--knk-text-muted) hover:text-(--knk-text) hover:border-(--knk-line-strong)"
+                }`}
+              >
+                Directos
+              </a>
               {user && (await userHasRole(dbClient, user?.id, "owner")) && (
                 <a
                   href="/ranking"
@@ -129,6 +139,17 @@ const currentPath = Astro.url.pathname;
             }`}
           >
             <span>Juegos</span>
+          </a>
+          <a
+            href="/streams"
+            @click="mobileMenuOpen = false"
+            class={`flex items-center justify-between px-3 py-2 text-sm font-medium transition-colors ${
+              currentPath.startsWith("/streams")
+                ? "bg-(--knk-surface) text-(--knk-primary) border-l-2 border-(--knk-primary)"
+                : "text-(--knk-text-muted) hover:text-(--knk-text) hover:bg-(--knk-surface)"
+            }`}
+          >
+            <span>Directos</span>
           </a>
           <a
             href="/ranking"

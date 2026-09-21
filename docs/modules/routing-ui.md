@@ -16,6 +16,8 @@ File-based routing (Astro). All pages wrap `layouts/Layout.astro`.
 | `/`                     | `pages/index.astro`                | Twitch player + chat embeds, live broadcast status & timer, YouTube slot, posts feed                                           | `posts`, `streams` (server)                                                                            |
 | `/games`                | `pages/games.astro`                | Status filter drawer (`GamesFilterMenu`) + name search (`GameSearch`) + games grid                                             | `game_status` + `games` via `lib/games.ts` (server); search & status filtering via `/api/games/search` |
 | `/games/[id]`           | `pages/games/[id].astro`           | Game detail page (cover, tags with expander, community rating, user voting, stream history)                                    | `loadGameById` via `get_game_by_id` RPC (server)                                                       |
+| `/streams`              | `pages/streams/index.astro`        | Monthly streams calendar (LUN-DOM grid, day boxes, stream indicators) + responsive aside detail drawer (`StreamDetailDrawer`)  | `loadStreamsForCalendar` via `get_streams_by_date_range` RPC (server)                                  |
+| `/streams/[id]`         | `pages/streams/[id].astro`         | Standalone stream detail page (hero metadata, broadcast timing, chronological category & game timeline with segment durations) | `loadStreamById` via `get_stream_by_id` RPC (server)                                                   |
 | `/ranking`              | `pages/ranking/index.astro`        | Rankings hub — category track panels (`ranking_categories`)                                                                    | `ranking_categories` via `lib/ranking.ts` (server)                                                     |
 | `/ranking/goty`         | `pages/ranking/goty.astro`         | Dedicated GOTY category ranking & podium                                                                                       | `ranking_categories`, `ranking_items`, `games` via `lib/ranking.ts`                                    |
 | `/ranking/vuela-alto`   | `pages/ranking/vuela-alto.astro`   | Dedicated Vuela Alto category ranking & podium                                                                                 | `ranking_categories`, `ranking_items`, `games` via `lib/ranking.ts`                                    |
@@ -100,6 +102,15 @@ Renders `GamesLayout.astro` with fetched data and matching initial dropdown labe
 | `RankingSectionLayout.astro` | Section wrapper for dedicated ranking category views (header, podium wrapper, and selection pool).     |
 | `RankingPodiumScript.astro`  | Client-side SortableJS drag & drop logic and handlers for podium assignment/swaps.                     |
 
+### Streams & Calendar (`src/components/streams/`)
+
+| Component                      | Role                                                                                                                                                                           |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `StreamCalendar.astro`         | Month calendar wrapper: navigation header (`←`, month name, `→`, `Hoy`), Monday..Sunday weekday headers (`LUN` to `DOM`), and 7-column day grid.                               |
+| `StreamDayBox.astro`           | Individual calendar cell: day number, "Hoy" highlight, stream status badge (duration or live badge), category/game covers glimpse, and click handler opening the aside drawer. |
+| `StreamDetailDrawer.astro`     | Responsive aside detail drawer: mobile off-canvas drawer with backdrop, desktop slide-over panel, broadcast timings, segment intervals, and link to `/streams/[id]`.           |
+| `StreamActivityTimeline.astro` | Chronological vertical timeline displaying each category transition with start time, end time, segment duration badge, category title, and linked game card.                   |
+
 ### Icons & SVGs
 
 Icons across the project are standardized using [`@lucide/astro`](https://lucide.dev/guide/packages/lucide-astro):
@@ -148,13 +159,14 @@ dispatches 'filter-changed' ───────────►│             
 
 All CSS lives in one folder, split by responsibility. Tailwind v4 via `@tailwindcss/vite`; **no config file**.
 
-| File              | Contents                                                                                                     | Loaded by                       |
-| ----------------- | ------------------------------------------------------------------------------------------------------------ | ------------------------------- |
-| `global.css`      | entry: `@import "tailwindcss"` + tokens/base/utilities                                                       | Layout (all pages)              |
-| `tokens.css`      | `--knk-*` CSS vars on `:root`                                                                                | via `global.css`                |
-| `base.css`        | `body`, `::selection`, focus ring, reduced-motion, and `[x-cloak]` (`display: none !important`)              | via `global.css`                |
-| `utilities.css`   | `.knk-notch` / `.knk-notch-sm`, `.knk-eyebrow`, `.knk-grid-bg`                                               | via `global.css`                |
-| `pages/games.css` | `/games` filter panel (`.knk-filter-panel`, `.knk-filter-backdrop`, `.knk-filter-plus`, `.knk-filter-minus`) | `pages/games.astro` frontmatter |
+| File                | Contents                                                                                                        | Loaded by                                             |
+| ------------------- | --------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| `global.css`        | entry: `@import "tailwindcss"` + tokens/base/utilities                                                          | Layout (all pages)                                    |
+| `tokens.css`        | `--knk-*` CSS vars on `:root`                                                                                   | via `global.css`                                      |
+| `base.css`          | `body`, `::selection`, focus ring, reduced-motion, and `[x-cloak]` (`display: none !important`)                 | via `global.css`                                      |
+| `utilities.css`     | `.knk-notch` / `.knk-notch-sm`, `.knk-eyebrow`, `.knk-grid-bg`                                                  | via `global.css`                                      |
+| `pages/games.css`   | `/games` filter panel (`.knk-filter-panel`, `.knk-filter-backdrop`, `.knk-filter-plus`, `.knk-filter-minus`)    | `pages/games.astro` frontmatter                       |
+| `pages/streams.css` | `/streams` calendar & detail drawer (`.knk-stream-aside-panel`, `.knk-stream-backdrop`, `.knk-stream-timeline`) | `pages/streams/index.astro`, `[id].astro` frontmatter |
 
 Use `bg-(--knk-surface)`, `text-(--knk-text-muted)`, etc.
 

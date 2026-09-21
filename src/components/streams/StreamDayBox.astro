@@ -1,0 +1,109 @@
+---
+import type { CalendarDay } from "@/types/streams";
+import { Tv } from "@lucide/astro";
+
+interface Props {
+  day: CalendarDay;
+}
+
+const { day } = Astro.props;
+const hasStream = day.streams.length > 0;
+const primaryStream = hasStream ? day.streams[0] : null;
+
+// Unique categories played in this stream session
+const uniqueCategories: { name: string; cover_url: string | null }[] = [];
+if (primaryStream) {
+  const seen = new Set<string>();
+  for (const seg of primaryStream.segments) {
+    if (!seen.has(seg.category_name)) {
+      seen.add(seg.category_name);
+      uniqueCategories.push({
+        name: seg.category_name,
+        cover_url: seg.cover_url,
+      });
+    }
+  }
+}
+
+const dayPayload = JSON.stringify(day);
+---
+
+<div
+  role="button"
+  tabindex="0"
+  class={`knk-calendar-day group relative flex flex-col p-2 sm:p-2.5 rounded-xs border transition-all text-left w-full h-full min-h-[90px] sm:min-h-[115px] select-none cursor-pointer ${
+    !day.isCurrentMonth
+      ? "bg-(--knk-bg)/30 border-(--knk-line)/40 opacity-45"
+      : hasStream && primaryStream?.is_live
+        ? "bg-(--knk-danger)/5 border-(--knk-danger)/40 hover:border-(--knk-danger)"
+        : hasStream
+          ? "bg-(--knk-surface) border-(--knk-line) hover:border-(--knk-primary) hover:bg-(--knk-surface-2)"
+          : "bg-(--knk-surface)/60 border-(--knk-line)/60 hover:border-(--knk-line-strong) hover:bg-(--knk-surface)"
+  }`}
+  :class={`{ 'ring-2 ring-(--knk-primary) border-(--knk-primary) bg-(--knk-surface-2)': selectedDateStr === '${day.dateStr}' }`}
+  @click={`selectDay(${dayPayload})`}
+  @keydown.enter={`selectDay(${dayPayload})`}
+>
+  <!-- Top Bar: Day Number & Stream Indicator -->
+  <div class="flex items-center justify-between gap-1 w-full">
+    {day.isToday ? (
+      <span class="size-6 inline-flex items-center justify-center rounded-full bg-(--knk-primary) text-(--knk-bg) font-bold text-xs shadow-xs shrink-0">
+        {day.dayNumber}
+      </span>
+    ) : (
+      <span
+        class={`text-xs font-semibold ${
+          day.isCurrentMonth
+            ? "text-(--knk-text) group-hover:text-(--knk-primary) transition-colors"
+            : "text-(--knk-text-faint)"
+        }`}
+      >
+        {day.dayNumber}
+      </span>
+    )}
+
+    {primaryStream?.is_live ? (
+      <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-xs text-[10px] font-bold tracking-wider uppercase bg-(--knk-danger)/15 text-(--knk-danger) border border-(--knk-danger)/30 shrink-0">
+        <span class="size-1.5 rounded-full bg-(--knk-danger) animate-ping" />
+        Live
+      </span>
+    ) : hasStream && primaryStream ? (
+      <span class="text-[11px] font-mono font-medium text-(--knk-primary) shrink-0">
+        {primaryStream.total_duration_text}
+      </span>
+    ) : null}
+  </div>
+
+  <!-- Content / Glimpse of activities -->
+  {hasStream && primaryStream ? (
+    <div class="mt-auto pt-2 flex flex-col gap-1.5 w-full">
+      <div class="flex flex-wrap items-center gap-1.5">
+        {uniqueCategories.slice(0, 2).map((cat) => (
+          <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-xs text-[10px] font-medium bg-(--knk-surface-2) text-(--knk-text-muted) border border-(--knk-line) truncate max-w-[85px] sm:max-w-[110px]">
+            {cat.cover_url ? (
+              <img
+                src={cat.cover_url}
+                alt=""
+                class="size-3.5 object-cover rounded-xs shrink-0"
+                loading="lazy"
+              />
+            ) : (
+              <Tv class="size-3 text-(--knk-text-faint) shrink-0" />
+            )}
+            <span class="truncate">{cat.name}</span>
+          </span>
+        ))}
+
+        {uniqueCategories.length > 2 && (
+          <span class="text-[10px] font-medium text-(--knk-text-faint) shrink-0">
+            +{uniqueCategories.length - 2}
+          </span>
+        )}
+      </div>
+    </div>
+  ) : (
+    <div class="mt-auto hidden sm:flex items-center justify-start text-[11px] text-(--knk-text-faint)/60">
+      Descanso
+    </div>
+  )}
+</div>

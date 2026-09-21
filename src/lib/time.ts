@@ -197,3 +197,125 @@ export function formatStreamElapsedTime(
 
   return `${seconds} ${secUnit}`;
 }
+
+/**
+ * Formats duration between two stream timestamps into Spanish concise duration string.
+ * Example: "7 h 1 min", "45 min", "30 secs".
+ */
+export function formatStreamDuration(
+  startedAt: string | Date | null | undefined,
+  endedAt?: string | Date | null | undefined,
+): string {
+  if (!startedAt) return "--";
+
+  const startEpoch = getStreamMadridEpoch(startedAt);
+  if (!startEpoch) return "--";
+
+  let endEpoch: number | null = null;
+  if (endedAt) {
+    endEpoch = getStreamMadridEpoch(endedAt);
+  } else {
+    const nowStr = toMadridDateTimeString();
+    endEpoch = Date.parse(nowStr.replace(" ", "T") + "Z");
+  }
+
+  if (!endEpoch || endEpoch < startEpoch) return "--";
+
+  const totalSeconds = Math.floor((endEpoch - startEpoch) / 1000);
+  return formatDurationSeconds(totalSeconds);
+}
+
+/**
+ * Formats a duration in seconds into Spanish concise string.
+ * Examples: "7 h 1 min", "45 min", "20 secs".
+ */
+export function formatDurationSeconds(totalSeconds: number): string {
+  if (totalSeconds <= 0) return "0 min";
+
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  if (hours > 0) {
+    return minutes > 0 ? `${hours} h ${minutes} min` : `${hours} h`;
+  }
+
+  if (minutes > 0) {
+    return `${minutes} min`;
+  }
+
+  return `${seconds} secs`;
+}
+
+/**
+ * Formats year and month into Spanish capitalized title.
+ * Example: (2026, 9) => "Septiembre 2026"
+ */
+export function formatSpanishMonthYear(year: number, month: number): string {
+  const date = new Date(year, month - 1, 1);
+  const monthName = date.toLocaleDateString("es-ES", {
+    month: "long",
+  });
+  const capitalized = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+  return `${capitalized} ${year}`;
+}
+
+/**
+ * Formats a date string (YYYY-MM-DD or full timestamp) into full Spanish date.
+ * Example: "2026-09-20" => "Domingo, 20 de septiembre de 2026"
+ */
+export function formatSpanishFullDate(
+  dateInput: string | Date | null | undefined,
+): string {
+  if (!dateInput) return "--";
+
+  const date = parseStreamDate(dateInput);
+  if (!date) return String(dateInput);
+
+  const formatted = date.toLocaleDateString("es-ES", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    timeZone: MADRID_TZ,
+  });
+
+  return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+}
+
+/**
+ * Calculates start and end calendar bounds (inclusive dates YYYY-MM-DD)
+ * for a month grid aligned to Monday..Sunday (7 columns).
+ */
+export function getCalendarMonthBounds(
+  year: number,
+  month: number,
+): {
+  startDateStr: string;
+  endDateStr: string;
+  firstDayOfMonthStr: string;
+  lastDayOfMonthStr: string;
+} {
+  const firstDay = new Date(year, month - 1, 1);
+  const lastDay = new Date(year, month, 0);
+
+  // Day of week: 0=Sun, 1=Mon, ..., 6=Sat.
+  // We want 0=Mon, 6=Sun:
+  const startDayOfWeek = (firstDay.getDay() + 6) % 7;
+  const gridStart = new Date(year, month - 1, 1 - startDayOfWeek);
+
+  const endDayOfWeek = (lastDay.getDay() + 6) % 7;
+  const trailingDays = 6 - endDayOfWeek;
+  const gridEnd = new Date(year, month - 1, lastDay.getDate() + trailingDays);
+
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const formatDate = (d: Date) =>
+    `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+
+  return {
+    startDateStr: formatDate(gridStart),
+    endDateStr: formatDate(gridEnd),
+    firstDayOfMonthStr: formatDate(firstDay),
+    lastDayOfMonthStr: formatDate(lastDay),
+  };
+}
