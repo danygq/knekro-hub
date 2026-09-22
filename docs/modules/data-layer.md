@@ -406,14 +406,13 @@ returns table (
     case when p_sort = 'user_vote_desc' then user_vote end desc nulls last,
     case when p_sort = 'user_vote_asc' then user_vote end asc nulls last,
     case when p_sort = 'last_played_desc' then last_played_at end desc nulls last,
-    case when p_sort = 'last_played_asc' then last_played_at end asc nulls last,
     id asc
   limit least(coalesce(p_limit, 24), 100)
   offset greatest(coalesce(p_offset, 0), 0);
 $$;
 ```
 
-- `get_user_games`: Powers `/games` library catalog searches and the ranking assignable game pool search (both via `fetchGames()` in `src/lib/games.ts`), accelerated by `idx_games_name_trgm` and `idx_games_last_played_at`. Supports status filters, tag/genre filters (AND intersection for inclusion, anti-join for exclusion), multi-column sorting (case-insensitive `lower(name)`, personal user votes with `NULLS LAST`, and stream recency `last_played_desc`/`last_played_asc` with `NULLS LAST`), and bounded DB-level pagination — all in a single RPC call. `loadRankingSearchGames` in `src/lib/ranking.ts` delegates to `fetchGames`, eliminating the previous two-stage `countQuery` + `gamesQuery` waterfall.
+- `get_user_games`: Powers `/games` library catalog searches and the ranking assignable game pool search (both via `fetchGames()` in `src/lib/games.ts`), accelerated by `idx_games_name_trgm` and `idx_games_last_played_at`. Supports status filters, tag/genre filters (AND intersection for inclusion, anti-join for exclusion), multi-column sorting (case-insensitive `lower(name)`, personal user votes with `NULLS LAST`, and stream recency `last_played_desc` with `NULLS LAST`), and bounded DB-level pagination — all in a single RPC call. `loadRankingSearchGames` in `src/lib/ranking.ts` delegates to `fetchGames`, eliminating the previous two-stage `countQuery` + `gamesQuery` waterfall.
 
 ```sql
 create or replace function public.get_game_by_id(

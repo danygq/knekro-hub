@@ -6,7 +6,6 @@ export const VALID_GAME_SORT_OPTIONS: readonly GameSortOption[] = [
   "name_asc",
   "name_desc",
   "last_played_desc",
-  "last_played_asc",
   "community_desc",
   "community_asc",
   "user_vote_desc",
