@@ -1,7 +1,8 @@
 ---
 import Vote from "@lucide/astro/icons/vote";
 import VoteButton from "./VoteButton.astro";
-import { X } from "@lucide/astro";
+import { X, Sparkles } from "@lucide/astro";
+import { VOTE_THANK_YOU_MESSAGES } from "@/lib/vote-messages";
 
 interface Props {
   gameId: number;
@@ -14,11 +15,11 @@ const { gameId, userVote } = Astro.props;
 <div class="absolute inset-x-0 top-1/2 -translate-y-1/2 z-20 p-3">
   <button
     type="button"
-    @click.stop="open = true"
+    @click.stop="open = true; if (typeof isThanking !== 'undefined') isThanking = false;"
     class="flex justify-center-safe gap-3 knk-vote-toggle knk-notch-sm w-full px-3 py-2 text-sm font-medium
         bg-(--knk-bg)/85 text-(--knk-text-muted) border border-(--knk-line)
         opacity-0 group-hover:opacity-100 transition-opacity
-        hover:text-(--knk-primary) hover:border-(--knk-line-strong)"
+        hover:text-(--knk-primary) hover:border-(--knk-line-strong) cursor-pointer"
   >
     <Vote width={18} height={18} /> Votar
   </button>
@@ -27,6 +28,43 @@ const { gameId, userVote } = Astro.props;
 <div
   x-show="open"
   x-cloak
+  x-data={`{
+    currentVote: ${userVote ?? "null"},
+    burstingVote: null,
+    isRetracting: false,
+    isThanking: false,
+    thankVote: null,
+    thankMessage: "",
+    lastMessage: "",
+    messages: ${JSON.stringify(VOTE_THANK_YOU_MESSAGES)},
+    handleVoteClick(vote, el) {
+      const retracting = this.currentVote === vote;
+      this.isRetracting = retracting;
+      this.burstingVote = vote;
+      if (el) {
+        el.setAttribute(
+          "hx-swap",
+          retracting ? "outerHTML swap:400ms" : "outerHTML swap:1s",
+        );
+      }
+      setTimeout(() => { this.burstingVote = null; }, 480);
+
+      if (retracting) {
+        this.currentVote = null;
+        this.isThanking = false;
+        setTimeout(() => { open = false; }, 400);
+      } else {
+        this.currentVote = vote;
+        this.thankVote = vote;
+        const pool = this.lastMessage && this.messages.length > 1
+          ? this.messages.filter(m => m !== this.lastMessage)
+          : this.messages;
+        this.thankMessage = pool[Math.floor(Math.random() * pool.length)];
+        this.lastMessage = this.thankMessage;
+        this.isThanking = true;
+      }
+    }
+  }`}
   x-transition.opacity.duration.150ms
   style="display: none;"
   @click.outside="open = false"
@@ -35,19 +73,51 @@ const { gameId, userVote } = Astro.props;
   <button
     type="button"
     @click.stop="open = false"
-    class="knk-notch-sm absolute top-2 right-2 text-(--knk-text-muted) hover:text-(--knk-primary) text-lg font-bold px-2 py-1"
+    class="knk-notch-sm absolute top-2 right-2 text-(--knk-text-muted) hover:text-(--knk-primary) text-lg font-bold px-2 py-1 cursor-pointer"
     aria-label="Cerrar"
   >
     <X />
   </button>
 
-  <span class="text-sm font-medium text-(--knk-text-muted)">
-    ¿Cuál es tu puntuación?
-  </span>
+  <!-- Normal Voting State: Question & 1-10 Grid -->
+  <div
+    x-show="!isThanking"
+    class="flex flex-col items-center justify-center gap-3 w-full"
+  >
+    <span class="text-sm font-medium text-(--knk-text-muted)">
+      ¿Cuál es tu puntuación?
+    </span>
 
-  <div class="grid grid-cols-5 gap-2" id="vote-grid">
-    {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
-      <VoteButton gameId={gameId} vote={n} isVoted={n === userVote} />
-    ))}
+    <div class="grid grid-cols-5 gap-2" id="vote-grid">
+      {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
+        <VoteButton gameId={gameId} vote={n} isVoted={n === userVote} />
+      ))}
+    </div>
+  </div>
+
+  <!-- Celebratory Thank-You State -->
+  <div
+    x-show="isThanking"
+    x-cloak
+    x-transition:enter="transition ease-out duration-200"
+    x-transition:enter-start="opacity-0 scale-95"
+    x-transition:enter-end="opacity-100 scale-100"
+    class="flex flex-col items-center justify-center gap-3 text-center px-2 w-full"
+  >
+    <div
+      class="size-12 rounded-lg border flex flex-col items-center justify-center font-bold text-lg tabular-nums knk-vote-badge"
+      :class="thankVote ? 'knk-vote-' + thankVote : 'knk-vote-muted'"
+    >
+      <span x-text="thankVote"></span>
+    </div>
+
+    <div
+      class="knk-vote-callout"
+      :class="thankVote ? 'knk-vote-callout-' + thankVote : ''"
+    >
+      <Sparkles class="size-4 shrink-0" />
+      <span x-text="thankMessage" class="tracking-wide"></span>
+      <Sparkles class="size-4 shrink-0" />
+    </div>
   </div>
 </div>

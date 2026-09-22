@@ -3,7 +3,9 @@ import { formatAvg } from "@/lib/games.ts";
 import type { GameDetailPageData } from "@/types";
 import type { User } from "@supabase/supabase-js";
 import LoginButton from "@/components/LoginButton.astro";
-import { Star, Users, Check } from "@lucide/astro";
+import { Star, Users, Check, Sparkles } from "@lucide/astro";
+import VoteBurst from "./VoteBurst.astro";
+import { VOTE_THANK_YOU_MESSAGES } from "@/lib/vote-messages";
 
 interface Props {
   game: GameDetailPageData;
@@ -59,18 +61,66 @@ const voteClass = voteTier ? `knk-vote-${voteTier}` : "knk-vote-muted";
     <!-- User Vote Action Block -->
     <div class="border-t md:border-t-0 md:border-l border-(--knk-line) pt-4 md:pt-0 md:pl-6">
       {isAuthenticated ? (
-        <div>
+        <div
+          x-data={`{
+            currentVote: ${userVote ?? "null"},
+            burstingVote: null,
+            isRetracting: false,
+            showCallout: false,
+            calloutVote: null,
+            calloutMessage: "",
+            lastMessage: "",
+            dismissTimer: null,
+            messages: ${JSON.stringify(VOTE_THANK_YOU_MESSAGES)},
+            triggerVote(n, el) {
+              const retracting = this.currentVote === n;
+              this.isRetracting = retracting;
+              this.burstingVote = n;
+              if (el) {
+                el.setAttribute('hx-swap', retracting ? 'outerHTML swap:400ms' : 'outerHTML swap:1s');
+              }
+              setTimeout(() => { this.burstingVote = null; }, 480);
+
+              if (retracting) {
+                this.currentVote = null;
+                this.showCallout = false;
+                if (this.dismissTimer) clearTimeout(this.dismissTimer);
+              } else {
+                this.currentVote = n;
+                this.calloutVote = n;
+                const pool = this.lastMessage && this.messages.length > 1
+                  ? this.messages.filter(m => m !== this.lastMessage)
+                  : this.messages;
+                this.calloutMessage = pool[Math.floor(Math.random() * pool.length)];
+                this.lastMessage = this.calloutMessage;
+                this.showCallout = true;
+                if (this.dismissTimer) clearTimeout(this.dismissTimer);
+                this.dismissTimer = setTimeout(() => {
+                  this.showCallout = false;
+                }, 1000);
+              }
+            }
+          }`}
+        >
           <div class="flex items-center justify-between gap-2 mb-2">
             <span class="text-xs uppercase font-semibold tracking-wider text-(--knk-text-muted)">
               Tu valoración
             </span>
-            {userVote != null ? (
-              <span class="inline-flex items-center gap-1 text-xs font-medium text-(--knk-primary)">
-                <Check class="size-3.5" /> Votado ({userVote}/10)
-              </span>
-            ) : (
-              <span class="text-xs text-(--knk-text-faint)">Sin valorar</span>
-            )}
+            <span
+              x-show="currentVote != null"
+              class="inline-flex items-center gap-1 text-xs font-medium text-(--knk-primary)"
+              style={userVote != null ? "" : "display: none;"}
+            >
+              <Check class="size-3.5" /> Votado (
+              <span x-text="currentVote">{userVote}</span>/10)
+            </span>
+            <span
+              x-show="currentVote == null"
+              class="text-xs text-(--knk-text-faint)"
+              style={userVote == null ? "" : "display: none;"}
+            >
+              Sin valorar
+            </span>
           </div>
 
           <div
@@ -85,13 +135,15 @@ const voteClass = voteTier ? `knk-vote-${voteTier}` : "knk-vote-muted";
                   hx-post="/api/games/vote"
                   hx-vals={`{"game_id": ${game.id}, "vote": ${n}, "view": "detail"}`}
                   hx-target="#game-detail-voting"
-                  hx-swap="outerHTML"
+                  hx-swap="outerHTML swap:1s"
                   title={
                     isActive
                       ? `Puntuación actual: ${n} (pulsa para cancelar)`
                       : `Votar con ${n}`
                   }
                   aria-label={`Votar ${n}`}
+                  @click={`triggerVote(${n}, $el)`}
+                  :class={`{ 'active': currentVote === ${n} }`}
                   class:list={[
                     "knk-vote-num",
                     `knk-vote-num-${n}`,
@@ -108,18 +160,51 @@ const voteClass = voteTier ? `knk-vote-${voteTier}` : "knk-vote-muted";
                     "flex",
                     "items-center",
                     "justify-center",
+                    "relative",
+                    "select-none",
                     { active: isActive },
                   ]}
                 >
+                  <template x-if={`burstingVote === ${n}`}>
+                    <VoteBurst :class="{ 'neutral': isRetracting }" />
+                  </template>
                   {n}
                 </button>
               );
             })}
           </div>
+
+          <!-- Animated Inline Callout (Option A with tier matching color & 3s timer) -->
+          <div
+            x-show="showCallout"
+            x-cloak
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0 translate-y-1 scale-98"
+            x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+            x-transition:leave="transition ease-in duration-200"
+            x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+            x-transition:leave-end="opacity-0 translate-y-1 scale-98"
+            class="knk-vote-callout mt-2.5"
+            :class="calloutVote ? 'knk-vote-callout-' + calloutVote : ''"
+          >
+            <Sparkles class="size-4 shrink-0" />
+            <span x-text="calloutMessage" class="tracking-wide" />
+            <Sparkles class="size-4 shrink-0" />
+          </div>
+
           <p class="text-[11px] text-(--knk-text-faint) mt-2 text-right">
-            {userVote != null
-              ? "Pulsa tu nota para retirar tu voto."
-              : "Haz clic en un número para guardar tu puntuación."}
+            <span
+              x-show="currentVote != null"
+              style={userVote != null ? "" : "display: none;"}
+            >
+              Pulsa tu nota para retirar tu voto.
+            </span>
+            <span
+              x-show="currentVote == null"
+              style={userVote == null ? "" : "display: none;"}
+            >
+              Haz clic en un número para guardar tu puntuación.
+            </span>
           </p>
         </div>
       ) : (
