@@ -42,7 +42,10 @@ const { gameId, userVote } = Astro.props;
       this.isRetracting = retracting;
       this.burstingVote = vote;
       if (el) {
-        el.setAttribute('hx-swap', retracting ? 'outerHTML swap:400ms' : 'outerHTML swap:3s');
+        el.setAttribute(
+          "hx-swap",
+          retracting ? "outerHTML swap:400ms" : "outerHTML swap:1s",
+        );
       }
       setTimeout(() => { this.burstingVote = null; }, 480);
 

@@ -18,7 +18,7 @@ const numCls = `knk-vote-num knk-vote-num-${vote} knk-notch-sm w-11 h-11 text-ba
   hx-post="/api/games/vote"
   hx-vals={`{"game_id": ${gameId}, "vote": ${vote}}`}
   hx-target="closest .knk-game-card"
-  hx-swap="outerHTML swap:3s"
+  hx-swap="outerHTML swap:1s"
   aria-label={`Puntuar con ${vote}`}
   @click.stop={`handleVoteClick(${vote}, $el)`}
 >
