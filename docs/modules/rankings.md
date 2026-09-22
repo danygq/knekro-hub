@@ -14,7 +14,12 @@ depends_on: [data-layer, query-optimization, routing-ui]
 A generalized awards and ranking system for Knekro Hub:
 
 - Hub page at `/ranking` displays categories/tracks (`ranking_categories` table).
-- Standalone category ranking pages at `/ranking/goty` (`goty.astro`) and `/ranking/vuela-alto` (`vuela-alto.astro`), with dynamic fallback at `/ranking/[slug]`.
+- Standalone category ranking pages:
+  - `/ranking/goty` (`goty.astro`): Overall Game of the Year.
+  - `/ranking/vuela-alto` (`vuela-alto.astro`): Games with "Vuela Alto" status (`status_id = 2`).
+  - `/ranking/roguelike` (`roguelike.astro`): Games with any roguelike tag (`68, 250, 251, 252`, `tag_mode = any`).
+  - `/ranking/terror` (`terror.astro`): Games with any terror tag (`289, 290`, `tag_mode = any`).
+  - `/ranking/incremental` (`incremental.astro`): Games with incremental tag (`149`).
 - User-scoped podium and ranking placement (`ranking_items` table with `user_id`).
 - Safe redirects for backward compatibility:
   - `/rankings` &rarr; 308 redirect to `/ranking`
@@ -102,9 +107,12 @@ reducing network latency by ~50%.
 
 Parameters passed through:
 
-| Param    | Source in `/api/ranking/search.astro` | Notes                                     |
-| -------- | ------------------------------------- | ----------------------------------------- |
-| `query`  | `?q=` (trimmed)                       | Empty string = no filter                  |
-| `offset` | `?offset=` (`Math.max(0, ...)`)       | Clamped to ≥ 0                            |
-| `limit`  | `?limit=` (1–48)                      | Clamped by `Math.min(48, Math.max(1, …))` |
-| `sort`   | hardcoded `"name_asc"`                | Consistent alphabetical ordering          |
+| Param       | Source in `/api/ranking/search.astro` | Notes                                     |
+| ----------- | ------------------------------------- | ----------------------------------------- |
+| `query`     | `?q=` (trimmed)                       | Empty string = no filter                  |
+| `offset`    | `?offset=` (`Math.max(0, ...)`)       | Clamped to ≥ 0                            |
+| `limit`     | `?limit=` (1–48)                      | Clamped by `Math.min(48, Math.max(1, …))` |
+| `sort`      | hardcoded `"name_asc"`                | Consistent alphabetical ordering          |
+| `status_id` | `?status_id=` (multiple)              | Filter game pool to specific status IDs   |
+| `tag_id`    | `?tag_id=` (multiple)                 | Filter game pool to specific tag IDs      |
+| `tag_mode`  | `?tag_mode=` (`'and'` \| `'any'`)     | Matching logic: `'any'` (OR) or `'and'`   |

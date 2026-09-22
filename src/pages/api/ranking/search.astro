@@ -20,16 +20,27 @@ const limit = Math.min(
   48,
   Math.max(1, Number(Astro.url.searchParams.get("limit") ?? "24")),
 );
-const statusIds = Astro.url.searchParams
-  .getAll("status_id")
-  .map(Number)
-  .filter((n) => Number.isFinite(n) && n > 0);
+const parseIds = (raw: string | string[] | null | undefined): number[] => {
+  if (!raw) return [];
+  const list = Array.isArray(raw) ? raw : [raw];
+  return list
+    .flatMap((v) => v.split(","))
+    .map(Number)
+    .filter((n) => Number.isInteger(n) && n > 0);
+};
+
+const statusIds = parseIds(Astro.url.searchParams.getAll("status_id"));
+const tagIds = parseIds(Astro.url.searchParams.getAll("tag_id"));
+const tagMode = (Astro.url.searchParams.get("tag_mode") ?? "and") as
+  "and" | "any";
 
 const { games, total } = await loadRankingSearchGames(dbClient, {
   query: q,
   offset,
   limit,
   includedStatusIds: statusIds,
+  includedTagIds: tagIds,
+  tagMode,
 });
 
 const visibleCount = Math.min(total, offset + games.length);
@@ -38,20 +49,30 @@ const hasMore = offset + limit < total;
 const nextOffset = offset + limit;
 ---
 
-<span id="ranking-visible-count" hx-swap-oob="innerHTML">
-  {visibleCount}
-</span>
-<span id="ranking-total-count" hx-swap-oob="innerHTML">
-  {total}
-</span>
-<p
-  id="ranking-no-results"
-  hx-swap-oob="true"
-  hidden={!noResults}
-  class="w-full text-sm text-(--knk-text-muted) py-8 text-center"
->
-  No hay juegos que coincidan con la búsqueda.
-</p>
+{offset === 0 ? (
+  <>
+    <span id="ranking-visible-count" hx-swap-oob="innerHTML">
+      {visibleCount}
+    </span>
+    <span id="ranking-total-count" hx-swap-oob="innerHTML">
+      {total}
+    </span>
+    <p
+      id="ranking-no-results"
+      hx-swap-oob="true"
+      hidden={!noResults}
+      class="w-full text-sm text-(--knk-text-muted) py-8 text-center"
+    >
+      No hay juegos que coincidan con la búsqueda.
+    </p>
+  </>
+) : (
+  games.length > 0 && (
+    <span id="ranking-visible-count" hx-swap-oob="innerHTML">
+      {visibleCount}
+    </span>
+  )
+)}
 
 {games.map((game, index) => (
   <RankingGameCard
@@ -69,5 +90,13 @@ const nextOffset = offset + limit;
     year={year}
     limit={limit}
     statusIds={statusIds}
+    tagIds={tagIds}
+    tagMode={tagMode}
   />
+)}
+
+{!hasMore && total > 0 && offset > 0 && (
+  <div class="w-full text-center py-6 text-xs text-(--knk-text-muted)">
+    Has llegado al final de los juegos
+  </div>
 )}

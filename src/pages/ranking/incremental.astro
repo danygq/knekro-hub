@@ -1,0 +1,62 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import RankingSectionLayout from "@/components/ranking/RankingSectionLayout.astro";
+import RankingPodiumScript from "@/components/ranking/RankingPodiumScript.astro";
+import {
+  loadRankingCategoryBySlug,
+  loadPodiumGames,
+  loadRankingSearchGames,
+} from "@/lib/ranking";
+import { userHasRole } from "@/lib/roles";
+import "@/styles/pages/ranking.css";
+
+const dbClient = Astro.locals.supabase;
+const user = Astro.locals.user;
+
+// Authorization: Owner-role only. Redirect unauthorized requests to "/"
+if (!user || !(await userHasRole(dbClient, user.id, "owner"))) {
+  return Astro.redirect("/");
+}
+
+const CATEGORY_SLUG = "incremental";
+const category = await loadRankingCategoryBySlug(dbClient, CATEGORY_SLUG);
+
+// Fallback in case category is missing from DB
+if (!category) {
+  return Astro.redirect("/ranking");
+}
+
+// Incremental tag ID: 149 (Incrementales)
+const INCREMENTAL_TAG_IDS = [149];
+const TAG_MODE = "any";
+
+const currentYear = 2026;
+const podiumItems = await loadPodiumGames(
+  dbClient,
+  category.id,
+  currentYear,
+  user.id,
+);
+const { games: initialGames, total: totalGames } = await loadRankingSearchGames(
+  dbClient,
+  {
+    limit: 24,
+    includedTagIds: INCREMENTAL_TAG_IDS,
+    tagMode: TAG_MODE,
+  },
+);
+---
+
+<Layout user={user}>
+  <RankingSectionLayout
+    category={category}
+    year={currentYear}
+    podiumItems={podiumItems}
+    initialGames={initialGames}
+    totalGames={totalGames}
+    tagIds={INCREMENTAL_TAG_IDS}
+    tagMode={TAG_MODE}
+  />
+</Layout>
+
+<RankingPodiumScript />

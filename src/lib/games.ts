@@ -103,6 +103,7 @@ export interface FetchGamesParams {
   excludedStatusIds?: number[];
   includedTagIds?: number[];
   excludedTagIds?: number[];
+  tagMode?: "and" | "any";
   sort?: GameSortOption;
   offset?: number;
   limit?: number;
@@ -124,6 +125,7 @@ export async function fetchGames(
     excludedStatusIds = [],
     includedTagIds = [],
     excludedTagIds = [],
+    tagMode = "and",
     sort = "name_asc",
     offset = 0,
     limit = 24,
@@ -140,6 +142,7 @@ export async function fetchGames(
     p_sort: sort,
     p_limit: limit,
     p_offset: offset,
+    p_tag_mode: tagMode,
   });
 
   if (error) {

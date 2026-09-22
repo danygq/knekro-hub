@@ -114,6 +114,8 @@ export async function loadRankingSearchGames(
     offset?: number;
     limit?: number;
     includedStatusIds?: number[];
+    includedTagIds?: number[];
+    tagMode?: "and" | "any";
   } = {},
 ): Promise<{ games: GameDetails[]; total: number }> {
   const {
@@ -121,6 +123,8 @@ export async function loadRankingSearchGames(
     offset = 0,
     limit = 24,
     includedStatusIds = [],
+    includedTagIds = [],
+    tagMode = "and",
   } = options;
   return fetchGames(client, {
     query,
@@ -128,6 +132,8 @@ export async function loadRankingSearchGames(
     limit,
     sort: "name_asc",
     includedStatusIds,
+    includedTagIds,
+    tagMode,
   });
 }
 

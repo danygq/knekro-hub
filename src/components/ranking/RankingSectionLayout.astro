@@ -14,6 +14,8 @@ interface Props {
   initialGames: GameDetails[];
   totalGames: number;
   statusIds?: number[];
+  tagIds?: number[];
+  tagMode?: "and" | "any";
 }
 
 const {
@@ -23,6 +25,8 @@ const {
   initialGames,
   totalGames,
   statusIds = [],
+  tagIds = [],
+  tagMode = "and",
 } = Astro.props;
 
 const visibleCount = Math.min(totalGames, initialGames.length);
@@ -87,19 +91,13 @@ const hasMore = initialGames.length < totalGames;
         categoryId={category.id}
         year={year}
         statusIds={statusIds}
+        tagIds={tagIds}
+        tagMode={tagMode}
       />
     </div>
 
     <!-- Games Grid -->
     <div id="ranking-games-grid" class="flex flex-wrap gap-5">
-      <p
-        id="ranking-no-results"
-        hidden={initialGames.length > 0}
-        class="w-full text-sm text-(--knk-text-muted) py-8 text-center"
-      >
-        No hay juegos que coincidan con la búsqueda.
-      </p>
-
       {initialGames.map((game, index) => (
         <RankingGameCard
           game={game}
@@ -116,8 +114,18 @@ const hasMore = initialGames.length < totalGames;
           year={year}
           limit={24}
           statusIds={statusIds}
+          tagIds={tagIds}
+          tagMode={tagMode}
         />
       )}
     </div>
+
+    <p
+      id="ranking-no-results"
+      hidden={initialGames.length > 0}
+      class="w-full text-sm text-(--knk-text-muted) py-8 text-center"
+    >
+      No hay juegos que coincidan con la búsqueda.
+    </p>
   </section>
 </div>
