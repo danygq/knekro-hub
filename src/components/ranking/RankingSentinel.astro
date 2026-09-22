@@ -23,8 +23,8 @@ const {
 
 // Build status_id and tag_id entries for hx-vals
 const statusVals =
-  statusIds.length > 0 ? `, status_id: ${JSON.stringify(statusIds)}` : "";
-const tagVals = tagIds.length > 0 ? `, tag_id: ${JSON.stringify(tagIds)}` : "";
+  statusIds.length > 0 ? `, status_id: '${statusIds.join(",")}'` : "";
+const tagVals = tagIds.length > 0 ? `, tag_id: '${tagIds.join(",")}'` : "";
 const tagModeVal = tagIds.length > 0 ? `, tag_mode: '${tagMode}'` : "";
 ---
 
@@ -32,8 +32,9 @@ const tagModeVal = tagIds.length > 0 ? `, tag_mode: '${tagMode}'` : "";
   id="ranking-sentinel"
   class="w-full flex flex-col items-center justify-center py-6 text-sm text-(--knk-text-muted)"
   hx-get="/api/ranking/search"
-  hx-trigger="intersect once"
+  hx-trigger="revealed"
   hx-swap="outerHTML"
+  hx-sync="this:replace"
   hx-indicator="#ranking-infinite-spinner"
   hx-include="[name='q']"
   hx-vals={`js:{ category_id: ${categoryId}, year: ${year}, offset: ${offset}, limit: ${limit}${statusVals}${tagVals}${tagModeVal} }`}

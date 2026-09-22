@@ -19,8 +19,8 @@ const {
 } = Astro.props;
 
 const statusVals =
-  statusIds.length > 0 ? `, status_id: ${JSON.stringify(statusIds)}` : "";
-const tagVals = tagIds.length > 0 ? `, tag_id: ${JSON.stringify(tagIds)}` : "";
+  statusIds.length > 0 ? `, status_id: '${statusIds.join(",")}'` : "";
+const tagVals = tagIds.length > 0 ? `, tag_id: '${tagIds.join(",")}'` : "";
 const tagModeVal = tagIds.length > 0 ? `, tag_mode: '${tagMode}'` : "";
 ---
 

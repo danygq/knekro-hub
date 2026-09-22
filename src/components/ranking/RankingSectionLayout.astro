@@ -98,14 +98,6 @@ const hasMore = initialGames.length < totalGames;
 
     <!-- Games Grid -->
     <div id="ranking-games-grid" class="flex flex-wrap gap-5">
-      <p
-        id="ranking-no-results"
-        hidden={initialGames.length > 0}
-        class="w-full text-sm text-(--knk-text-muted) py-8 text-center"
-      >
-        No hay juegos que coincidan con la búsqueda.
-      </p>
-
       {initialGames.map((game, index) => (
         <RankingGameCard
           game={game}
@@ -127,5 +119,13 @@ const hasMore = initialGames.length < totalGames;
         />
       )}
     </div>
+
+    <p
+      id="ranking-no-results"
+      hidden={initialGames.length > 0}
+      class="w-full text-sm text-(--knk-text-muted) py-8 text-center"
+    >
+      No hay juegos que coincidan con la búsqueda.
+    </p>
   </section>
 </div>
