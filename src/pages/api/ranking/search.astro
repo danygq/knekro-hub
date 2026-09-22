@@ -24,12 +24,20 @@ const statusIds = Astro.url.searchParams
   .getAll("status_id")
   .map(Number)
   .filter((n) => Number.isFinite(n) && n > 0);
+const tagIds = Astro.url.searchParams
+  .getAll("tag_id")
+  .map(Number)
+  .filter((n) => Number.isFinite(n) && n > 0);
+const tagMode = (Astro.url.searchParams.get("tag_mode") ?? "and") as
+  "and" | "any";
 
 const { games, total } = await loadRankingSearchGames(dbClient, {
   query: q,
   offset,
   limit,
   includedStatusIds: statusIds,
+  includedTagIds: tagIds,
+  tagMode,
 });
 
 const visibleCount = Math.min(total, offset + games.length);
@@ -69,5 +77,7 @@ const nextOffset = offset + limit;
     year={year}
     limit={limit}
     statusIds={statusIds}
+    tagIds={tagIds}
+    tagMode={tagMode}
   />
 )}

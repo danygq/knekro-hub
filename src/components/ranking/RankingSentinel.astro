@@ -7,13 +7,25 @@ interface Props {
   year: number;
   limit?: number;
   statusIds?: number[];
+  tagIds?: number[];
+  tagMode?: "and" | "any";
 }
 
-const { offset, categoryId, year, limit = 24, statusIds = [] } = Astro.props;
+const {
+  offset,
+  categoryId,
+  year,
+  limit = 24,
+  statusIds = [],
+  tagIds = [],
+  tagMode = "and",
+} = Astro.props;
 
-// Build status_id entries for hx-vals: { status_id: [2] } or {}
+// Build status_id and tag_id entries for hx-vals
 const statusVals =
   statusIds.length > 0 ? `, status_id: ${JSON.stringify(statusIds)}` : "";
+const tagVals = tagIds.length > 0 ? `, tag_id: ${JSON.stringify(tagIds)}` : "";
+const tagModeVal = tagIds.length > 0 ? `, tag_mode: '${tagMode}'` : "";
 ---
 
 <div
@@ -24,7 +36,7 @@ const statusVals =
   hx-swap="outerHTML"
   hx-indicator="#ranking-infinite-spinner"
   hx-include="[name='q']"
-  hx-vals={`js:{ category_id: ${categoryId}, year: ${year}, offset: ${offset}, limit: ${limit}${statusVals} }`}
+  hx-vals={`js:{ category_id: ${categoryId}, year: ${year}, offset: ${offset}, limit: ${limit}${statusVals}${tagVals}${tagModeVal} }`}
 >
   <div
     id="ranking-infinite-spinner"
