@@ -37,10 +37,13 @@ const { gameId, userVote } = Astro.props;
     thankMessage: "",
     lastMessage: "",
     messages: ${JSON.stringify(VOTE_THANK_YOU_MESSAGES)},
-    handleVoteClick(vote) {
+    handleVoteClick(vote, el) {
       const retracting = this.currentVote === vote;
       this.isRetracting = retracting;
       this.burstingVote = vote;
+      if (el) {
+        el.setAttribute('hx-swap', retracting ? 'outerHTML swap:400ms' : 'outerHTML swap:3s');
+      }
       setTimeout(() => { this.burstingVote = null; }, 480);
 
       if (retracting) {
@@ -111,6 +114,7 @@ const { gameId, userVote } = Astro.props;
     >
       <Sparkles class="size-4 shrink-0" />
       <span x-text="thankMessage" class="tracking-wide"></span>
+      <Sparkles class="size-4 shrink-0" />
     </div>
   </div>
 </div>

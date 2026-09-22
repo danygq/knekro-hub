@@ -72,10 +72,13 @@ const voteClass = voteTier ? `knk-vote-${voteTier}` : "knk-vote-muted";
             lastMessage: "",
             dismissTimer: null,
             messages: ${JSON.stringify(VOTE_THANK_YOU_MESSAGES)},
-            triggerVote(n) {
+            triggerVote(n, el) {
               const retracting = this.currentVote === n;
               this.isRetracting = retracting;
               this.burstingVote = n;
+              if (el) {
+                el.setAttribute('hx-swap', retracting ? 'outerHTML swap:400ms' : 'outerHTML swap:3s');
+              }
               setTimeout(() => { this.burstingVote = null; }, 480);
 
               if (retracting) {
@@ -132,14 +135,14 @@ const voteClass = voteTier ? `knk-vote-${voteTier}` : "knk-vote-muted";
                   hx-post="/api/games/vote"
                   hx-vals={`{"game_id": ${game.id}, "vote": ${n}, "view": "detail"}`}
                   hx-target="#game-detail-voting"
-                  :hx-swap={`currentVote === ${n} ? 'outerHTML swap:400ms' : 'outerHTML swap:3000ms'`}
+                  hx-swap="outerHTML swap:3s"
                   title={
                     isActive
                       ? `Puntuación actual: ${n} (pulsa para cancelar)`
                       : `Votar con ${n}`
                   }
                   aria-label={`Votar ${n}`}
-                  @click={`triggerVote(${n})`}
+                  @click={`triggerVote(${n}, $el)`}
                   :class={`{ 'active': currentVote === ${n} }`}
                   class:list={[
                     "knk-vote-num",
@@ -186,6 +189,7 @@ const voteClass = voteTier ? `knk-vote-${voteTier}` : "knk-vote-muted";
           >
             <Sparkles class="size-4 shrink-0" />
             <span x-text="calloutMessage" class="tracking-wide" />
+            <Sparkles class="size-4 shrink-0" />
           </div>
 
           <p class="text-[11px] text-(--knk-text-faint) mt-2 text-right">
