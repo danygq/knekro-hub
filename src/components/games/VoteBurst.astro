@@ -1,0 +1,22 @@
+---
+interface Props {
+  class?: string;
+  angles?: number[];
+}
+
+const {
+  angles = [0, 45, 90, 135, 180, 225, 270, 315],
+  class: className = "",
+  ...rest
+} = Astro.props;
+---
+
+<div
+  class:list={["knk-burst-container", className]}
+  aria-hidden="true"
+  {...rest}
+>
+  {angles.map((deg) => (
+    <span class="knk-burst-ray" style={`--rot: ${deg}deg;`} />
+  ))}
+</div>

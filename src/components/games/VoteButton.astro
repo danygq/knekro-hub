@@ -1,4 +1,6 @@
 ---
+import VoteBurst from "./VoteBurst.astro";
+
 interface Props {
   gameId: number;
   vote: number;
@@ -6,19 +8,22 @@ interface Props {
 }
 
 const { gameId, vote, isVoted } = Astro.props;
-const numCls = `knk-vote-num knk-vote-num-${vote} knk-notch-sm w-11 h-11 text-base font-medium border transition-colors`;
+const numCls = `knk-vote-num knk-vote-num-${vote} knk-notch-sm w-11 h-11 text-base font-medium border transition-colors relative cursor-pointer flex items-center justify-center select-none`;
 ---
 
 <button
   type="button"
-  x-data={`{ isActive: ${isVoted} }`}
-  :class="{ 'active': isActive }"
+  :class={`{ 'active': currentVote === ${vote} }`}
   class:list={[numCls, { active: isVoted }]}
   hx-post="/api/games/vote"
   hx-vals={`{"game_id": ${gameId}, "vote": ${vote}}`}
   hx-target="closest .knk-game-card"
-  hx-swap="outerHTML"
-  @click.stop="isActive = !isActive"
+  :hx-swap={`currentVote === ${vote} ? 'outerHTML swap:400ms' : 'outerHTML swap:1500ms'`}
+  aria-label={`Puntuar con ${vote}`}
+  @click.stop={`handleVoteClick(${vote})`}
 >
+  <template x-if={`burstingVote === ${vote}`}>
+    <VoteBurst :class="{ 'neutral': isRetracting }" />
+  </template>
   {vote}
 </button>

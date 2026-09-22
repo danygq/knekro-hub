@@ -252,3 +252,116 @@
     -1px 1px 1px var(--tw-text-shadow-color, var(--knk-line)),
     1px 1px 1px var(--tw-text-shadow-color, var(--knk-line));
 }
+
+/* ── Vote Button Burst Animation ──
+   Radial rays shooting outward when a vote is cast or changed.
+   Neutral variant uses text-muted for vote retractions without tier colors. */
+.knk-burst-container {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: visible;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 30;
+}
+
+.knk-burst-ray {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 2px;
+  height: 10px;
+  border-radius: 9999px;
+  background: var(--burst-c, var(--vote-c, var(--knk-primary)));
+  transform-origin: center bottom;
+  animation: knk-burst-ray 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.knk-burst-container.neutral .knk-burst-ray {
+  background: var(--knk-text-muted);
+  opacity: 0.6;
+}
+
+@keyframes knk-burst-ray {
+  0% {
+    transform: translate(-50%, -50%) rotate(var(--rot, 0deg)) translateY(-14px)
+      scaleY(0.2);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-50%, -50%) rotate(var(--rot, 0deg)) translateY(-26px)
+      scaleY(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(var(--rot, 0deg)) translateY(-38px)
+      scaleY(0.3);
+    opacity: 0;
+  }
+}
+
+/* ── Vote Feedback Callout ──
+   Celebratory banner displaying randomized Knekro catchphrases with tier-matching colors. */
+.knk-vote-callout {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.75rem;
+  border-radius: 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  background: color-mix(
+    in srgb,
+    var(--callout-c, var(--knk-primary)) 12%,
+    var(--knk-surface)
+  );
+  color: color-mix(
+    in srgb,
+    var(--callout-c, var(--knk-primary)) 85%,
+    var(--knk-text)
+  );
+  border: 1px solid
+    color-mix(in srgb, var(--callout-c, var(--knk-primary)) 35%, transparent);
+  box-shadow: 0 0 14px -2px
+    color-mix(in srgb, var(--callout-c, var(--knk-primary)) 20%, transparent);
+  animation: knk-fade-slide-up 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.knk-vote-callout-1,
+.knk-vote-callout-2 {
+  --callout-c: var(--knk-red-500);
+}
+
+.knk-vote-callout-3,
+.knk-vote-callout-4 {
+  --callout-c: var(--knk-orange-500);
+}
+
+.knk-vote-callout-5,
+.knk-vote-callout-6 {
+  --callout-c: var(--knk-amber-500);
+}
+
+.knk-vote-callout-7,
+.knk-vote-callout-8 {
+  --callout-c: var(--knk-green-500);
+}
+
+.knk-vote-callout-9,
+.knk-vote-callout-10 {
+  --callout-c: var(--knk-blue-500);
+}
+
+@keyframes knk-fade-slide-up {
+  0% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
