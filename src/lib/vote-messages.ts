@@ -7,6 +7,7 @@ export const VOTE_THANK_YOU_MESSAGES = [
   "Un saludito?",
   "Cracabuuuuut",
   "PUUUUUUM",
+  "Mondongo",
 ] as const;
 
 export type VoteThankYouMessage = (typeof VOTE_THANK_YOU_MESSAGES)[number];
