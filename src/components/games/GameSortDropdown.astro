@@ -12,6 +12,8 @@ const { loggedIn = false, initialSort = "name_asc" } = Astro.props;
 const generalSortOptions: { id: GameSortOption; label: string }[] = [
   { id: "name_asc", label: "Nombre (A - Z)" },
   { id: "name_desc", label: "Nombre (Z - A)" },
+  { id: "last_played_desc", label: "Última vez jugado (más reciente)" },
+  { id: "last_played_asc", label: "Última vez jugado (más antiguo)" },
   { id: "community_desc", label: "Media comunidad (mejor a peor)" },
   { id: "community_asc", label: "Media comunidad (peor a mejor)" },
 ];
@@ -24,6 +26,8 @@ const userVoteSortOptions: { id: GameSortOption; label: string }[] = [
 const sortLabels: Record<GameSortOption, string> = {
   name_asc: "Nombre (A - Z)",
   name_desc: "Nombre (Z - A)",
+  last_played_desc: "Última vez jugado (más reciente)",
+  last_played_asc: "Última vez jugado (más antiguo)",
   community_desc: "Media comunidad (mejor a peor)",
   community_asc: "Media comunidad (peor a mejor)",
   user_vote_desc: "Mi voto (mejor a peor)",
@@ -54,6 +58,8 @@ const sortLabels: Record<GameSortOption, string> = {
       x-text="{
         name_asc: 'Nombre (A - Z)',
         name_desc: 'Nombre (Z - A)',
+        last_played_desc: 'Última vez jugado (más reciente)',
+        last_played_asc: 'Última vez jugado (más antiguo)',
         community_desc: 'Media comunidad (mejor a peor)',
         community_asc: 'Media comunidad (peor a mejor)',
         user_vote_desc: 'Mi voto (mejor a peor)',

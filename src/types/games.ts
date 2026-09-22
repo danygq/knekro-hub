@@ -13,6 +13,8 @@ export interface GameStatus {
 export type GameSortOption =
   | "name_asc"
   | "name_desc"
+  | "last_played_desc"
+  | "last_played_asc"
   | "community_desc"
   | "community_asc"
   | "user_vote_desc"
