@@ -1,7 +1,7 @@
 ---
 module: data-layer
 owner_area: backend
-last_verified_against_commit: 06d6c31
+last_verified_against_commit: 22ab607
 depends_on: []
 ---
 
@@ -52,7 +52,9 @@ create table public.twitch_channel_update
     event_timestamp timestamp without time zone             null,
     category_id     text                                    null,
     category_name   text                                    null,
-    constraint twitch_channel_update_pkey primary key (id)
+    stream_id       bigint                                  null,
+    constraint twitch_channel_update_pkey primary key (id),
+    constraint twitch_channel_update_stream_id_fkey foreign key (stream_id) references public.streams (id) on delete set null
 ) TABLESPACE pg_default;
 ```
 
@@ -60,7 +62,9 @@ create table public.twitch_channel_update
 - Writes are performed by server-side webhook handlers using `createSupabaseAdminClient()`.
 - `event_timestamp` tracks the message timestamp sent by Twitch EventSub or stream start time normalized into Europe/Madrid wall-clock time (`toMadridDateTimeString`).
 - `category_id` and `category_name` store the raw Twitch category identifier and display name.
+- `stream_id` points to the active broadcast in `public.streams(id)` if the update occurred during a live stream (`NULL` for offline changes).
 - Secondary index: `idx_twitch_channel_update_category_id` on `(category_id)` accelerates joins with `games.twitch_game_id` and category resolution queries.
+- Secondary index: `idx_twitch_channel_update_stream_id` on `(stream_id)` accelerates joins with `streams.id` in timeline RPCs.
 
 ### `game_status`
 
@@ -485,12 +489,12 @@ as $$
             max(t.created_at) as created_at,
             max(t.category_name) as category_name
           from public.twitch_channel_update t
-          left join public.streams s
-            on t.event_timestamp >= s.started_at
-           and (s.ended_at is null or t.event_timestamp <= s.ended_at)
+          join public.streams s
+            on s.id = t.stream_id
           where t.category_id = g.twitch_game_id
             and g.twitch_game_id is not null
-          group by coalesce(s.id, -cast(to_char(t.event_timestamp, 'YYYYMMDD') as bigint))
+            and t.stream_id is not null
+          group by s.id
           order by min(t.event_timestamp) desc
           limit 5
         ) tcu
@@ -504,9 +508,9 @@ as $$
 $$;
 ```
 
-- `get_game_by_id`: Powers `/games/[id]` detail view via `loadGameById()` in `src/lib/games.ts`. Executes an atomic single-query database fetch returning game metadata, status, tags (aggregated from `games_tags` and `tags`), community vote statistics, personal user vote, and up to 5 distinct stream play sessions from `twitch_channel_update` correlated against `streams` (or calendar day fallback for offline updates). Eliminates waterfall queries and collapses duplicate `channel.update` events per stream session.
-- `get_streams_by_date_range`: Powers the `/streams` calendar view via `loadStreamsForCalendar()` in `src/lib/streams.ts`. Queries all streams within a calendar date range (including month padding days), joins `twitch_channel_update` events within each stream session, joins cataloged `games` (`twitch_game_id`) and `game_status`, and uses `LAG(category_id)` to deduplicate consecutive title-only or tag-only updates while preserving the original category switch timestamp.
-- `get_stream_by_id`: Powers the `/streams/[id]` standalone view via `loadStreamById()` in `src/lib/streams.ts`. Fetches an individual broadcast with its complete, deduplicated activity history and game metadata.
+- `get_game_by_id`: Powers `/games/[id]` detail view via `loadGameById()` in `src/lib/games.ts`. Executes an atomic single-query database fetch returning game metadata, status, tags (aggregated from `games_tags` and `tags`), community vote statistics, personal user vote, and up to 5 distinct stream play sessions from `twitch_channel_update` linked by `stream_id` to `streams` (strictly excluding offline updates). Eliminates waterfall queries and collapses duplicate `channel.update` events per stream session.
+- `get_streams_by_date_range`: Powers the `/streams` calendar view via `loadStreamsForCalendar()` in `src/lib/streams.ts`. Queries all streams within a calendar date range (including month padding days), joins `twitch_channel_update` events via `stream_id = ds.id`, joins cataloged `games` (`twitch_game_id`) and `game_status`, and uses `LAG(category_id)` to deduplicate consecutive title-only or tag-only updates while preserving the original category switch timestamp.
+- `get_stream_by_id`: Powers the `/streams/[id]` standalone view via `loadStreamById()` in `src/lib/streams.ts`. Fetches an individual broadcast with its complete, deduplicated activity history linked strictly by `tcu.stream_id = ts.id` and game metadata.
 
 ## Clients
 
@@ -534,7 +538,7 @@ Referenced in `src/` (confirmed):
 | Table                   | Columns                                                                                                 | Where                                                                                                                                                                |
 | ----------------------- | ------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `streams`               | `id, created_at, started_at, ended_at, twitch_id`                                                       | `pages/index.astro` (select latest) · `pages/api/webhooks/twitch.ts` (insert/update)                                                                                 |
-| `twitch_channel_update` | `id, created_at, event_timestamp, category_id, category_name`                                           | `pages/api/webhooks/twitch.ts` (insert)                                                                                                                              |
+| `twitch_channel_update` | `id, created_at, event_timestamp, category_id, category_name, stream_id`                                | `pages/api/webhooks/twitch.ts` (insert)                                                                                                                              |
 | `game_status`           | `id, name, created_at, games_with_this_status`                                                          | `lib/games.ts` → `pages/games.astro` (order `id`) → `GamesFilterMenu.astro`                                                                                          |
 | `games`                 | `id, created_at, name, game_status_id, cover_url, avg_vote, vote_count, twitch_game_id, last_played_at` | `lib/games.ts` (`fetchGames`, `loadGameById`) · `pages/games.astro` · `api/games/search.astro` · `api/games/vote.astro` · `pages/api/webhooks/twitch.ts` (reconcile) |
 | `games_user_votes`      | `id, created_at, user_id, game_id, vote`                                                                | `lib/games.ts` (user votes via `get_user_games` RPC) · `api/games/vote.astro` (upsert)                                                                               |

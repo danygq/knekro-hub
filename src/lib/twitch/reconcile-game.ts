@@ -31,6 +31,7 @@ export async function reconcileGame(
   categoryId: string | null | undefined,
   categoryName: string | null | undefined,
   eventTimestamp?: string | null,
+  streamId?: number | null,
 ): Promise<ReconcileGameResult> {
   const trimmedId = categoryId?.trim();
   const trimmedName = categoryName?.trim();
@@ -70,18 +71,24 @@ export async function reconcileGame(
   }
 
   if (existingById) {
-    console.log(
-      `[Twitch Reconcile] Game "${existingById.name}" already exists in database (twitch_game_id: ${trimmedId}, id: ${existingById.id}). Updating last_played_at: ${timestamp}...`,
-    );
-    const { error: updatePlayedError } = await supabaseAdmin
-      .from("games")
-      .update({ last_played_at: timestamp })
-      .eq("id", existingById.id);
+    if (streamId) {
+      console.log(
+        `[Twitch Reconcile] Game "${existingById.name}" already exists in database (twitch_game_id: ${trimmedId}, id: ${existingById.id}). Updating last_played_at: ${timestamp}...`,
+      );
+      const { error: updatePlayedError } = await supabaseAdmin
+        .from("games")
+        .update({ last_played_at: timestamp })
+        .eq("id", existingById.id);
 
-    if (updatePlayedError) {
-      console.error(
-        `[Twitch Reconcile] Failed to update last_played_at for "${existingById.name}":`,
-        updatePlayedError,
+      if (updatePlayedError) {
+        console.error(
+          `[Twitch Reconcile] Failed to update last_played_at for "${existingById.name}":`,
+          updatePlayedError,
+        );
+      }
+    } else {
+      console.log(
+        `[Twitch Reconcile] Game "${existingById.name}" matched (id: ${existingById.id}) but stream is offline. Skipping last_played_at update.`,
       );
     }
     return { action: "matched_by_id", game: existingById };
@@ -105,11 +112,17 @@ export async function reconcileGame(
   if (matchedByName) {
     if (!matchedByName.twitch_game_id) {
       console.log(
-        `[Twitch Reconcile] Matched existing game "${matchedByName.name}" (id: ${matchedByName.id}) by name. Backfilling twitch_game_id: ${trimmedId} and last_played_at: ${timestamp}...`,
+        `[Twitch Reconcile] Matched existing game "${matchedByName.name}" (id: ${matchedByName.id}) by name. Backfilling twitch_game_id: ${trimmedId}${streamId ? ` and last_played_at: ${timestamp}` : ""}...`,
       );
+      const updatePayload: Record<string, unknown> = {
+        twitch_game_id: trimmedId,
+      };
+      if (streamId) {
+        updatePayload.last_played_at = timestamp;
+      }
       const { data: updatedGame, error: updateError } = await supabaseAdmin
         .from("games")
-        .update({ twitch_game_id: trimmedId, last_played_at: timestamp })
+        .update(updatePayload)
         .eq("id", matchedByName.id)
         .select(
           "id, name, twitch_game_id, game_status_id, cover_url, last_played_at",
@@ -198,18 +211,24 @@ export async function reconcileGame(
       return { action: "updated_by_name", game: updatedGame };
     }
 
-    console.log(
-      `[Twitch Reconcile] Matched existing game "${matchedByName.name}" (id: ${matchedByName.id}) by name, updating last_played_at: ${timestamp}...`,
-    );
-    const { error: updatePlayedError } = await supabaseAdmin
-      .from("games")
-      .update({ last_played_at: timestamp })
-      .eq("id", matchedByName.id);
+    if (streamId) {
+      console.log(
+        `[Twitch Reconcile] Matched existing game "${matchedByName.name}" (id: ${matchedByName.id}) by name, updating last_played_at: ${timestamp}...`,
+      );
+      const { error: updatePlayedError } = await supabaseAdmin
+        .from("games")
+        .update({ last_played_at: timestamp })
+        .eq("id", matchedByName.id);
 
-    if (updatePlayedError) {
-      console.error(
-        `[Twitch Reconcile] Failed to update last_played_at for "${matchedByName.name}":`,
-        updatePlayedError,
+      if (updatePlayedError) {
+        console.error(
+          `[Twitch Reconcile] Failed to update last_played_at for "${matchedByName.name}":`,
+          updatePlayedError,
+        );
+      }
+    } else {
+      console.log(
+        `[Twitch Reconcile] Matched existing game "${matchedByName.name}" (id: ${matchedByName.id}) by name but stream is offline. Skipping last_played_at update.`,
       );
     }
 
@@ -217,8 +236,9 @@ export async function reconcileGame(
   }
 
   // 3. Create New Game
+  const initialPlayedAt = streamId ? timestamp : null;
   console.log(
-    `[Twitch Reconcile] Game "${trimmedName}" (twitch_game_id: ${trimmedId}) not found in database. Inserting new game with last_played_at: ${timestamp}...`,
+    `[Twitch Reconcile] Game "${trimmedName}" (twitch_game_id: ${trimmedId}) not found in database. Inserting new game with last_played_at: ${initialPlayedAt}...`,
   );
   const { data: newGame, error: insertError } = await supabaseAdmin
     .from("games")
@@ -226,7 +246,7 @@ export async function reconcileGame(
       name: trimmedName,
       twitch_game_id: trimmedId,
       game_status_id: 11,
-      last_played_at: timestamp,
+      last_played_at: initialPlayedAt,
     })
     .select("id, name, twitch_game_id, game_status_id, last_played_at")
     .single();
@@ -311,6 +331,7 @@ export async function recordChannelUpdate(
   eventTimestamp: string | null | undefined,
   categoryId: string | null | undefined,
   categoryName: string | null | undefined,
+  streamId?: number | null,
 ) {
   const timestamp = eventTimestamp || toMadridDateTimeString();
   const { data, error } = await supabaseAdmin
@@ -319,8 +340,9 @@ export async function recordChannelUpdate(
       event_timestamp: timestamp,
       category_id: categoryId?.trim() || null,
       category_name: categoryName?.trim() || null,
+      stream_id: streamId ?? null,
     })
-    .select("id, category_id, category_name, event_timestamp")
+    .select("id, category_id, category_name, event_timestamp, stream_id")
     .single();
 
   if (error) {
@@ -330,7 +352,7 @@ export async function recordChannelUpdate(
     );
   } else {
     console.log(
-      `[Twitch ChannelUpdate] Recorded category update: "${categoryName}" (ID: ${categoryId}) at ${timestamp}`,
+      `[Twitch ChannelUpdate] Recorded category update: "${categoryName}" (ID: ${categoryId}) at ${timestamp} (stream_id: ${streamId ?? "offline"})`,
     );
   }
   return data;

@@ -233,6 +233,7 @@ export const POST: APIRoute = async ({ request }) => {
             startedAt,
             categoryId,
             categoryName,
+            insertedStream.id,
           );
 
           const result = await reconcileGame(
@@ -240,6 +241,7 @@ export const POST: APIRoute = async ({ request }) => {
             categoryId,
             categoryName,
             startedAt,
+            insertedStream.id,
           );
           console.log(
             `[Twitch EventSub] Stream start game reconciliation for "${categoryName}": ${result.action}`,
@@ -264,8 +266,19 @@ export const POST: APIRoute = async ({ request }) => {
       const categoryName = event.category_name ?? null;
       const eventTimestamp = toMadridDateTimeString(messageTimestamp);
 
+      // Query active live broadcast if currently in progress
+      const { data: activeStream } = await supabaseAdmin
+        .from("streams")
+        .select("id")
+        .is("ended_at", null)
+        .order("started_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      const streamId = activeStream?.id ?? null;
+
       console.log(
-        `[Twitch EventSub] channel.update received: category="${categoryName}" (ID: ${categoryId}), title="${event.title || ""}", eventTimestamp=${eventTimestamp}`,
+        `[Twitch EventSub] channel.update received: category="${categoryName}" (ID: ${categoryId}), title="${event.title || ""}", eventTimestamp=${eventTimestamp}, streamId=${streamId ?? "offline"}`,
       );
 
       // 1. Record category transition in twitch_channel_update
@@ -274,6 +287,7 @@ export const POST: APIRoute = async ({ request }) => {
         eventTimestamp,
         categoryId,
         categoryName,
+        streamId,
       );
 
       // 2. Reconcile game in public.games
@@ -282,6 +296,7 @@ export const POST: APIRoute = async ({ request }) => {
         categoryId,
         categoryName,
         eventTimestamp,
+        streamId,
       );
       console.log(
         `[Twitch EventSub] channel.update game reconciliation for "${categoryName}": ${result.action}`,
