@@ -1,7 +1,7 @@
 ---
 module: data-layer
 owner_area: backend
-last_verified_against_commit: 22ab607
+last_verified_against_commit: b1a58b6
 depends_on: []
 ---
 
@@ -338,7 +338,8 @@ returns table (
   status_name text,
   user_vote smallint,
   total_count bigint
-) language sql stable as $$
+) language sql stable
+set search_path to 'public' as $$
   with filtered as (
     select
       g.id,
@@ -449,7 +450,8 @@ returns table (
 )
 language sql
 stable
-security definer
+security invoker
+set search_path to 'public'
 as $$
   select
     g.id,
@@ -509,8 +511,8 @@ $$;
 ```
 
 - `get_game_by_id`: Powers `/games/[id]` detail view via `loadGameById()` in `src/lib/games.ts`. Executes an atomic single-query database fetch returning game metadata, status, tags (aggregated from `games_tags` and `tags`), community vote statistics, personal user vote, and up to 5 distinct stream play sessions from `twitch_channel_update` linked by `stream_id` to `streams` (strictly excluding offline updates). Eliminates waterfall queries and collapses duplicate `channel.update` events per stream session.
-- `get_streams_by_date_range`: Powers the `/streams` calendar view via `loadStreamsForCalendar()` in `src/lib/streams.ts`. Queries all streams within a calendar date range (including month padding days), joins `twitch_channel_update` events via `stream_id = ds.id`, joins cataloged `games` (`twitch_game_id`) and `game_status`, and uses `LAG(category_id)` to deduplicate consecutive title-only or tag-only updates while preserving the original category switch timestamp.
-- `get_stream_by_id`: Powers the `/streams/[id]` standalone view via `loadStreamById()` in `src/lib/streams.ts`. Fetches an individual broadcast with its complete, deduplicated activity history linked strictly by `tcu.stream_id = ts.id` and game metadata.
+- `get_streams_by_date_range`: Powers the `/streams` calendar view via `loadStreamsForCalendar()` in `src/lib/streams.ts`. Queries all streams within a calendar date range (including month padding days), joins `twitch_channel_update` events via `stream_id = ds.id`, joins cataloged `games` (`twitch_game_id`) and `game_status`, and uses `LAG(category_id)` to deduplicate consecutive title-only or tag-only updates while preserving the original category switch timestamp. Configured as `SECURITY INVOKER` with explicit `search_path = public`.
+- `get_stream_by_id`: Powers the `/streams/[id]` standalone view via `loadStreamById()` in `src/lib/streams.ts`. Fetches an individual broadcast with its complete, deduplicated activity history linked strictly by `tcu.stream_id = ts.id` and game metadata. Configured as `SECURITY INVOKER` with explicit `search_path = public`.
 
 ## Clients
 
