@@ -1,7 +1,7 @@
 ---
 module: agent-protocol
 owner_area: repo-wide
-last_verified_against_commit: 0d27f3f
+last_verified_against_commit: d660525
 depends_on: [agent-onboarding, architecture]
 ---
 
@@ -155,7 +155,7 @@ Scopes align with repository modules and functional boundaries:
 
 ### Commit Rules
 
-- **Pre-commit Formatting:** Run `npx prettier --write <file>` on every file pending to commit before committing so all staged changes are properly formatted.
+- **Automated Pre-commit Formatting:** Prettier formatting is handled automatically upon commit via Husky and `lint-staged`. Agents do not need to manually format modified files before committing.
 - **Imperative Mood:** Write in imperative present tense ("add", "fix", "refactor" — not "added", "fixes",
   "refactoring").
 - **Lowercase Summary:** Start the description with a lowercase letter (unless starting with a proper noun or code
@@ -245,6 +245,6 @@ new features, architectural refactors, DB schema changes), follow the recommende
 #### Step 4: Implementation & Verification
 
 - Implement the changes adhering to established project conventions (naming rules, type safety, directory structures).
-- Run `npx prettier --write <file>` on every modified file pending to commit to guarantee standard formatting.
+- Formatting is handled automatically upon commit via Husky and `lint-staged` (no manual Prettier step required by agents).
 - Verify every Acceptance Criterion listed in the issue step-by-step.
 - Confirm all touched code is self-documenting and typed correctly.
