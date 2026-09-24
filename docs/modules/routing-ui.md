@@ -1,7 +1,7 @@
 ---
 module: routing-ui
 owner_area: frontend
-last_verified_against_commit: 5cdf394
+last_verified_against_commit: c3a0c73
 depends_on: [data-layer, auth]
 ---
 
@@ -109,12 +109,15 @@ Renders `GamesLayout.astro` with fetched data and matching initial dropdown labe
 
 ### Streams & Calendar (`src/components/streams/`)
 
-| Component                      | Role                                                                                                                                                                           |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `StreamCalendar.astro`         | Month calendar wrapper: navigation header (`←`, month name, `→`, `Hoy`), Monday..Sunday weekday headers (`LUN` to `DOM`), and 7-column day grid.                               |
-| `StreamDayBox.astro`           | Individual calendar cell: day number, "Hoy" highlight, stream status badge (duration or live badge), category/game covers glimpse, and click handler opening the aside drawer. |
-| `StreamDetailDrawer.astro`     | Responsive aside detail drawer: mobile off-canvas drawer with backdrop, desktop slide-over panel, broadcast timings, segment intervals, and link to `/streams/[id]`.           |
-| `StreamActivityTimeline.astro` | Chronological vertical timeline displaying each category transition with start time, end time, segment duration badge, category title, and linked game card.                   |
+| Component                       | Role                                                                                                                                                                           |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `StreamCalendar.astro`          | Month calendar wrapper: navigation header (`←`, month name, `→`, `Hoy`), Monday..Sunday weekday headers (`LUN` to `DOM`), and 7-column day grid.                               |
+| `StreamDayBox.astro`            | Individual calendar cell: day number, "Hoy" highlight, stream status badge (duration or live badge), category/game covers glimpse, and click handler opening the aside drawer. |
+| `StreamDetailDrawer.astro`      | Responsive aside detail drawer: mobile off-canvas drawer with backdrop, desktop slide-over panel, broadcast timings, segment intervals, and link to `/streams/[id]`.           |
+| `StreamActivityTimeline.astro`  | Chronological vertical timeline displaying each category transition with start time, end time, segment duration badge, category title, and linked game card.                   |
+| `StreamMonthlyRanking.astro`    | Monthly leaderboard section below calendar: displays section header, empty state fallback, top 3 Olympic podium, and ranked table for remaining games.                         |
+| `StreamMonthPodium.astro`       | Olympic 3-place podium (#1 Gold center elevated, #2 Silver left, #3 Bronze right) displaying game cover, stream duration, stream count, and status badge.                      |
+| `StreamMonthRankingTable.astro` | Ranked table for games from 4th place onward displaying rank number, mini cover, title, status badge, community rating, stream sessions, and total broadcast duration.         |
 
 ### Icons & SVGs
 

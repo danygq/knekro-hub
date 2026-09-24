@@ -2,7 +2,11 @@
 import Layout from "@/layouts/Layout.astro";
 import StreamCalendar from "@/components/streams/StreamCalendar.astro";
 import StreamDetailDrawer from "@/components/streams/StreamDetailDrawer.astro";
-import { loadStreamsForCalendar } from "@/lib/streams";
+import StreamMonthlyRanking from "@/components/streams/StreamMonthlyRanking.astro";
+import {
+  loadStreamsForCalendar,
+  calculateMonthlyGameRankings,
+} from "@/lib/streams";
 import { toMadridDateTimeString } from "@/lib/time";
 import "@/styles/pages/streams.css";
 
@@ -31,6 +35,8 @@ const monthData = await loadStreamsForCalendar(
   selectedYear,
   selectedMonth,
 );
+
+const monthlyRankings = calculateMonthlyGameRankings(monthData);
 
 // Check if deep link ?day=YYYY-MM-DD or ?stream=ID was passed
 const dayParam = Astro.url.searchParams.get("day");
@@ -147,6 +153,10 @@ if (dayParam) {
     `}
   >
     <StreamCalendar monthData={monthData} />
+    <StreamMonthlyRanking
+      monthName={monthData.monthName}
+      rankings={monthlyRankings}
+    />
     <StreamDetailDrawer />
   </div>
 </Layout>

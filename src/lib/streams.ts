@@ -2,11 +2,13 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   CalendarDay,
   CalendarMonthData,
+  MonthlyGameRankingItem,
   RawStreamActivity,
   StreamActivitySegment,
   StreamWithActivities,
 } from "../types/streams";
 import {
+  formatDurationSeconds,
   formatSpanishMonthYear,
   formatStreamDuration,
   formatStreamStartTime,
@@ -14,6 +16,7 @@ import {
   getStreamMadridEpoch,
   toMadridDateTimeString,
 } from "./time";
+import { isIgnoredTwitchCategory } from "./twitch/constants";
 
 /**
  * Calculates continuous category transition segments with start times, end times,
@@ -254,4 +257,101 @@ export async function loadStreamById(
   if (!data) return null;
 
   return mapRawStream(data);
+}
+
+/**
+ * Aggregates all game segments for streams belonging exclusively to the selected calendar month
+ * (filtering day.isCurrentMonth === true and cataloged games with game_id != null),
+ * sorted descending by total duration played.
+ */
+export function calculateMonthlyGameRankings(
+  monthData: CalendarMonthData,
+): MonthlyGameRankingItem[] {
+  if (!monthData?.days || monthData.days.length === 0) {
+    return [];
+  }
+
+  interface AggregatedGame {
+    game_id: number;
+    game_name: string;
+    cover_url: string | null;
+    avg_vote: number | null;
+    status_name: string | null;
+    total_duration_seconds: number;
+    stream_ids: Set<number>;
+  }
+
+  const map = new Map<number, AggregatedGame>();
+
+  for (const day of monthData.days) {
+    // Only aggregate days strictly within the target month (exclude calendar grid padding days)
+    if (!day.isCurrentMonth || !day.streams) continue;
+
+    for (const stream of day.streams) {
+      if (!stream.segments) continue;
+
+      for (const segment of stream.segments) {
+        if (
+          segment.game_id == null ||
+          isIgnoredTwitchCategory(segment.category_id)
+        ) {
+          continue;
+        }
+
+        const gameId = segment.game_id;
+        let entry = map.get(gameId);
+
+        if (!entry) {
+          entry = {
+            game_id: gameId,
+            game_name:
+              segment.game_name ?? segment.category_name ?? `Juego #${gameId}`,
+            cover_url: segment.cover_url ?? null,
+            avg_vote: segment.avg_vote ?? null,
+            status_name: segment.status_name ?? null,
+            total_duration_seconds: 0,
+            stream_ids: new Set<number>(),
+          };
+          map.set(gameId, entry);
+        }
+
+        entry.total_duration_seconds += segment.duration_seconds;
+        entry.stream_ids.add(stream.id);
+
+        if (!entry.cover_url && segment.cover_url) {
+          entry.cover_url = segment.cover_url;
+        }
+        if (entry.avg_vote == null && segment.avg_vote != null) {
+          entry.avg_vote = segment.avg_vote;
+        }
+        if (!entry.status_name && segment.status_name) {
+          entry.status_name = segment.status_name;
+        }
+      }
+    }
+  }
+
+  const items: MonthlyGameRankingItem[] = Array.from(map.values())
+    .sort((a, b) => {
+      if (b.total_duration_seconds !== a.total_duration_seconds) {
+        return b.total_duration_seconds - a.total_duration_seconds;
+      }
+      if (b.stream_ids.size !== a.stream_ids.size) {
+        return b.stream_ids.size - a.stream_ids.size;
+      }
+      return a.game_name.localeCompare(b.game_name);
+    })
+    .map((item, index) => ({
+      game_id: item.game_id,
+      game_name: item.game_name,
+      cover_url: item.cover_url,
+      avg_vote: item.avg_vote,
+      status_name: item.status_name,
+      total_duration_seconds: item.total_duration_seconds,
+      total_duration_text: formatDurationSeconds(item.total_duration_seconds),
+      stream_count: item.stream_ids.size,
+      rank: index + 1,
+    }));
+
+  return items;
 }

@@ -1,0 +1,319 @@
+---
+import type { MonthlyGameRankingItem } from "@/types/streams";
+import GameCover from "@/components/games/GameCover.astro";
+import GameStatusBadge from "@/components/games/GameStatusBadge.astro";
+import { Clock, Star, Tv, ChevronRight } from "@lucide/astro";
+
+interface Props {
+  topGames: MonthlyGameRankingItem[];
+}
+
+const { topGames } = Astro.props;
+
+const gold = topGames.find((g) => g.rank === 1) ?? null;
+const silver = topGames.find((g) => g.rank === 2) ?? null;
+const bronze = topGames.find((g) => g.rank === 3) ?? null;
+
+const rankMeta: Record<
+  number,
+  { label: string; emoji: string; badgeClass: string; auraColor: string }
+> = {
+  1: {
+    label: "Oro",
+    emoji: "🥇",
+    badgeClass: "knk-medal-gold",
+    auraColor: "rgba(251, 191, 36, 0.25)",
+  },
+  2: {
+    label: "Plata",
+    emoji: "🥈",
+    badgeClass: "knk-medal-silver",
+    auraColor: "rgba(226, 232, 240, 0.25)",
+  },
+  3: {
+    label: "Bronce",
+    emoji: "🥉",
+    badgeClass: "knk-medal-bronze",
+    auraColor: "rgba(217, 119, 6, 0.25)",
+  },
+};
+---
+
+<div class="knk-stream-podium-stage">
+  <div class="knk-stream-podium-stage-glow" aria-hidden="true"></div>
+
+  <div class="knk-stream-podium-container">
+    {/* Silver #2 (Left on desktop) */}
+    {silver && (
+      <div class="knk-stream-podium-slot knk-stream-podium-slot-2">
+        <div class="flex items-center justify-between gap-2 mb-3 w-full">
+          <div class="flex items-center gap-2">
+            <div
+              class={`size-7.5 rounded-lg flex items-center justify-center border text-sm shadow-sm ${rankMeta[2].badgeClass}`}
+            >
+              <span aria-hidden="true">{rankMeta[2].emoji}</span>
+            </div>
+            <div>
+              <span class="text-[10px] font-semibold tracking-wider uppercase text-(--knk-text-muted)">
+                Puesto #2
+              </span>
+              <h4 class="font-(--font-display) text-xs font-bold text-white tracking-tight leading-none">
+                {rankMeta[2].label}
+              </h4>
+            </div>
+          </div>
+
+          <span class="text-[11px] font-mono text-(--knk-text-muted) px-2 py-0.5 rounded-xs bg-(--knk-surface-2) border border-(--knk-line)">
+            {silver.stream_count}{" "}
+            {silver.stream_count === 1 ? "directo" : "directos"}
+          </span>
+        </div>
+
+        <div class="knk-podium-card-wrapper w-full">
+          <div
+            class="knk-stream-podium-aura"
+            style={`--aura-color: ${rankMeta[2].auraColor}`}
+            aria-hidden="true"
+          />
+
+          <article class="knk-game-card group relative w-full border border-(--knk-line) bg-(--knk-surface) hover:border-(--knk-line-strong) transition-colors overflow-hidden">
+            <div class="relative bg-(--knk-surface-2) knk-grid-bg overflow-hidden aspect-2/3">
+              <a
+                href={`/games/${silver.game_id}`}
+                class="block w-full h-full focus:outline-none focus-visible:ring-2 focus-visible:ring-(--knk-primary)"
+                aria-label={`Ver detalles de ${silver.game_name}`}
+              >
+                <GameCover
+                  coverUrl={silver.cover_url}
+                  name={silver.game_name}
+                  loading="lazy"
+                />
+              </a>
+
+              {silver.status_name && (
+                <GameStatusBadge status={{ name: silver.status_name }} />
+              )}
+
+              {/* Bottom stats overlay */}
+              <div class="absolute bottom-2.5 left-2.5 right-2.5 z-10 flex items-end justify-between gap-2 pointer-events-none">
+                <span class="knk-notch-sm inline-flex items-center gap-1 px-2 py-0.5 text-xs font-mono font-bold bg-black/80 text-(--knk-primary) border border-(--knk-line) backdrop-blur-xs">
+                  <Clock class="size-3" />
+                  {silver.total_duration_text}
+                </span>
+
+                {silver.avg_vote != null && (
+                  <span
+                    class={`inline-flex items-center gap-1 text-[11px] font-semibold px-1.5 py-0.5 rounded-xs border tabular-nums knk-vote-badge ${silver.avg_vote ? "knk-vote-" + Math.trunc(silver.avg_vote) : "knk-vote-muted"}`}
+                  >
+                    <Star class="size-3 fill-current" />
+                    {silver.avg_vote.toFixed(1)}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div class="p-3.5 flex items-center justify-between gap-2">
+              <h3
+                class="font-(--font-display) text-sm font-semibold truncate text-(--knk-text) group-hover:text-(--knk-primary) transition-colors"
+                title={silver.game_name}
+              >
+                <a href={`/games/${silver.game_id}`}>{silver.game_name}</a>
+              </h3>
+
+              <a
+                href={`/games/${silver.game_id}`}
+                class="text-xs text-(--knk-text-muted) hover:text-(--knk-primary) flex items-center shrink-0 transition-colors"
+                title="Ver ficha"
+                aria-label={`Ver ficha de ${silver.game_name}`}
+              >
+                <ChevronRight class="size-4" />
+              </a>
+            </div>
+          </article>
+        </div>
+      </div>
+    )}
+
+    {/* Gold #1 (Center, elevated on desktop) */}
+    {gold && (
+      <div class="knk-stream-podium-slot knk-stream-podium-slot-1">
+        <div class="flex items-center justify-between gap-2 mb-3 w-full">
+          <div class="flex items-center gap-2">
+            <div
+              class={`size-8 rounded-lg flex items-center justify-center border text-base shadow-sm ${rankMeta[1].badgeClass}`}
+            >
+              <span aria-hidden="true">{rankMeta[1].emoji}</span>
+            </div>
+            <div>
+              <span class="text-[10px] font-semibold tracking-wider uppercase text-(--knk-primary)">
+                Puesto #1 • Campeón
+              </span>
+              <h4 class="font-(--font-display) text-sm font-bold text-white tracking-tight leading-none">
+                {rankMeta[1].label}
+              </h4>
+            </div>
+          </div>
+
+          <span class="text-xs font-mono font-semibold text-(--knk-primary) px-2 py-0.5 rounded-xs bg-(--knk-primary)/10 border border-(--knk-primary)/30">
+            {gold.stream_count}{" "}
+            {gold.stream_count === 1 ? "directo" : "directos"}
+          </span>
+        </div>
+
+        <div class="knk-podium-card-wrapper w-full">
+          <div
+            class="knk-stream-podium-aura knk-stream-podium-aura-gold"
+            style={`--aura-color: ${rankMeta[1].auraColor}`}
+            aria-hidden="true"
+          />
+
+          <article class="knk-game-card group relative w-full border-2 border-amber-400/50 bg-(--knk-surface) hover:border-amber-400 transition-colors shadow-lg shadow-amber-500/10 overflow-hidden">
+            <div class="relative bg-(--knk-surface-2) knk-grid-bg overflow-hidden aspect-2/3">
+              <a
+                href={`/games/${gold.game_id}`}
+                class="block w-full h-full focus:outline-none focus-visible:ring-2 focus-visible:ring-(--knk-primary)"
+                aria-label={`Ver detalles de ${gold.game_name}`}
+              >
+                <GameCover
+                  coverUrl={gold.cover_url}
+                  name={gold.game_name}
+                  loading="lazy"
+                />
+              </a>
+
+              {gold.status_name && (
+                <GameStatusBadge status={{ name: gold.status_name }} />
+              )}
+
+              {/* Bottom stats overlay */}
+              <div class="absolute bottom-2.5 left-2.5 right-2.5 z-10 flex items-end justify-between gap-2 pointer-events-none">
+                <span class="knk-notch-sm inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-mono font-bold bg-black/90 text-amber-300 border border-amber-400/40 backdrop-blur-xs">
+                  <Clock class="size-3.5" />
+                  {gold.total_duration_text}
+                </span>
+
+                {gold.avg_vote != null && (
+                  <span
+                    class={`inline-flex items-center gap-1 text-[11px] font-semibold px-1.5 py-0.5 rounded-xs border tabular-nums knk-vote-badge ${gold.avg_vote ? "knk-vote-" + Math.trunc(gold.avg_vote) : "knk-vote-muted"}`}
+                  >
+                    <Star class="size-3 fill-current" />
+                    {gold.avg_vote.toFixed(1)}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div class="p-4 flex items-center justify-between gap-2 bg-gradient-to-b from-(--knk-surface) to-(--knk-surface-2)">
+              <h3
+                class="font-(--font-display) text-base font-bold truncate text-white group-hover:text-amber-300 transition-colors"
+                title={gold.game_name}
+              >
+                <a href={`/games/${gold.game_id}`}>{gold.game_name}</a>
+              </h3>
+
+              <a
+                href={`/games/${gold.game_id}`}
+                class="text-xs text-amber-300/80 hover:text-amber-300 flex items-center shrink-0 transition-colors"
+                title="Ver ficha"
+                aria-label={`Ver ficha de ${gold.game_name}`}
+              >
+                <ChevronRight class="size-4" />
+              </a>
+            </div>
+          </article>
+        </div>
+      </div>
+    )}
+
+    {/* Bronze #3 (Right on desktop) */}
+    {bronze && (
+      <div class="knk-stream-podium-slot knk-stream-podium-slot-3">
+        <div class="flex items-center justify-between gap-2 mb-3 w-full">
+          <div class="flex items-center gap-2">
+            <div
+              class={`size-7.5 rounded-lg flex items-center justify-center border text-sm shadow-sm ${rankMeta[3].badgeClass}`}
+            >
+              <span aria-hidden="true">{rankMeta[3].emoji}</span>
+            </div>
+            <div>
+              <span class="text-[10px] font-semibold tracking-wider uppercase text-(--knk-text-muted)">
+                Puesto #3
+              </span>
+              <h4 class="font-(--font-display) text-xs font-bold text-white tracking-tight leading-none">
+                {rankMeta[3].label}
+              </h4>
+            </div>
+          </div>
+
+          <span class="text-[11px] font-mono text-(--knk-text-muted) px-2 py-0.5 rounded-xs bg-(--knk-surface-2) border border-(--knk-line)">
+            {bronze.stream_count}{" "}
+            {bronze.stream_count === 1 ? "directo" : "directos"}
+          </span>
+        </div>
+
+        <div class="knk-podium-card-wrapper w-full">
+          <div
+            class="knk-stream-podium-aura"
+            style={`--aura-color: ${rankMeta[3].auraColor}`}
+            aria-hidden="true"
+          />
+
+          <article class="knk-game-card group relative w-full border border-(--knk-line) bg-(--knk-surface) hover:border-(--knk-line-strong) transition-colors overflow-hidden">
+            <div class="relative bg-(--knk-surface-2) knk-grid-bg overflow-hidden aspect-2/3">
+              <a
+                href={`/games/${bronze.game_id}`}
+                class="block w-full h-full focus:outline-none focus-visible:ring-2 focus-visible:ring-(--knk-primary)"
+                aria-label={`Ver detalles de ${bronze.game_name}`}
+              >
+                <GameCover
+                  coverUrl={bronze.cover_url}
+                  name={bronze.game_name}
+                  loading="lazy"
+                />
+              </a>
+
+              {bronze.status_name && (
+                <GameStatusBadge status={{ name: bronze.status_name }} />
+              )}
+
+              {/* Bottom stats overlay */}
+              <div class="absolute bottom-2.5 left-2.5 right-2.5 z-10 flex items-end justify-between gap-2 pointer-events-none">
+                <span class="knk-notch-sm inline-flex items-center gap-1 px-2 py-0.5 text-xs font-mono font-bold bg-black/80 text-(--knk-primary) border border-(--knk-line) backdrop-blur-xs">
+                  <Clock class="size-3" />
+                  {bronze.total_duration_text}
+                </span>
+
+                {bronze.avg_vote != null && (
+                  <span
+                    class={`inline-flex items-center gap-1 text-[11px] font-semibold px-1.5 py-0.5 rounded-xs border tabular-nums knk-vote-badge ${bronze.avg_vote ? "knk-vote-" + Math.trunc(bronze.avg_vote) : "knk-vote-muted"}`}
+                  >
+                    <Star class="size-3 fill-current" />
+                    {bronze.avg_vote.toFixed(1)}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div class="p-3.5 flex items-center justify-between gap-2">
+              <h3
+                class="font-(--font-display) text-sm font-semibold truncate text-(--knk-text) group-hover:text-(--knk-primary) transition-colors"
+                title={bronze.game_name}
+              >
+                <a href={`/games/${bronze.game_id}`}>{bronze.game_name}</a>
+              </h3>
+
+              <a
+                href={`/games/${bronze.game_id}`}
+                class="text-xs text-(--knk-text-muted) hover:text-(--knk-primary) flex items-center shrink-0 transition-colors"
+                title="Ver ficha"
+                aria-label={`Ver ficha de ${bronze.game_name}`}
+              >
+                <ChevronRight class="size-4" />
+              </a>
+            </div>
+          </article>
+        </div>
+      </div>
+    )}
+  </div>
+</div>

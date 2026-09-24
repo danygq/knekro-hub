@@ -99,3 +99,110 @@
   background: var(--knk-primary);
   box-shadow: 0 0 0 3px var(--knk-surface);
 }
+
+/* Medal badges */
+.knk-medal-gold {
+  color: #fbbf24;
+  border-color: rgba(251, 191, 36, 0.4);
+  background-color: rgba(251, 191, 36, 0.1);
+}
+
+.knk-medal-silver {
+  color: #e2e8f0;
+  border-color: rgba(226, 232, 240, 0.4);
+  background-color: rgba(226, 232, 240, 0.1);
+}
+
+.knk-medal-bronze {
+  color: #d97706;
+  border-color: rgba(217, 119, 6, 0.4);
+  background-color: rgba(217, 119, 6, 0.1);
+}
+
+/* Monthly Stream Games Podium */
+.knk-stream-podium-stage {
+  position: relative;
+  width: 100%;
+  padding-top: 1rem;
+}
+
+.knk-stream-podium-stage-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(720px, 90vw);
+  height: 280px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(230, 203, 70, 0.08) 0%,
+    rgba(230, 203, 70, 0.02) 45%,
+    transparent 70%
+  );
+  pointer-events: none;
+  filter: blur(28px);
+}
+
+.knk-stream-podium-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  width: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+.knk-stream-podium-slot {
+  width: 100%;
+  max-width: 260px;
+}
+
+@media (min-width: 768px) {
+  .knk-stream-podium-container {
+    flex-direction: row;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 1.5rem;
+  }
+
+  .knk-stream-podium-slot-1 {
+    order: 2;
+    transform: translateY(-1.25rem);
+  }
+
+  .knk-stream-podium-slot-2 {
+    order: 1;
+  }
+
+  .knk-stream-podium-slot-3 {
+    order: 3;
+  }
+}
+
+.knk-stream-podium-aura {
+  position: absolute;
+  inset: -6px;
+  border-radius: 4px;
+  background: radial-gradient(
+    ellipse at 50% 40%,
+    var(--aura-color, rgba(230, 203, 70, 0.18)) 0%,
+    transparent 70%
+  );
+  filter: blur(14px);
+  pointer-events: none;
+  opacity: 0.65;
+  transition:
+    opacity 300ms ease,
+    filter 300ms ease;
+}
+
+.knk-podium-card-wrapper:hover .knk-stream-podium-aura {
+  opacity: 1;
+  filter: blur(18px);
+}
+
+.knk-stream-podium-aura-gold {
+  opacity: 0.8;
+  filter: blur(16px);
+}

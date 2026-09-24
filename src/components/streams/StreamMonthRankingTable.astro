@@ -1,0 +1,119 @@
+---
+import type { MonthlyGameRankingItem } from "@/types/streams";
+import { Clock, Star, Tv, ChevronRight, Gamepad2 } from "@lucide/astro";
+import Image from "astro/components/Image.astro";
+
+interface Props {
+  games: MonthlyGameRankingItem[];
+}
+
+const { games } = Astro.props;
+---
+
+{games && games.length > 0 && (
+  <div class="mt-10 overflow-hidden rounded-xs border border-(--knk-line) bg-(--knk-surface)">
+    <div class="p-4 sm:px-6 border-b border-(--knk-line) flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <div class="size-7 rounded-xs bg-(--knk-surface-2) border border-(--knk-line) flex items-center justify-center text-(--knk-text-muted)">
+          <Gamepad2 class="size-4" />
+        </div>
+        <div>
+          <h3 class="font-(--font-display) text-base sm:text-lg font-bold text-white tracking-tight">
+            Otros juegos del mes
+          </h3>
+          <p class="text-xs text-(--knk-text-muted)">
+            Juegos emitidos desde el 4º puesto en adelante
+          </p>
+        </div>
+      </div>
+
+      <span class="text-xs font-mono text-(--knk-text-muted) px-2.5 py-1 rounded-xs bg-(--knk-surface-2) border border-(--knk-line)">
+        {games.length} {games.length === 1 ? "juego" : "juegos"}
+      </span>
+    </div>
+
+    <div class="divide-y divide-(--knk-line)">
+      {games.map((game) => (
+        <div class="p-3.5 sm:px-6 flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 hover:bg-(--knk-surface-2)/40 transition-colors">
+          <div class="flex items-center gap-3.5 min-w-0">
+            {/* Rank Number */}
+            <span class="font-mono text-sm font-bold text-(--knk-text-muted) w-7 text-center shrink-0">
+              #{game.rank}
+            </span>
+
+            {/* Game Cover */}
+            <a
+              href={`/games/${game.game_id}`}
+              class="shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-(--knk-primary)"
+              tabindex="-1"
+              aria-hidden="true"
+            >
+              {game.cover_url ? (
+                <Image
+                  src={game.cover_url}
+                  alt={game.game_name + " cover"}
+                  width={40}
+                  height={56}
+                  class="w-10 h-14 object-cover rounded-xs border border-(--knk-line) shrink-0 bg-(--knk-surface-2)"
+                  loading="lazy"
+                />
+              ) : (
+                <div class="w-10 h-14 rounded-xs bg-(--knk-surface-2) border border-(--knk-line) flex items-center justify-center shrink-0 text-(--knk-text-faint)">
+                  <Tv class="size-5" />
+                </div>
+              )}
+            </a>
+
+            {/* Title & Metadata */}
+            <div class="flex flex-col min-w-0">
+              <a
+                href={`/games/${game.game_id}`}
+                class="font-semibold text-sm sm:text-base text-white hover:text-(--knk-primary) hover:underline transition-colors truncate"
+              >
+                {game.game_name}
+              </a>
+
+              <div class="mt-1 flex flex-wrap items-center gap-2">
+                {game.status_name && (
+                  <span class="text-[10px] font-semibold px-2 py-0.5 rounded-xs bg-(--knk-surface-2) text-(--knk-text-muted) border border-(--knk-line)">
+                    {game.status_name}
+                  </span>
+                )}
+
+                {game.avg_vote != null && (
+                  <span
+                    class={`inline-flex items-center gap-1 text-[11px] font-semibold px-1.5 py-px rounded-xs border tabular-nums knk-vote-badge ${game.avg_vote ? "knk-vote-" + Math.trunc(game.avg_vote) : "knk-vote-muted"}`}
+                  >
+                    <Star class="size-3 fill-current" />
+                    {game.avg_vote.toFixed(1)}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Stats & Link */}
+          <div class="flex items-center gap-3 sm:gap-4 shrink-0 ml-auto sm:ml-0">
+            <span class="text-xs font-mono text-(--knk-text-muted) hidden sm:inline-block">
+              {game.stream_count}{" "}
+              {game.stream_count === 1 ? "directo" : "directos"}
+            </span>
+
+            <span class="inline-flex items-center gap-1 text-xs font-mono font-semibold text-(--knk-primary) px-2.5 py-1 rounded-xs bg-(--knk-surface-2) border border-(--knk-line)">
+              <Clock class="size-3" />
+              {game.total_duration_text}
+            </span>
+
+            <a
+              href={`/games/${game.game_id}`}
+              class="inline-flex items-center gap-1 text-xs font-medium text-(--knk-text-muted) hover:text-(--knk-primary) transition-colors"
+            >
+              <span class="hidden md:inline">Ficha</span>
+              <ChevronRight class="size-4" />
+            </a>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+)}

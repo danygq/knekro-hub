@@ -67,3 +67,15 @@ export interface CalendarMonthData {
   currentMonthStr: string; // YYYY-MM
   days: CalendarDay[];
 }
+
+export interface MonthlyGameRankingItem {
+  game_id: number;
+  game_name: string;
+  cover_url: string | null;
+  avg_vote: number | null;
+  status_name: string | null;
+  total_duration_seconds: number;
+  total_duration_text: string;
+  stream_count: number;
+  rank: number;
+}
