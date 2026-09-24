@@ -1,0 +1,53 @@
+---
+import type { MonthlyGameRankingItem } from "@/types/streams";
+import StreamMonthPodium from "./StreamMonthPodium.astro";
+import StreamMonthRankingTable from "./StreamMonthRankingTable.astro";
+import { Trophy, Gamepad2 } from "@lucide/astro";
+
+interface Props {
+  monthName: string;
+  rankings: MonthlyGameRankingItem[];
+}
+
+const { monthName, rankings } = Astro.props;
+
+const topGames = rankings.slice(0, 3);
+const remainingGames = rankings.slice(3);
+---
+
+<section class="mt-12 sm:mt-16 pt-8 sm:pt-10 border-t border-(--knk-line)">
+  <div class="mb-8 flex flex-wrap items-end justify-between gap-4">
+    <div>
+      <div class="flex items-center gap-2 text-(--knk-primary) mb-1.5">
+        <Trophy class="size-4" />
+        <span class="knk-eyebrow">Clasificación mensual</span>
+      </div>
+      <h2 class="font-(--font-display) text-2xl sm:text-3xl font-bold tracking-tight text-white">
+        Juegos más jugados en {monthName}
+      </h2>
+      <p class="mt-1 text-sm text-(--knk-text-muted) max-w-xl">
+        Podio y tiempo dedicado a cada videojuego durante las emisiones de este
+        mes en Twitch.
+      </p>
+    </div>
+  </div>
+
+  {rankings.length === 0 ? (
+    <div class="p-8 sm:p-12 text-center rounded-xs bg-(--knk-surface) border border-(--knk-line) flex flex-col items-center justify-center">
+      <div class="size-12 rounded-full bg-(--knk-surface-2) border border-(--knk-line) flex items-center justify-center text-(--knk-text-faint) mb-3">
+        <Gamepad2 class="size-6" />
+      </div>
+      <h3 class="text-base font-semibold text-white">Sin juegos registrados</h3>
+      <p class="text-sm text-(--knk-text-muted) mt-1 max-w-md">
+        No se emitieron partidas de juegos catalogados durante {monthName}.
+      </p>
+    </div>
+  ) : (
+    <div>
+      <StreamMonthPodium topGames={topGames} />
+      {remainingGames.length > 0 && (
+        <StreamMonthRankingTable games={remainingGames} />
+      )}
+    </div>
+  )}
+</section>

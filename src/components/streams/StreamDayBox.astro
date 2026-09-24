@@ -1,6 +1,7 @@
 ---
 import type { CalendarDay } from "@/types/streams";
 import { Tv } from "@lucide/astro";
+import Image from "astro/components/Image.astro";
 
 interface Props {
   day: CalendarDay;
@@ -86,9 +87,11 @@ const dayPayload = JSON.stringify(day);
             title={cat.name}
           >
             {cat.cover_url ? (
-              <img
+              <Image
+                width={14}
+                height={14}
                 src={cat.cover_url}
-                alt=""
+                alt={cat.name + " cover"}
                 class="size-3.5 object-cover rounded-xs shrink-0"
                 loading="lazy"
               />
