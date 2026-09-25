@@ -2,7 +2,7 @@
 import Layout from "@/layouts/Layout.astro";
 import StreamActivityTimeline from "@/components/streams/StreamActivityTimeline.astro";
 import { loadStreamById } from "@/lib/streams";
-import { formatSpanishFullDate } from "@/lib/time";
+import { formatSpanishFullDate, formatStreamStartTime } from "@/lib/time";
 import { ChevronLeft, Clock, Tv } from "@lucide/astro";
 import "@/styles/pages/streams.css";
 
@@ -30,6 +30,16 @@ if (!stream) {
 const formattedDate = formatSpanishFullDate(stream.started_at);
 const monthParam = stream.started_at.slice(0, 7);
 const dayParam = stream.started_at.slice(0, 10);
+
+// Query sibling streams on the same calendar day (e.g. stream restart)
+const { data: siblingData } = await dbClient
+  .from("streams")
+  .select("id, started_at, ended_at")
+  .gte("started_at", `${dayParam} 00:00:00`)
+  .lte("started_at", `${dayParam} 23:59:59`)
+  .order("started_at", { ascending: true });
+
+const siblingStreams = Array.isArray(siblingData) ? siblingData : [];
 ---
 
 <Layout
@@ -49,6 +59,57 @@ const dayParam = stream.started_at.slice(0, 10);
   </div>
 
   <div class="max-w-4xl mx-auto space-y-8">
+    <!-- Sibling streams banner if more than 1 stream occurred on this day -->
+    {siblingStreams.length > 1 && (
+      <div class="flex flex-wrap items-center justify-between gap-3 p-3.5 sm:p-4 rounded-xs bg-(--knk-surface) border border-(--knk-line)">
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-bold uppercase tracking-wider text-(--knk-text-muted)">
+            Emisiones de este día:
+          </span>
+          <span class="text-xs text-(--knk-text-faint)">
+            ({siblingStreams.length} directos)
+          </span>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          {siblingStreams.map((s, idx) => {
+            const isCurrent = s.id === stream.id;
+            const isLive = s.ended_at == null;
+            const startTime = formatStreamStartTime(s.started_at);
+
+            return isCurrent ? (
+              <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xs text-xs font-bold bg-(--knk-primary) text-(--knk-bg) shadow-xs">
+                <span>
+                  Directo #{idx + 1} ({startTime})
+                </span>
+                {isLive && (
+                  <span class="size-1.5 rounded-full bg-(--knk-bg) animate-ping" />
+                )}
+                <span class="text-[10px] uppercase tracking-wider opacity-85">
+                  (Actual)
+                </span>
+              </span>
+            ) : (
+              <a
+                href={`/streams/${s.id}`}
+                class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xs text-xs font-semibold bg-(--knk-surface-2) text-(--knk-text-muted) hover:text-(--knk-text) border border-(--knk-line) hover:border-(--knk-line-strong) transition-colors cursor-pointer"
+              >
+                <span>
+                  Directo #{idx + 1} ({startTime})
+                </span>
+                {isLive && (
+                  <span class="inline-flex items-center gap-1 text-[10px] font-bold uppercase text-(--knk-danger)">
+                    <span class="size-1.5 rounded-full bg-(--knk-danger) animate-ping" />
+                    Live
+                  </span>
+                )}
+              </a>
+            );
+          })}
+        </div>
+      </div>
+    )}
+
     <!-- Stream Hero / Header -->
     <div class="p-6 sm:p-8 rounded-xs bg-(--knk-surface) border border-(--knk-line) space-y-6">
       <div class="flex flex-wrap items-center justify-between gap-4 border-b border-(--knk-line) pb-6">

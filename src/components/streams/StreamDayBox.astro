@@ -9,19 +9,21 @@ interface Props {
 
 const { day } = Astro.props;
 const hasStream = day.streams.length > 0;
-const primaryStream = hasStream ? day.streams[0] : null;
+const isLive = day.streams.some((s) => s.is_live);
 
-// Unique categories played in this stream session
+// Unique categories played across all stream sessions on this day
 const uniqueCategories: { name: string; cover_url: string | null }[] = [];
-if (primaryStream) {
+if (hasStream) {
   const seen = new Set<string>();
-  for (const seg of primaryStream.segments) {
-    if (!seen.has(seg.category_name)) {
-      seen.add(seg.category_name);
-      uniqueCategories.push({
-        name: seg.category_name,
-        cover_url: seg.cover_url,
-      });
+  for (const stream of day.streams) {
+    for (const seg of stream.segments) {
+      if (!seen.has(seg.category_name)) {
+        seen.add(seg.category_name);
+        uniqueCategories.push({
+          name: seg.category_name,
+          cover_url: seg.cover_url,
+        });
+      }
     }
   }
 }
@@ -35,7 +37,7 @@ const dayPayload = JSON.stringify(day);
   class={`knk-calendar-day group relative flex flex-col p-1.5 sm:p-2.5 rounded-xs border transition-all text-left w-full h-full min-h-[75px] sm:min-h-[115px] select-none cursor-pointer ${
     !day.isCurrentMonth
       ? "bg-(--knk-bg)/30 border-(--knk-line)/40 opacity-45"
-      : hasStream && primaryStream?.is_live
+      : isLive
         ? "bg-(--knk-danger)/5 border-(--knk-danger)/40 hover:border-(--knk-danger)"
         : hasStream
           ? "bg-(--knk-surface) border-(--knk-line) hover:border-(--knk-primary) hover:bg-(--knk-surface-2)"
@@ -48,12 +50,12 @@ const dayPayload = JSON.stringify(day);
   <!-- Top Bar: Day Number & Stream Indicator -->
   <div class="flex items-center justify-between gap-1 w-full">
     {day.isToday ? (
-      <span class="size-6 inline-flex items-center justify-center rounded-full bg-(--knk-primary) text-(--knk-bg) font-bold text-xs shadow-xs shrink-0">
+      <span class="size-6 self-start inline-flex items-center justify-center rounded-full bg-(--knk-primary) text-(--knk-bg) font-bold text-xs shadow-xs shrink-0">
         {day.dayNumber}
       </span>
     ) : (
       <span
-        class={`text-xs font-semibold ${
+        class={`text-xs self-start font-semibold ${
           day.isCurrentMonth
             ? hasStream
               ? "text-(--knk-primary) font-bold group-hover:text-(--knk-primary) transition-colors"
@@ -65,20 +67,26 @@ const dayPayload = JSON.stringify(day);
       </span>
     )}
 
-    {primaryStream?.is_live ? (
-      <span class="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 rounded-xs text-[10px] font-bold tracking-wider uppercase bg-(--knk-danger)/15 text-(--knk-danger) border border-(--knk-danger)/30 shrink-0">
-        <span class="size-1.5 rounded-full bg-(--knk-danger) animate-ping" />
-        Live
-      </span>
-    ) : hasStream && primaryStream ? (
-      <span class="hidden sm:inline-flex text-[11px] font-mono font-medium text-(--knk-primary) shrink-0">
-        {primaryStream.total_duration_text}
-      </span>
+    {hasStream ? (
+      <div class="hidden sm:flex flex-col items-end gap-0.5 shrink-0">
+        {day.streams.map((stream) =>
+          stream.is_live ? (
+            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-xs text-[10px] font-bold tracking-wider uppercase bg-(--knk-danger)/15 text-(--knk-danger) border border-(--knk-danger)/30 shrink-0">
+              <span class="size-1.5 rounded-full bg-(--knk-danger) animate-ping" />
+              Live
+            </span>
+          ) : (
+            <span class="text-[11px] font-mono font-medium text-(--knk-primary) shrink-0">
+              {stream.total_duration_text}
+            </span>
+          ),
+        )}
+      </div>
     ) : null}
   </div>
 
   <!-- Content / Glimpse of activities -->
-  {hasStream && primaryStream ? (
+  {hasStream ? (
     <div class="mt-auto pt-1 sm:pt-2 flex flex-col gap-1.5 w-full">
       <div class="flex flex-wrap items-center gap-1 sm:gap-1.5">
         {uniqueCategories.slice(0, 2).map((cat) => (
