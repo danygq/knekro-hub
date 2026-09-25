@@ -43,6 +43,7 @@ const dayParam = Astro.url.searchParams.get("day");
 const streamParam = Astro.url.searchParams.get("stream");
 
 let initialSelectedDay = null;
+let initialStreamIndex: number | "all" = "all";
 if (dayParam) {
   initialSelectedDay =
     monthData.days.find((d) => d.dateStr === dayParam) ?? null;
@@ -51,6 +52,14 @@ if (dayParam) {
   initialSelectedDay =
     monthData.days.find((d) => d.streams.some((s) => s.id === streamIdNum)) ??
     null;
+  if (initialSelectedDay) {
+    const idx = initialSelectedDay.streams.findIndex(
+      (s) => s.id === streamIdNum,
+    );
+    if (idx !== -1) {
+      initialStreamIndex = idx;
+    }
+  }
 }
 ---
 
@@ -76,23 +85,24 @@ if (dayParam) {
   <div
     class="relative"
     x-data={`{
-      selectedStream: null,
+      selectedStreams: [],
+      activeTab: 'all',
       selectedDateStr: '',
       formattedDate: '',
       todayDateStr: '${nowMadrid.slice(0, 10)}',
       drawerOpen: false,
       isFuture: false,
+      get selectedStream() {
+        return this.selectedStreams && this.selectedStreams.length > 0 ? this.selectedStreams[0] : null;
+      },
       isFutureDate(dateStr) {
         if (!dateStr) return false;
         return dateStr > this.todayDateStr;
       },
-      selectDay(day) {
+      selectDay(day, preferredStreamIndex = 'all') {
         if (!day) return;
-        if (day.streams && day.streams.length > 0) {
-          this.selectedStream = day.streams[0];
-        } else {
-          this.selectedStream = null;
-        }
+        this.selectedStreams = day.streams || [];
+        this.activeTab = preferredStreamIndex;
         this.selectedDateStr = day.dateStr;
         this.formattedDate = this.formatDate(day.dateStr);
         this.isFuture = Boolean(day.isFuture ?? this.isFutureDate(day.dateStr));
@@ -105,6 +115,12 @@ if (dayParam) {
           const search = url.searchParams.toString();
           window.history.replaceState(null, '', url.pathname + (search ? '?' + search : '') + url.hash);
         }
+      },
+      visibleStreams() {
+        if (!this.selectedStreams || this.selectedStreams.length === 0) return [];
+        if (this.activeTab === 'all') return this.selectedStreams;
+        const target = this.selectedStreams[this.activeTab];
+        return target ? [target] : this.selectedStreams;
       },
       formatDate(dateStr) {
         if (!dateStr) return '';
@@ -143,8 +159,9 @@ if (dayParam) {
     }`}
     x-init={`
       const initialDay = ${JSON.stringify(initialSelectedDay)};
+      const initialIndex = ${JSON.stringify(initialStreamIndex)};
       if (initialDay) {
-        selectDay(initialDay);
+        selectDay(initialDay, initialIndex);
       }
     `}
   >
