@@ -2,14 +2,13 @@
 import RankingGameCard from "@/components/ranking/RankingGameCard.astro";
 import RankingSentinel from "@/components/ranking/RankingSentinel.astro";
 import { loadRankingSearchGames } from "@/lib/ranking";
-import { userHasRole } from "@/lib/roles";
 
 const dbClient = Astro.locals.supabase;
 const user = Astro.locals.user;
 
-// Verify Owner access
-if (!user || !(await userHasRole(dbClient, user.id, "owner"))) {
-  return new Response("Unauthorized", { status: 403 });
+// Verify authenticated access
+if (!user) {
+  return new Response("Unauthorized", { status: 401 });
 }
 
 const q = (Astro.url.searchParams.get("q") ?? "").trim();

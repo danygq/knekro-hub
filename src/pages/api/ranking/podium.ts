@@ -6,7 +6,6 @@ import {
   loadPodiumGames,
   removePodiumGame,
 } from "@/lib/ranking";
-import { userHasRole } from "@/lib/roles";
 
 let containerPromise: Promise<AstroContainer> | null = null;
 function getContainer(): Promise<AstroContainer> {
@@ -20,10 +19,10 @@ export const POST: APIRoute = async ({ request, locals }) => {
   const dbClient = locals.supabase;
   const user = locals.user;
 
-  // Strict Owner authorization
-  if (!user || !(await userHasRole(dbClient, user.id, "owner"))) {
+  // Authenticated users only
+  if (!user) {
     return new Response(JSON.stringify({ error: "No autorizado" }), {
-      status: 403,
+      status: 401,
       headers: { "Content-Type": "application/json" },
     });
   }
