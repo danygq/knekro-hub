@@ -43,97 +43,6 @@ const rankMeta: Record<
   <div class="knk-stream-podium-stage-glow" aria-hidden="true"></div>
 
   <div class="knk-stream-podium-container">
-    {/* Silver #2 (Left on desktop) */}
-    {silver && (
-      <div class="knk-stream-podium-slot knk-stream-podium-slot-2">
-        <div class="flex items-center justify-between gap-2 mb-3 w-full">
-          <div class="flex items-center gap-2">
-            <div
-              class={`size-7.5 rounded-lg flex items-center justify-center border text-sm shadow-sm ${rankMeta[2].badgeClass}`}
-            >
-              <span aria-hidden="true">{rankMeta[2].emoji}</span>
-            </div>
-            <div>
-              <span class="text-[10px] font-semibold tracking-wider uppercase text-(--knk-text-muted)">
-                Puesto #2
-              </span>
-              <h4 class="font-(--font-display) text-xs font-bold text-white tracking-tight leading-none">
-                {rankMeta[2].label}
-              </h4>
-            </div>
-          </div>
-
-          <span class="text-[11px] font-mono text-(--knk-text-muted) px-2 py-0.5 rounded-xs bg-(--knk-surface-2) border border-(--knk-line)">
-            {silver.stream_count}{" "}
-            {silver.stream_count === 1 ? "directo" : "directos"}
-          </span>
-        </div>
-
-        <div class="knk-podium-card-wrapper w-full">
-          <div
-            class="knk-stream-podium-aura"
-            style={`--aura-color: ${rankMeta[2].auraColor}`}
-            aria-hidden="true"
-          />
-
-          <article class="knk-game-card group relative w-full border border-(--knk-line) bg-(--knk-surface) hover:border-(--knk-line-strong) transition-colors overflow-hidden">
-            <div class="relative bg-(--knk-surface-2) knk-grid-bg overflow-hidden aspect-2/3">
-              <a
-                href={`/games/${silver.game_id}`}
-                class="block w-full h-full focus:outline-none focus-visible:ring-2 focus-visible:ring-(--knk-primary)"
-                aria-label={`Ver detalles de ${silver.game_name}`}
-              >
-                <GameCover
-                  coverUrl={silver.cover_url}
-                  name={silver.game_name}
-                  loading="lazy"
-                />
-              </a>
-
-              {silver.status_name && (
-                <GameStatusBadge status={{ name: silver.status_name }} />
-              )}
-
-              {/* Bottom stats overlay */}
-              <div class="absolute bottom-2.5 left-2.5 right-2.5 z-10 flex items-end justify-between gap-2 pointer-events-none">
-                <span class="knk-notch-sm inline-flex items-center gap-1 px-2 py-0.5 text-xs font-mono font-bold bg-black/80 text-(--knk-primary) border border-(--knk-line) backdrop-blur-xs">
-                  <Clock class="size-3" />
-                  {silver.total_duration_text}
-                </span>
-
-                {silver.avg_vote != null && (
-                  <span
-                    class={`inline-flex items-center gap-1 text-[11px] font-semibold px-1.5 py-0.5 rounded-xs border tabular-nums knk-vote-badge ${silver.avg_vote ? "knk-vote-" + Math.trunc(silver.avg_vote) : "knk-vote-muted"}`}
-                  >
-                    <Star class="size-3 fill-current" />
-                    {silver.avg_vote.toFixed(1)}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            <div class="p-3.5 flex items-center justify-between gap-2">
-              <h3
-                class="font-(--font-display) text-sm font-semibold truncate text-(--knk-text) group-hover:text-(--knk-primary) transition-colors"
-                title={silver.game_name}
-              >
-                <a href={`/games/${silver.game_id}`}>{silver.game_name}</a>
-              </h3>
-
-              <a
-                href={`/games/${silver.game_id}`}
-                class="text-xs text-(--knk-text-muted) hover:text-(--knk-primary) flex items-center shrink-0 transition-colors"
-                title="Ver ficha"
-                aria-label={`Ver ficha de ${silver.game_name}`}
-              >
-                <ChevronRight class="size-4" />
-              </a>
-            </div>
-          </article>
-        </div>
-      </div>
-    )}
-
     {/* Gold #1 (Center, elevated on desktop) */}
     {gold && (
       <div class="knk-stream-podium-slot knk-stream-podium-slot-1">
@@ -216,6 +125,97 @@ const rankMeta: Record<
                 class="text-xs text-amber-300/80 hover:text-amber-300 flex items-center shrink-0 transition-colors"
                 title="Ver ficha"
                 aria-label={`Ver ficha de ${gold.game_name}`}
+              >
+                <ChevronRight class="size-4" />
+              </a>
+            </div>
+          </article>
+        </div>
+      </div>
+    )}
+
+    {/* Silver #2 (Left on desktop) */}
+    {silver && (
+      <div class="knk-stream-podium-slot knk-stream-podium-slot-2">
+        <div class="flex items-center justify-between gap-2 mb-3 w-full">
+          <div class="flex items-center gap-2">
+            <div
+              class={`size-7.5 rounded-lg flex items-center justify-center border text-sm shadow-sm ${rankMeta[2].badgeClass}`}
+            >
+              <span aria-hidden="true">{rankMeta[2].emoji}</span>
+            </div>
+            <div>
+              <span class="text-[10px] font-semibold tracking-wider uppercase text-(--knk-text-muted)">
+                Puesto #2
+              </span>
+              <h4 class="font-(--font-display) text-xs font-bold text-white tracking-tight leading-none">
+                {rankMeta[2].label}
+              </h4>
+            </div>
+          </div>
+
+          <span class="text-[11px] font-mono text-(--knk-text-muted) px-2 py-0.5 rounded-xs bg-(--knk-surface-2) border border-(--knk-line)">
+            {silver.stream_count}{" "}
+            {silver.stream_count === 1 ? "directo" : "directos"}
+          </span>
+        </div>
+
+        <div class="knk-podium-card-wrapper w-full">
+          <div
+            class="knk-stream-podium-aura"
+            style={`--aura-color: ${rankMeta[2].auraColor}`}
+            aria-hidden="true"
+          />
+
+          <article class="knk-game-card group relative w-full border border-(--knk-line) bg-(--knk-surface) hover:border-(--knk-line-strong) transition-colors overflow-hidden">
+            <div class="relative bg-(--knk-surface-2) knk-grid-bg overflow-hidden aspect-2/3">
+              <a
+                href={`/games/${silver.game_id}`}
+                class="block w-full h-full focus:outline-none focus-visible:ring-2 focus-visible:ring-(--knk-primary)"
+                aria-label={`Ver detalles de ${silver.game_name}`}
+              >
+                <GameCover
+                  coverUrl={silver.cover_url}
+                  name={silver.game_name}
+                  loading="lazy"
+                />
+              </a>
+
+              {silver.status_name && (
+                <GameStatusBadge status={{ name: silver.status_name }} />
+              )}
+
+              {/* Bottom stats overlay */}
+              <div class="absolute bottom-2.5 left-2.5 right-2.5 z-10 flex items-end justify-between gap-2 pointer-events-none">
+                <span class="knk-notch-sm inline-flex items-center gap-1 px-2 py-0.5 text-xs font-mono font-bold bg-black/80 text-(--knk-primary) border border-(--knk-line) backdrop-blur-xs">
+                  <Clock class="size-3" />
+                  {silver.total_duration_text}
+                </span>
+
+                {silver.avg_vote != null && (
+                  <span
+                    class={`inline-flex items-center gap-1 text-[11px] font-semibold px-1.5 py-0.5 rounded-xs border tabular-nums knk-vote-badge ${silver.avg_vote ? "knk-vote-" + Math.trunc(silver.avg_vote) : "knk-vote-muted"}`}
+                  >
+                    <Star class="size-3 fill-current" />
+                    {silver.avg_vote.toFixed(1)}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div class="p-3.5 flex items-center justify-between gap-2">
+              <h3
+                class="font-(--font-display) text-sm font-semibold truncate text-(--knk-text) group-hover:text-(--knk-primary) transition-colors"
+                title={silver.game_name}
+              >
+                <a href={`/games/${silver.game_id}`}>{silver.game_name}</a>
+              </h3>
+
+              <a
+                href={`/games/${silver.game_id}`}
+                class="text-xs text-(--knk-text-muted) hover:text-(--knk-primary) flex items-center shrink-0 transition-colors"
+                title="Ver ficha"
+                aria-label={`Ver ficha de ${silver.game_name}`}
               >
                 <ChevronRight class="size-4" />
               </a>
