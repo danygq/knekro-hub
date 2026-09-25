@@ -50,7 +50,7 @@ within `<body>`.
 **SEO & Head Management:**
 `Layout.astro` manages document head metadata via structured props:
 
-- `title`: Page-specific title with automatic `— Knekro Hub` suffix formatting.
+- `title`: Page-specific title with automatic `Knekro Hub - [Section]` prefix formatting (defaults to `Knekro Hub - Inicio`).
 - `description`: Custom meta description with fallback to default community summary.
 - `image`: Open Graph & Twitter card image resolution (supports absolute and relative asset URLs).
 - `type`: Open Graph type (`website` or `article`).

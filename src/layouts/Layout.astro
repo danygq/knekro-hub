@@ -38,10 +38,10 @@ const ogImage =
     : `${siteOrigin}${image.startsWith("/") ? "" : "/"}${image}`;
 
 const pageTitle = title
-  ? title.toLowerCase().includes("knekro")
+  ? title.startsWith("Knekro Hub")
     ? title
-    : `${title} — Knekro Hub`
-  : "Knekro Hub — Biblioteca y directos de Knekro";
+    : `Knekro Hub - ${title}`
+  : "Knekro Hub - Inicio";
 ---
 
 <!doctype html>
