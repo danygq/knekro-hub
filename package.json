@@ -3,6 +3,8 @@
   "version": "0.0.1",
   "type": "module",
   "private": true,
+  "license": "MIT",
+  "author": "Dani (danygq) <dany.gq91@gmail.com>",
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",

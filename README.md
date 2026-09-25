@@ -18,6 +18,7 @@
   <a href="https://htmx.org"><img src="https://img.shields.io/badge/HTMX-2.x-3366CC?style=flat-square&logo=htmx&logoColor=white" alt="HTMX" /></a>
   <a href="https://alpinejs.dev"><img src="https://img.shields.io/badge/Alpine.js-3.x-8BC0D0?style=flat-square&logo=alpinedotjs&logoColor=white" alt="Alpine.js" /></a>
   <a href="https://vercel.com"><img src="https://img.shields.io/badge/Deploy-Vercel-000000?style=flat-square&logo=vercel&logoColor=white" alt="Vercel" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" alt="MIT License" /></a>
 </p>
 
 ---
@@ -51,6 +52,7 @@ El propósito es totalmente <strong>educativo</strong> y <strong>no comercial</s
 - [Historial de Emisiones e Inicio de Datos](#-historial-de-emisiones-e-inicio-de-datos)
 - [Puesta en Marcha en Local](#-puesta-en-marcha-en-local)
 - [Documentación Adicional](#-documentación-adicional)
+- [Licencia y Contribuciones (CLA)](#-licencia-y-contribuciones-cla)
 
 ---
 
@@ -238,20 +240,6 @@ El sistema de valoración de Knekro Hub permite a la comunidad puntuar los juego
 - **Cálculo Automático en Postgres**: Un trigger en la base de datos (`on_vote_change`) recalcula inmediatamente el recuento total de votos (`vote_count`) y la media ponderada (`avg_vote`) en la tabla `games`.
 - **Formateo de la Nota Media**: Los promedios se muestran con un máximo de un decimal (ej. `8.4`), salvo que la media sea un número entero exacto, en cuyo caso se presenta sin decimales (ej. `8`), gracias a la función de formateo `formatAvg`.
 
-### Escala de Colores y Feedback Visual:
-
-Tanto los botones de puntuación como las insignias de nota media utilizan un sistema de colores por tramos visuales:
-
-- **1 – 2**: Tono Rojo (`--knk-red-500`)
-- **3 – 4**: Tono Naranja (`--knk-orange-500`)
-- **5 – 6**: Tono Ámbar (`--knk-amber-500`)
-- **7 – 8**: Tono Verde (`--knk-green-500`)
-- **9 – 10**: Tono Azul / Primario (`--knk-blue-500`)
-
-Al votar, se activa una animación de estallido de partículas radiales (`VoteBurst`) y se muestra aleatoriamente una de las frases clásicas de Knekro:
-
-> _"Grande loquete"_ · _"jeje goz"_ · _"Un saludito?"_ · _"Cracabuuuuut"_ · _"PUUUUUUM"_ · _"Mondongo"_
-
 ---
 
 ## 🎮 Ficha y Detalles de los Juegos
@@ -367,3 +355,15 @@ Para agentes de Inteligencia Artificial y desarrolladores que contribuyan al rep
 - **[`ARCHITECTURE.md`](ARCHITECTURE.md)**: Mapa integral de la arquitectura del sistema y flujo de datos.
 - **[`docs/INDEX.md`](docs/INDEX.md)**: Índice completo de documentación técnica modular (capa de datos, optimización de consultas SQL, autenticación y rankings).
 - **[`docs/AGENT_PROTOCOL.md`](docs/AGENT_PROTOCOL.md)**: Protocolo de trabajo para creación de ramas, commits y pull requests.
+
+---
+
+## 📄 Licencia y Contribuciones (CLA)
+
+Este proyecto es de código abierto y se distribuye bajo los términos de la licencia **[MIT](LICENSE)**.
+
+### Contributor License Agreement (CLA)
+
+Para garantizar la sostenibilidad del proyecto, protegerlo jurídicamente y permitir que el titular del proyecto (**Dani / `danygq`**) mantenga la propiedad intelectual y pueda en el futuro ceder, donar o transferir la titularidad y los derechos a terceros si así lo decide sin bloqueos legales, todas las contribuciones externas se rigen por el **[Contributor License Agreement (CLA)](CLA.md)**.
+
+Al enviar un _Pull Request_ o colaborar con código en este repositorio, aceptas los términos del [CLA](CLA.md), cediendo los derechos patrimoniales sobre tus aportaciones al titular del proyecto, quien a su vez se compromete a mantener el proyecto público y accesible bajo licencia de código abierto.
