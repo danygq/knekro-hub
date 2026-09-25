@@ -1,7 +1,7 @@
 ---
 module: routing-ui
 owner_area: frontend
-last_verified_against_commit: c3a0c73
+last_verified_against_commit: c1cf3a2
 depends_on: [data-layer, auth]
 ---
 
@@ -32,6 +32,7 @@ File-based routing (Astro). All pages wrap `layouts/Layout.astro`.
 | `/api/games/status`     | `pages/api/games/status.astro`     | `POST` → updates game status with audit log entry for owner/manager roles (HTMX outerHTML swap of `GameStatusEditor`)            | `game_id`, `status_id` form data                                                                       |
 | `/api/ranking/search`   | `pages/api/ranking/search.astro`   | `GET` → paginated game search for ranking assignments                                                                            | `q`, `category_id`, `year`, `offset`, `limit`                                                          |
 | `/api/ranking/podium`   | `pages/api/ranking/podium.ts`      | `POST` → assign/swap/remove podium ranks (renders `RankingPodium.astro` via container for seamless swap)                         | `action`, `categoryId`, `gameId`, `rank`, `year`                                                       |
+| `/sitemap.xml`          | `pages/sitemap.xml.ts`             | `GET` → Dynamic XML sitemap listing home, games catalogue, streams archive, and detail pages with lastmod timestamps             | `games`, `streams` (server)                                                                            |
 
 Referenced but **not present**: `/posts/[id]` (linked from home feed). Add when posts detail is built. Unmatched routes and non-existent resource IDs (`/games/[id]`, `/streams/[id]`) rewrite or route to `pages/404.astro`.
 
@@ -45,6 +46,17 @@ session via SSR client `getUser()`, renders `UserMenu` or `LoginButton`. Fonts: 
 self-hosted from `public/fonts/` (see `src/styles/fonts.css`).
 Responsive mobile menu is powered by Alpine.js (`x-data="{ mobileMenuOpen: false }"`). `<main>` and `<footer>` reside
 within `<body>`.
+
+**SEO & Head Management:**
+`Layout.astro` manages document head metadata via structured props:
+
+- `title`: Page-specific title with automatic `Knekro Hub - [Section]` prefix formatting (defaults to `Knekro Hub - Inicio`).
+- `description`: Custom meta description with fallback to default community summary.
+- `image`: Open Graph & Twitter card image resolution (supports absolute and relative asset URLs).
+- `type`: Open Graph type (`website` or `article`).
+- `canonicalUrl`: Standardized canonical link computed from `Astro.site` / origin and current route.
+- `noindex`: Boolean directive rendering `<meta name="robots" content="noindex, nofollow" />` (used for 404, session expired, and private authenticated ranking tracks).
+- `slot="head"`: Insertion slot for JSON-LD schemas (`WebSite`, `VideoGame`, etc.) and page-specific tags.
 
 ### `pages/games.astro`
 

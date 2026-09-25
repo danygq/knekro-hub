@@ -28,7 +28,11 @@ const [gameStatuses, tags, { games, total: totalGames }] = await Promise.all([
 ]);
 ---
 
-<Layout user={user}>
+<Layout
+  user={user}
+  title="Biblioteca de Juegos"
+  description="Biblioteca completa de juegos jugados en directo por Knekro. Filtra por estado, categorías y valoraciones de la comunidad."
+>
   <div class="mb-8 flex flex-wrap items-start justify-between gap-x-6 gap-y-4">
     <div class="min-w-0">
       <p class="knk-eyebrow mb-2">Biblioteca del canal</p>

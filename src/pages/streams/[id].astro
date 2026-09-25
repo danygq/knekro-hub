@@ -32,15 +32,11 @@ const monthParam = stream.started_at.slice(0, 7);
 const dayParam = stream.started_at.slice(0, 10);
 ---
 
-<Layout user={user}>
-  <Fragment slot="head">
-    <title>Directo del {formattedDate} — Knekro Hub</title>
-    <meta
-      name="description"
-      content={`Historial y categorías emitidas en el directo del ${formattedDate} en el canal de Knekro.`}
-    />
-  </Fragment>
-
+<Layout
+  user={user}
+  title={`Directo del ${formattedDate}`}
+  description={`Historial y categorías emitidas en el directo del ${formattedDate} en el canal de Knekro.`}
+>
   <!-- Back Link -->
   <div class="mb-6">
     <a
