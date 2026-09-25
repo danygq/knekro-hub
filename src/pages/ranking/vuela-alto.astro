@@ -7,14 +7,13 @@ import {
   loadPodiumGames,
   loadRankingSearchGames,
 } from "@/lib/ranking";
-import { userHasRole } from "@/lib/roles";
 import "@/styles/pages/ranking.css";
 
 const dbClient = Astro.locals.supabase;
 const user = Astro.locals.user;
 
-// Authorization: Owner-role only. Redirect unauthorized requests to "/"
-if (!user || !(await userHasRole(dbClient, user.id, "owner"))) {
+// Authorization: Authenticated users only. Redirect unauthorized requests to "/"
+if (!user) {
   return Astro.redirect("/");
 }
 

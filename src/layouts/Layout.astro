@@ -4,7 +4,6 @@ import "@/styles/global.css";
 import type { User } from "@supabase/supabase-js";
 import LoginButton from "@/components/LoginButton.astro";
 import UserMenu from "@/components/UserMenu.astro";
-import { userHasRole } from "@/lib/roles.ts";
 import { Menu, X } from "@lucide/astro";
 
 interface Props {
@@ -12,7 +11,6 @@ interface Props {
 }
 
 let { user = Astro.locals.user } = Astro.props;
-const dbClient = Astro.locals.supabase;
 const currentPath = Astro.url.pathname;
 ---
 
@@ -74,7 +72,7 @@ const currentPath = Astro.url.pathname;
               >
                 Directos
               </a>
-              {user && (await userHasRole(dbClient, user?.id, "owner")) && (
+              {user && (
                 <a
                   href="/ranking"
                   class={`text-sm font-medium pb-0.75 border-b-2 transition-colors ${
@@ -151,17 +149,19 @@ const currentPath = Astro.url.pathname;
           >
             <span>Directos</span>
           </a>
-          <a
-            href="/ranking"
-            @click="mobileMenuOpen = false"
-            class={`flex items-center justify-between px-3 py-2 text-sm font-medium transition-colors ${
-              currentPath.startsWith("/ranking")
-                ? "bg-(--knk-surface) text-(--knk-primary) border-l-2 border-(--knk-primary)"
-                : "text-(--knk-text-muted) hover:text-(--knk-text) hover:bg-(--knk-surface)"
-            }`}
-          >
-            <span>Rankings</span>
-          </a>
+          {user && (
+            <a
+              href="/ranking"
+              @click="mobileMenuOpen = false"
+              class={`flex items-center justify-between px-3 py-2 text-sm font-medium transition-colors ${
+                currentPath.startsWith("/ranking")
+                  ? "bg-(--knk-surface) text-(--knk-primary) border-l-2 border-(--knk-primary)"
+                  : "text-(--knk-text-muted) hover:text-(--knk-text) hover:bg-(--knk-surface)"
+              }`}
+            >
+              <span>Rankings</span>
+            </a>
+          )}
         </nav>
 
         <div class="pt-3 mt-2 border-t border-(--knk-line)">

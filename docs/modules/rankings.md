@@ -1,13 +1,13 @@
 ---
 module: rankings
 owner_area: product
-last_verified_against_commit: HEAD
+last_verified_against_commit: 21df033
 depends_on: [data-layer, query-optimization, routing-ui]
 ---
 
 # Rankings — awards & classification module
 
-**Status: confirmed & implemented (Issue #61).**
+**Status: confirmed & implemented (Issues #61, #91).**
 
 ## Purpose
 
@@ -57,7 +57,8 @@ A generalized awards and ranking system for Knekro Hub:
 ### Row Level Security (RLS)
 
 - **`ranking_categories`**:
-  - Owner-only CRUD policies using `public.is_owner()`.
+  - `SELECT`: `authenticated` users (`USING (true)`).
+  - `INSERT`, `UPDATE`, `DELETE`: Owner-only mutations using `public.is_owner()`.
 - **`ranking_items`**:
   - `SELECT`: `user_id = (select auth.uid()) OR is_owner()`
   - `INSERT`: `user_id = (select auth.uid())`
