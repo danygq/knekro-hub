@@ -37,13 +37,33 @@ const canEditStatus = user
 const statuses = canEditStatus ? await loadGameStatuses(dbClient) : [];
 ---
 
-<Layout user={user}>
+<Layout
+  user={user}
+  title={game.name}
+  description={`Ficha y detalles de ${game.name} en Knekro Hub. Puntuación de la comunidad y directos donde se ha jugado.`}
+  image={game.cover_url ?? undefined}
+  type="article"
+>
   <Fragment slot="head">
-    <title>{game.name} — Knekro Hub</title>
-    <meta
-      name="description"
-      content={`Ficha y detalles de ${game.name} en Knekro Hub.`}
-    />
+    <script
+      type="application/ld+json"
+      set:html={JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "VideoGame",
+        name: game.name,
+        image: game.cover_url ?? undefined,
+        aggregateRating:
+          game.avg_vote && game.vote_count
+            ? {
+                "@type": "AggregateRating",
+                ratingValue: game.avg_vote,
+                bestRating: 10,
+                worstRating: 1,
+                ratingCount: game.vote_count,
+              }
+            : undefined,
+      })}
+    ></script>
   </Fragment>
 
   <div class="mb-6">

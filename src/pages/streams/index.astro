@@ -54,15 +54,11 @@ if (dayParam) {
 }
 ---
 
-<Layout user={user}>
-  <Fragment slot="head">
-    <title>Directos y Calendario — Knekro Hub</title>
-    <meta
-      name="description"
-      content="Calendario de directos de Knekro en Twitch: historial de emisiones, juegos jugados y categorías."
-    />
-  </Fragment>
-
+<Layout
+  user={user}
+  title="Directos y Calendario"
+  description="Calendario de directos de Knekro en Twitch: historial de emisiones, juegos jugados y categorías."
+>
   <!-- Page Header -->
   <div class="mb-8 flex flex-wrap items-start justify-between gap-x-6 gap-y-4">
     <div class="min-w-0">

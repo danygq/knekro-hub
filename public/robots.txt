@@ -1,0 +1,9 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /auth/
+Disallow: /ranking
+
+# Sitemaps
+Sitemap: https://knekro.vercel.app/sitemap.xml

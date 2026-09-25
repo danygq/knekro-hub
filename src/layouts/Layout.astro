@@ -8,10 +8,40 @@ import { Menu, X } from "@lucide/astro";
 
 interface Props {
   user?: User | null;
+  title?: string;
+  description?: string;
+  image?: string;
+  type?: "website" | "article";
+  noindex?: boolean;
+  canonicalUrl?: string;
 }
 
-let { user = Astro.locals.user } = Astro.props;
+let {
+  user = Astro.locals.user,
+  title,
+  description = "Explora la biblioteca de juegos jugados en directo por Knekro, calendario de emisiones, comunidad y votaciones.",
+  image = "/android-chrome-192x192.png",
+  type = "website",
+  noindex = false,
+  canonicalUrl,
+} = Astro.props;
+
 const currentPath = Astro.url.pathname;
+const siteOrigin = (Astro.site ? Astro.site.origin : Astro.url.origin).replace(
+  /\/$/,
+  "",
+);
+const canonical = canonicalUrl ?? `${siteOrigin}${currentPath}`;
+const ogImage =
+  image.startsWith("http://") || image.startsWith("https://")
+    ? image
+    : `${siteOrigin}${image.startsWith("/") ? "" : "/"}${image}`;
+
+const pageTitle = title
+  ? title.toLowerCase().includes("knekro")
+    ? title
+    : `${title} — Knekro Hub`
+  : "Knekro Hub — Biblioteca y directos de Knekro";
 ---
 
 <!doctype html>
@@ -20,8 +50,33 @@ const currentPath = Astro.url.pathname;
     <meta charset="utf-8" />
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+
+    {noindex ? (
+      <meta name="robots" content="noindex, nofollow" />
+    ) : (
+      <meta name="robots" content="index, follow" />
+    )}
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content={type} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:site_name" content="Knekro Hub" />
+    <meta property="og:locale" content="es_ES" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content={canonical} />
+    <meta name="twitter:title" content={pageTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+
     <slot name="head" />
-    <title>Knekro Hub</title>
   </head>
   <body class="min-h-screen bg-(--knk-bg) text-(--knk-text) antialiased flex flex-col">
     <header

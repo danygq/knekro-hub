@@ -54,7 +54,24 @@ const lastStreamFormatted = latestStream?.started_at
   : "--";
 ---
 
-<Layout>
+<Layout
+  title="Knekro Hub — La biblioteca y directos de Knekro"
+  description="Hub de la comunidad de Knekro: directos de Twitch en vivo, biblioteca de juegos jugados, votaciones y estadísticas de la comunidad."
+>
+  <Fragment slot="head">
+    <script
+      type="application/ld+json"
+      set:html={JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        name: "Knekro Hub",
+        url: "https://knekro.vercel.app/",
+        description:
+          "Hub de la comunidad de Knekro: directos de Twitch en vivo, biblioteca de juegos jugados, votaciones y estadísticas.",
+        inLanguage: "es",
+      })}
+    ></script>
+  </Fragment>
   <div class="mb-8">
     <p class="knk-eyebrow mb-2">Directo desde Twitch</p>
   </div>

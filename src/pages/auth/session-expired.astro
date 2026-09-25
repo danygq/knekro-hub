@@ -13,7 +13,12 @@ const safeNext =
     : "/";
 ---
 
-<Layout user={null}>
+<Layout
+  user={null}
+  title="Sesión expirada"
+  description="Tu sesión en Knekro Hub ha expirado. Por favor, inicia sesión de nuevo."
+  noindex={true}
+>
   <div class="max-w-md mx-auto my-16 px-4">
     <div class="relative border border-(--knk-line) bg-(--knk-surface) p-8 text-center knk-notch">
       <span class="pointer-events-none absolute -top-px -left-px w-4 h-4 border-t-2 border-l-2 border-(--knk-amber)"></span>

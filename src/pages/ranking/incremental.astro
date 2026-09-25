@@ -46,7 +46,12 @@ const { games: initialGames, total: totalGames } = await loadRankingSearchGames(
 );
 ---
 
-<Layout user={user}>
+<Layout
+  user={user}
+  title={`Ranking ${category.name} ${currentYear}`}
+  description={`Votación y ranking de ${category.name} ${currentYear} en Knekro Hub.`}
+  noindex={true}
+>
   <RankingSectionLayout
     category={category}
     year={currentYear}

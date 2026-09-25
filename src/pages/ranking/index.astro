@@ -15,6 +15,11 @@ if (!user) {
 const categories = await loadRankingCategories(dbClient);
 ---
 
-<Layout user={user}>
+<Layout
+  user={user}
+  title="Rankings de la Comunidad"
+  description="Categorías y rankings de la comunidad de Knekro."
+  noindex={true}
+>
   <RankingHub categories={categories} />
 </Layout>
