@@ -59,7 +59,7 @@ export async function loadGameById(
   userId?: string,
 ): Promise<GameDetailPageData | null> {
   const { data, error } = await client
-    .rpc("get_game_by_id", {
+    .rpc("get_game_by_id_v2", {
       p_game_id: gameId,
       p_user_id: userId ?? null,
     })
@@ -90,6 +90,7 @@ export async function loadGameById(
       raw.game_status_id != null ? Number(raw.game_status_id) : null,
     status_name: raw.status_name ?? null,
     twitch_game_id: raw.twitch_game_id ?? null,
+    steam_game_id: raw.steam_game_id != null ? Number(raw.steam_game_id) : null,
     last_played_at: raw.last_played_at ?? null,
     user_vote: raw.user_vote != null ? Number(raw.user_vote) : null,
     tags: Array.isArray(raw.tags) ? raw.tags : [],

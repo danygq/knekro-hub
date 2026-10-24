@@ -35,6 +35,7 @@ export interface GameDetails {
   game_status_id: number | null;
   user_vote?: UserVoteEmbed[] | null;
   twitch_game_id?: string | null;
+  steam_game_id?: number | null;
   last_played_at?: string | null;
 }
 
@@ -89,6 +90,7 @@ export interface Game {
   updated_at?: string; // ISO timestamp
   tags?: string[];
   twitch_game_id?: string | null;
+  steam_game_id?: number | null;
   last_played_at?: string | null;
 }
 
@@ -125,6 +127,7 @@ export interface GameDetailPageData {
   game_status_id: number | null;
   status_name: string | null;
   twitch_game_id: string | null;
+  steam_game_id: number | null;
   last_played_at: string | null;
   user_vote: number | null;
   tags: string[];

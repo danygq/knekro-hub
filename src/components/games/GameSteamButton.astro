@@ -1,0 +1,176 @@
+---
+import { STEAM_STORE_APP_BASE_URL } from "@/lib/steam-tags";
+import SteamLogo from "@/components/icons/SteamLogo.astro";
+import Spinner from "@/components/Spinner.astro";
+import { ExternalLink, Pencil, Trash2, X } from "@lucide/astro";
+
+interface Props {
+  gameId: number;
+  steamGameId: number | null;
+  canEdit: boolean;
+}
+
+const { gameId, steamGameId, canEdit } = Astro.props;
+const hasSteamId = steamGameId != null && steamGameId > 0;
+const steamUrl = hasSteamId
+  ? `${STEAM_STORE_APP_BASE_URL}${steamGameId}`
+  : null;
+---
+
+<div
+  id="game-steam-container"
+  class="w-full relative mt-3"
+  x-data={`{ open: false, isSubmitting: false, steamId: '${steamGameId ?? ""}' }`}
+>
+  <!-- Button Row -->
+  <div class="w-full flex items-center gap-1.5">
+    {hasSteamId ? (
+      <a
+        href={steamUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="flex-1 inline-flex items-center justify-between px-3 py-2 text-xs font-semibold rounded bg-(--knk-surface-2) hover:bg-(--knk-surface-3) text-(--knk-text) border border-(--knk-line) hover:border-(--knk-primary)/50 transition-all group"
+      >
+        <span class="inline-flex items-center gap-2 min-w-0">
+          <SteamLogo class="size-4 shrink-0 text-(--knk-primary) group-hover:scale-105 transition-transform" />
+          <span class="truncate">Ver en Steam</span>
+        </span>
+        <ExternalLink class="size-3 text-(--knk-text-muted) group-hover:text-(--knk-primary) transition-colors shrink-0 ml-1.5" />
+      </a>
+    ) : (
+      <button
+        type="button"
+        disabled
+        class="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium rounded bg-(--knk-surface-2)/60 text-(--knk-text-muted) border border-(--knk-line)/50 cursor-not-allowed opacity-80"
+        title="Este juego no está vinculado a Steam"
+      >
+        <SteamLogo class="size-4 shrink-0 grayscale opacity-50" />
+        <span class="truncate">No disponible en Steam</span>
+      </button>
+    )}
+
+    {canEdit && (
+      <button
+        type="button"
+        @click="open = !open"
+        class="inline-flex items-center justify-center p-2 rounded bg-(--knk-surface-2) hover:bg-(--knk-surface-3) text-(--knk-text-muted) hover:text-(--knk-primary) border border-(--knk-line) hover:border-(--knk-primary)/50 transition-colors cursor-pointer shrink-0"
+        title={hasSteamId ? "Editar Steam ID" : "Vincular Steam ID"}
+        aria-label={hasSteamId ? "Editar Steam ID" : "Vincular Steam ID"}
+        :aria-expanded="open"
+      >
+        <Pencil class="size-3.5" />
+      </button>
+    )}
+  </div>
+
+  <!-- Steam ID Subtitle Label (Only when present) -->
+  {hasSteamId && (
+    <div class="w-full text-center mt-1">
+      <span class="text-[11px] font-mono text-(--knk-text-faint) tracking-wider select-all">
+        Steam ID: {steamGameId}
+      </span>
+    </div>
+  )}
+
+  <!-- Manager Edit Popover Dialog -->
+  {canEdit && (
+    <div
+      x-show="open"
+      x-cloak
+      @click.outside="open = false"
+      @keydown.escape.window="open = false"
+      x-transition:enter="transition ease-out duration-100"
+      x-transition:enter-start="opacity-0 scale-95"
+      x-transition:enter-end="opacity-100 scale-100"
+      x-transition:leave="transition ease-in duration-75"
+      x-transition:leave-start="opacity-100 scale-100"
+      x-transition:leave-end="opacity-0 scale-95"
+      class="absolute left-0 right-0 top-full mt-2 z-50 p-3 rounded-lg bg-(--knk-surface-2) border border-(--knk-line) shadow-2xl"
+    >
+      <div class="flex items-center justify-between pb-2 mb-2 border-b border-(--knk-line)">
+        <span class="text-xs font-semibold text-(--knk-text)">
+          {hasSteamId ? "Modificar Steam ID" : "Vincular con Steam"}
+        </span>
+        <button
+          type="button"
+          @click="open = false"
+          class="text-(--knk-text-muted) hover:text-(--knk-text) p-0.5 rounded cursor-pointer transition-colors"
+          aria-label="Cerrar"
+        >
+          <X class="size-3.5" />
+        </button>
+      </div>
+
+      <form
+        x-ref="steamForm"
+        hx-post="/api/games/steam"
+        hx-indicator="#steam-submit-indicator"
+        @htmx:before-request="isSubmitting = true"
+        @htmx:after-request="isSubmitting = false"
+        class="flex flex-col gap-2.5"
+      >
+        <input type="hidden" name="game_id" value={gameId} />
+
+        <div>
+          <label class="block text-[11px] font-medium text-(--knk-text-muted) mb-1">
+            Steam App ID
+          </label>
+          <input
+            type="number"
+            name="steam_id"
+            x-model="steamId"
+            placeholder="Ej: 5200620"
+            class="w-full px-2.5 py-1.5 text-xs rounded bg-(--knk-surface) text-(--knk-text) border border-(--knk-line) focus:border-(--knk-primary) focus:outline-none font-mono"
+            :disabled="isSubmitting"
+          />
+        </div>
+
+        <p class="text-[10px] text-(--knk-text-faint) leading-relaxed">
+          Al guardar con un nuevo ID se sincronizarán los tags de Steam. Si se
+          deja en blanco, se desvinculará de Steam y se eliminarán los tags
+          asociados a este juego.
+        </p>
+
+        <div class="flex items-center justify-between gap-2 pt-1 border-t border-(--knk-line)/60">
+          {hasSteamId ? (
+            <button
+              type="button"
+              @click="steamId = ''; $nextTick(() => $refs.steamForm.requestSubmit())"
+              :disabled="isSubmitting"
+              class="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-medium text-red-400 hover:text-red-300 hover:bg-red-950/30 rounded border border-red-900/40 transition-colors cursor-pointer disabled:opacity-50"
+              title="Eliminar Steam ID y desvincular tags"
+            >
+              <Trash2 class="size-3" />
+              <span>Desvincular</span>
+            </button>
+          ) : (
+            <div />
+          )}
+
+          <div class="flex items-center gap-1.5 ml-auto">
+            <button
+              type="button"
+              @click="open = false"
+              :disabled="isSubmitting"
+              class="px-2.5 py-1 text-[11px] text-(--knk-text-muted) hover:text-(--knk-text) rounded hover:bg-(--knk-surface-3) transition-colors cursor-pointer"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              :disabled="isSubmitting"
+              class="inline-flex items-center gap-1.5 px-3 py-1 text-[11px] font-semibold text-white bg-(--knk-primary) hover:bg-(--knk-primary)/90 rounded transition-colors cursor-pointer disabled:opacity-50"
+            >
+              <span id="steam-submit-indicator" class="htmx-indicator">
+                <Spinner class="size-3 text-white" />
+              </span>
+              <span x-text="isSubmitting ? 'Guardando...' : 'Guardar'">
+                Guardar
+              </span>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  )}
+</div>
