@@ -1,5 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+export const STEAM_STORE_APP_BASE_URL = "https://store.steampowered.com/app/";
+
 /**
  * Normalizes a game title for fuzzy comparison:
  * - lowercase
@@ -77,6 +79,52 @@ export interface SteamFetchResult {
 }
 
 /**
+ * Fetches user tags directly from a Steam store page by Steam App ID in Spanish.
+ */
+export async function fetchSteamTagsByAppId(appId: number): Promise<string[]> {
+  try {
+    const pageUrl = `${STEAM_STORE_APP_BASE_URL}${appId}/`;
+    const pageRes = await fetch(pageUrl, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept-Language": "es-ES,es;q=0.9",
+        Cookie:
+          "Steam_Language=spanish; birthtime=568022401; wants_mature_content=1",
+      },
+      signal: AbortSignal.timeout(6000),
+    });
+
+    if (!pageRes.ok) {
+      console.warn(
+        `[Steam Tags] Store page fetch failed for app ${appId} with status ${pageRes.status}`,
+      );
+      return [];
+    }
+
+    const html = await pageRes.text();
+    const tagRegex = /<a[^>]*class="[^"]*app_tag[^"]*"[^>]*>([\s\S]*?)<\/a>/gi;
+    const tagsSet = new Set<string>();
+    let match: RegExpExecArray | null;
+
+    while ((match = tagRegex.exec(html)) !== null) {
+      const tag = match[1].trim();
+      if (tag && tag !== "+") {
+        tagsSet.add(tag);
+      }
+    }
+
+    return Array.from(tagsSet);
+  } catch (error) {
+    console.error(
+      `[Steam Tags] Error fetching tags for app ${appId}:`,
+      error instanceof Error ? error.message : String(error),
+    );
+    return [];
+  }
+}
+
+/**
  * Searches Steam for a game title and retrieves its user tags in Spanish via standard HTTP fetch.
  * Does not require Puppeteer or a browser binary.
  */
@@ -134,46 +182,8 @@ export async function fetchSteamTags(
       };
     }
 
-    // 2. Fetch game store page HTML directly with Spanish and adult content cookies
-    const pageUrl = `https://store.steampowered.com/app/${bestItem.id}/`;
-    const pageRes = await fetch(pageUrl, {
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept-Language": "es-ES,es;q=0.9",
-        Cookie:
-          "Steam_Language=spanish; birthtime=568022401; wants_mature_content=1",
-      },
-      signal: AbortSignal.timeout(6000),
-    });
-
-    if (!pageRes.ok) {
-      console.warn(
-        `[Steam Tags] Store page fetch failed for "${bestItem.name}" (app ${bestItem.id}) with status ${pageRes.status}`,
-      );
-      return {
-        tags: [],
-        steamAppId: bestItem.id,
-        steamAppName: bestItem.name,
-        similarity: bestScore,
-      };
-    }
-
-    const html = await pageRes.text();
-
-    // Extract tags from glance_tags / app_tag links
-    const tagRegex = /<a[^>]*class="[^"]*app_tag[^"]*"[^>]*>([\s\S]*?)<\/a>/gi;
-    const tagsSet = new Set<string>();
-    let match: RegExpExecArray | null;
-
-    while ((match = tagRegex.exec(html)) !== null) {
-      const tag = match[1].trim();
-      if (tag && tag !== "+") {
-        tagsSet.add(tag);
-      }
-    }
-
-    const tags = Array.from(tagsSet);
+    // 2. Fetch game store page HTML directly with Spanish tags
+    const tags = await fetchSteamTagsByAppId(bestItem.id);
 
     return {
       tags,
@@ -201,8 +211,9 @@ export interface SyncGameTagsResult {
 /**
  * Synchronizes Steam tags for a game with Supabase:
  * 1. Fetches tags from Steam Store API & page.
- * 2. Upserts any newly discovered tags into `public.tags` (name is UNIQUE).
- * 3. Links the game to the tags in `public.games_tags`.
+ * 2. Updates `steam_game_id` on `public.games` if matched.
+ * 3. Upserts any newly discovered tags into `public.tags` (name is UNIQUE).
+ * 4. Links the game to the tags in `public.games_tags`.
  */
 export async function syncGameTags(
   supabaseAdmin: SupabaseClient,
@@ -212,6 +223,20 @@ export async function syncGameTags(
 ): Promise<SyncGameTagsResult> {
   const fetchResult = await fetchSteamTags(gameName, minSimilarity);
   const uniqueTags = Array.from(new Set(fetchResult.tags));
+
+  if (fetchResult.steamAppId) {
+    const { error: gameUpdateError } = await supabaseAdmin
+      .from("games")
+      .update({ steam_game_id: fetchResult.steamAppId })
+      .eq("id", gameId);
+
+    if (gameUpdateError) {
+      console.error(
+        `[Steam Tags] Failed to update steam_game_id for "${gameName}":`,
+        gameUpdateError,
+      );
+    }
+  }
 
   if (!uniqueTags.length) {
     return {
@@ -287,4 +312,137 @@ export async function syncGameTags(
     similarity: fetchResult.similarity,
     addedRelations: junctionRows.length,
   };
+}
+
+export interface UpdateGameSteamResult {
+  success: boolean;
+  steam_game_id: number | null;
+  tags: string[];
+  error?: string;
+}
+
+/**
+ * Updates a game's Steam App ID and synchronizes its tags (manager manual override):
+ * - If steamAppId is null / empty / 0:
+ *     Clears `steam_game_id = NULL` in `games` and removes all `games_tags` rows for this game.
+ * - If steamAppId is provided:
+ *     Updates `steam_game_id = steamAppId`, removes old `games_tags` rows, fetches fresh tags from Steam,
+ *     upserts new tags to `tags`, and inserts new relations in `games_tags`.
+ */
+export async function updateGameSteamIdAndTags(
+  supabaseAdmin: SupabaseClient,
+  gameId: number,
+  steamAppId: number | null,
+): Promise<UpdateGameSteamResult> {
+  try {
+    // 1. If clearing Steam ID (null or <= 0)
+    if (!steamAppId || steamAppId <= 0) {
+      const { error: gameError } = await supabaseAdmin
+        .from("games")
+        .update({ steam_game_id: null })
+        .eq("id", gameId);
+
+      if (gameError) {
+        console.error(
+          "[Steam Sync] Error nullifying steam_game_id:",
+          gameError,
+        );
+        return {
+          success: false,
+          steam_game_id: null,
+          tags: [],
+          error: gameError.message,
+        };
+      }
+
+      // Delete existing tags for this game
+      const { error: deleteTagsError } = await supabaseAdmin
+        .from("games_tags")
+        .delete()
+        .eq("game_id", gameId);
+
+      if (deleteTagsError) {
+        console.error(
+          "[Steam Sync] Error deleting tags for game:",
+          deleteTagsError,
+        );
+      }
+
+      return { success: true, steam_game_id: null, tags: [] };
+    }
+
+    // 2. If setting / updating Steam ID
+    const { error: gameError } = await supabaseAdmin
+      .from("games")
+      .update({ steam_game_id: steamAppId })
+      .eq("id", gameId);
+
+    if (gameError) {
+      console.error("[Steam Sync] Error updating steam_game_id:", gameError);
+      return {
+        success: false,
+        steam_game_id: null,
+        tags: [],
+        error: gameError.message,
+      };
+    }
+
+    // Delete existing tags for this game so we replace them cleanly
+    const { error: deleteError } = await supabaseAdmin
+      .from("games_tags")
+      .delete()
+      .eq("game_id", gameId);
+
+    if (deleteError) {
+      console.warn(
+        "[Steam Sync] Warning deleting old tags for game:",
+        deleteError,
+      );
+    }
+
+    // Fetch tags from Steam Store page for this Steam App ID
+    const fetchedTags = await fetchSteamTagsByAppId(steamAppId);
+    const uniqueTags = Array.from(new Set(fetchedTags));
+
+    if (uniqueTags.length > 0) {
+      // Upsert tags into public.tags
+      await supabaseAdmin.from("tags").upsert(
+        uniqueTags.map((name) => ({ name })),
+        { onConflict: "name" },
+      );
+
+      // Fetch IDs for these tags
+      const { data: tagEntities, error: selectError } = await supabaseAdmin
+        .from("tags")
+        .select("id, name")
+        .in("name", uniqueTags);
+
+      if (!selectError && tagEntities?.length) {
+        const junctionRows = tagEntities.map((t) => ({
+          game_id: gameId,
+          tag_id: t.id,
+        }));
+        await supabaseAdmin
+          .from("games_tags")
+          .upsert(junctionRows, { onConflict: "game_id,tag_id" });
+      }
+    }
+
+    return {
+      success: true,
+      steam_game_id: steamAppId,
+      tags: uniqueTags,
+    };
+  } catch (err) {
+    console.error(
+      "[Steam Sync] Unexpected error in updateGameSteamIdAndTags:",
+      err,
+    );
+    return {
+      success: false,
+      steam_game_id: null,
+      tags: [],
+      error: err instanceof Error ? err.message : String(err),
+    };
+  }
 }

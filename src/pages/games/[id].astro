@@ -1,6 +1,7 @@
 ---
 import Layout from "@/layouts/Layout.astro";
 import GameCover from "@/components/games/GameCover.astro";
+import GameSteamButton from "@/components/games/GameSteamButton.astro";
 import GameDetailTags from "@/components/games/GameDetailTags.astro";
 import GameDetailVoting from "@/components/games/GameDetailVoting.astro";
 import GameStatusEditor from "@/components/games/GameStatusEditor.astro";
@@ -82,6 +83,13 @@ const statuses = canEditStatus ? await loadGameStatuses(dbClient) : [];
       <div class="knk-detail-cover knk-grid-bg relative rounded-xs shadow-lg">
         <GameCover coverUrl={game.cover_url} name={game.name} loading="eager" />
       </div>
+
+      <!-- Steam Button & Manager Override -->
+      <GameSteamButton
+        gameId={game.id}
+        steamGameId={game.steam_game_id}
+        canEdit={canEditStatus}
+      />
 
       <!-- Game Tags -->
       <GameDetailTags tags={game.tags} />

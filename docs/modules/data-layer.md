@@ -1,7 +1,7 @@
 ---
 module: data-layer
 owner_area: backend
-last_verified_against_commit: b1a58b6
+last_verified_against_commit: d3a1479
 depends_on: []
 ---
 
@@ -269,13 +269,14 @@ create table public.games_tags
 - Read policy: viewable by all users (`SELECT` for `anon, authenticated`).
 - Mutation policies: `INSERT`, `UPDATE`, `DELETE` strictly restricted to users holding the `owner` role via `public.is_owner()`.
 
-#### Steam Tags Synchronization (`src/lib/steam-tags.ts`)
+#### Steam Data & Tags Synchronization (`src/lib/steam-tags.ts`)
 
-Steam tags are resolved and synchronized via lightweight HTTP fetch (Store search API + store page parser with Spanish locale cookies):
+Steam App ID and user tags are resolved and synchronized via lightweight HTTP fetch (Store search API + store page parser with Spanish locale cookies):
 
 - **Automated Twitch Ingestion**: In `src/lib/twitch/reconcile-game.ts`, whenever a new game is created (`action: "created"`) or matched by name (`action: "updated_by_name"`), `syncGameTags(supabaseAdmin, gameId, gameName)` is executed.
-- **Tag Upsert & Linking**: Discovered tags are upserted into `public.tags` (`ON CONFLICT (name) DO NOTHING`), then associated in `public.games_tags` (`ON CONFLICT (game_id, tag_id) DO NOTHING`).
-- **CLI Utility**: `scripts/sync-tags.ts` (`pnpm run games:sync-tags`) supports manual syncing (`--missing`, `--force`, `--game <name>`, `--dry-run`).
+- **Steam App ID & Tag Upsert**: Discovered Steam App IDs are persisted to `public.games.steam_game_id`. Discovered tags are upserted into `public.tags` (`ON CONFLICT (name) DO NOTHING`), then associated in `public.games_tags` (`ON CONFLICT (game_id, tag_id) DO NOTHING`).
+- **CLI Utility**: `scripts/sync-with-steam.ts` (`pnpm run games:sync-steam`, backward-compatible alias `pnpm run games:sync-tags`) supports manual syncing (`--missing`, `--force`, `--game <name>`, `--dry-run`).
+- **Manager Override**: `updateGameSteamIdAndTags(supabaseAdmin, gameId, steamAppId)` in `src/lib/steam-tags.ts` allows managers to manually specify or clear `steam_game_id`. Clearing the ID (`NULL`) removes corresponding `games_tags` rows; providing a new ID wipes previous associations and re-syncs fresh tags from Steam for that App ID.
 
 ### Triggers
 
@@ -430,7 +431,7 @@ $$;
 - `get_user_games`: Powers `/games` library catalog searches and the ranking assignable game pool search (both via `fetchGames()` in `src/lib/games.ts`), accelerated by `idx_games_name_trgm` and `idx_games_last_played_at`. Supports status filters, tag/genre filters (configurable AND vs ANY/OR matching for inclusion via `p_tag_mode`, anti-join for exclusion), multi-column sorting (case-insensitive `lower(name)`, personal user votes with `NULLS LAST`, and stream recency `last_played_desc` with `NULLS LAST`), and bounded DB-level pagination — all in a single RPC call. `loadRankingSearchGames` in `src/lib/ranking.ts` delegates to `fetchGames`, eliminating the previous two-stage `countQuery` + `gamesQuery` waterfall.
 
 ```sql
-create or replace function public.get_game_by_id(
+create or replace function public.get_game_by_id_v2(
   p_game_id bigint,
   p_user_id uuid default null
 )
@@ -443,6 +444,7 @@ returns table (
   game_status_id bigint,
   status_name text,
   twitch_game_id text,
+  steam_game_id bigint,
   last_played_at timestamp without time zone,
   user_vote smallint,
   tags text[],
@@ -462,6 +464,7 @@ as $$
     g.game_status_id,
     gs.name as status_name,
     g.twitch_game_id,
+    g.steam_game_id,
     g.last_played_at,
     uv.vote as user_vote,
     coalesce(
@@ -510,7 +513,7 @@ as $$
 $$;
 ```
 
-- `get_game_by_id`: Powers `/games/[id]` detail view via `loadGameById()` in `src/lib/games.ts`. Executes an atomic single-query database fetch returning game metadata, status, tags (aggregated from `games_tags` and `tags`), community vote statistics, personal user vote, and up to 5 distinct stream play sessions from `twitch_channel_update` linked by `stream_id` to `streams` (strictly excluding offline updates). Eliminates waterfall queries and collapses duplicate `channel.update` events per stream session.
+- `get_game_by_id_v2`: Powers `/games/[id]` detail view via `loadGameById()` in `src/lib/games.ts`. Executes an atomic single-query database fetch returning game metadata, status, `steam_game_id`, tags (aggregated from `games_tags` and `tags`), community vote statistics, personal user vote, and up to 5 distinct stream play sessions from `twitch_channel_update` linked by `stream_id` to `streams` (strictly excluding offline updates). Eliminates waterfall queries and collapses duplicate `channel.update` events per stream session.
 - `get_streams_by_date_range`: Powers the `/streams` calendar view via `loadStreamsForCalendar()` in `src/lib/streams.ts`. Queries all streams within a calendar date range (including month padding days), joins `twitch_channel_update` events via `stream_id = ds.id`, joins cataloged `games` (`twitch_game_id`) and `game_status`, and uses `LAG(category_id)` to deduplicate consecutive title-only or tag-only updates while preserving the original category switch timestamp. Configured as `SECURITY INVOKER` with explicit `search_path = public`.
 - `get_stream_by_id`: Powers the `/streams/[id]` standalone view via `loadStreamById()` in `src/lib/streams.ts`. Fetches an individual broadcast with its complete, deduplicated activity history linked strictly by `tcu.stream_id = ts.id` and game metadata. Configured as `SECURITY INVOKER` with explicit `search_path = public`.
 
