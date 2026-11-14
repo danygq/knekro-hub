@@ -5,6 +5,7 @@ import type { User } from "@supabase/supabase-js";
 import LoginButton from "@/components/LoginButton.astro";
 import UserMenu from "@/components/UserMenu.astro";
 import { Menu, X } from "@lucide/astro";
+import SpeedInsights from "@vercel/speed-insights/astro";
 
 interface Props {
   user?: User | null;
@@ -259,5 +260,6 @@ const pageTitle = title
         </div>
       </div>
     </footer>
+    <SpeedInsights />
   </body>
 </html>
