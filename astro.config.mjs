@@ -7,7 +7,11 @@ import alpinejs from "@astrojs/alpinejs";
 
 export default defineConfig({
   output: "server",
-  adapter: vercel(),
+  adapter: vercel({
+    webAnalytics: {
+      enabled: true,
+    },
+  }),
   site: "https://knekro.vercel.app/",
   redirects: {
     "/rankings": "/ranking",
