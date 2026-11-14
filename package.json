@@ -28,6 +28,7 @@
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.117.1",
     "@tailwindcss/vite": "^4.3.3",
+    "@vercel/analytics": "^2.0.1",
     "alpinejs": "^3.17.4",
     "astro": "^7.3.5",
     "htmx.org": "^2.0.11",
